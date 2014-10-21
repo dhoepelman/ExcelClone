@@ -28,10 +28,10 @@ class ParserTests {
 
   @Test def testPlusExpr = assertEquals(
       TermAdd(TermNum(1), TermNum(2)),
-      parse("1 + 2"))
+      parse("=1 + 2"))
 
   @Test def testProdTerm = assertEquals(
       TermMult(TermAdd(TermNum(1), TermNum(2)), TermNum(3)),
-      parse("(1 + 2) * 3"))
+      parse("=(1 + 2) * 3"))
 
 }
