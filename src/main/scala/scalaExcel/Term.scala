@@ -3,6 +3,7 @@ package scalaExcel
 
 object AST {
 
+  /*
   class Node[A] (v: A, l: List[Node[A]] = List()) {
     val leafs = l
     val value = v
@@ -23,18 +24,43 @@ object AST {
       head ++ fleafs.flatten
     }
   }
+  */
 
-  case class Num(d: Double) extends Node(d)
-  case class Bool(b: Boolean) extends Node(b)
+  abstract class CellVal
+  case class CDouble(c: Double) extends CellVal
+  case class CBool(c: Boolean) extends CellVal
+
+  abstract class Node
+
+  case class Num(d: Double) extends Node
+  case class Bool(b: Boolean) extends Node
 
   abstract class Op
   case class Plus()   extends Op
   case class Min()    extends Op
   case class Mult()   extends Op
+  case class Div()    extends Op
   case class Negate() extends Op
 
-  case class BinOp(op: Op, l: Node, r: Node) extends Node(op, List(l, r))
-  case class UnOp(op: Op, n: Node) extends Node(op, List(n))
+  case class BinOp(op: Op, l: Node, r: Node) extends Node
+  case class UnOp(op: Op, n: Node) extends Node
+
+  def eval (t: Node): Double = t match {
+    case Num(d)          => d
+    case BinOp(op, l, r) => evalBinOp(op, l, r)
+    case UnOp(op, n)     => evalUnOp(op, n)
+  }
+
+  def evalBinOp (op: Op, l: Node, r: Node) = op match {
+    case Plus() => (eval(l) + eval(r))
+    case Min()  => (eval(l) - eval(r))
+    case Mult() => (eval(l) * eval(r))
+    case Div()  => (eval(l) / eval(r))
+  }
+
+  def evalUnOp (op: Op, n: Node) = op match {
+    case Negate() => - eval(n)
+  }
 
 }
 
