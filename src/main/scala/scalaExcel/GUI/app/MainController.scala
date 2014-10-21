@@ -30,6 +30,7 @@ class MainController extends jfxf.Initializable {
     tableContainer = new AnchorPane(tableContainerDelegate)
 
     //TODO add table with data to tableContainer
+    //TODO    or use "mainTable" component and fill it
 
   }
 }

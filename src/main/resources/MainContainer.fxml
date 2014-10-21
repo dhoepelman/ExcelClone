@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.net.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import java.net.URL?>
 
 <GridPane alignment="CENTER" prefHeight="348.0" prefWidth="460.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="scalaExcel.GUI.app.MainController">
     <columnConstraints>
@@ -92,15 +96,11 @@
                     <tabs>
                         <Tab text="Untitled Tab 1">
                             <content>
-                                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                <AnchorPane fx:id="tableContainer" minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                                     <children>
-                                        <ScrollPane prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                            <content>
-                                                <AnchorPane fx:id="tableContainerDelegate" minHeight="0.0" minWidth="0.0" />
-                                            </content>
-                                        </ScrollPane>
-                                    </children>
-                                </AnchorPane>
+                                        <TableView fx:id="mainTable" layoutX="110.0" layoutY="14.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                        </TableView>
+                                    </children></AnchorPane>
                             </content>
                         </Tab>
                         <Tab text="Untitled Tab 2">
@@ -259,7 +259,7 @@
                                                                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                                             </rowConstraints>
                                                             <children>
-                                                                <Button alignment="CENTER" mnemonicParsing="false" onAction="#makeResizable" text="Start Resize" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
+                                                                <Button fx:id="startButton" alignment="CENTER" mnemonicParsing="false" onAction="#makeResizable" text="Start Resize" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
                                                             </children>
                                                         </GridPane>
                                                     </children>
@@ -267,7 +267,8 @@
                                                 <AnchorPane prefHeight="200.0" prefWidth="200.0">
                                                     <children>
                                                         <Region fx:id="redRegion" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: crimson;" />
-                                                    </children></AnchorPane>
+                                                    </children>
+                                                </AnchorPane>
                                             </items>
                                         </SplitPane>
                                     </children>
