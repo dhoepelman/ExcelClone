@@ -1,3 +1,15 @@
 target/
 .cache
 .classpath
+.idea
+/classes
+/dist
+/out
+/SDK/*SDK
+/*.bat
+*.class
+out
+target
+build
+.DS_Store
+*~
