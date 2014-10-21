@@ -5,14 +5,15 @@
 package scalaExcel.GUI
 
 import javafx.application.Application
-import javafx.scene.control.cell.PropertyValueFactory
-import javafx.scene.control.{TableColumn, TableView}
-import javafx.scene.paint.Color
-import javafx.scene.{Group, Scene}
-import javafx.stage.Stage
 import javafx.beans.property._
-
 import javafx.collections.FXCollections
+import javafx.scene.Scene
+import javafx.scene.control.cell.PropertyValueFactory
+import javafx.scene.control.{TableCell, TableColumn, TableView}
+import javafx.scene.layout.StackPane
+import javafx.scene.paint.Color
+import javafx.stage.Stage
+import javafx.util.Callback
 
 class Person (fName : String, lName : String, eMail : String){
   val firstName = new SimpleStringProperty(fName)
@@ -56,11 +57,12 @@ class Test extends Application {
   override def start(primaryStage: Stage) {
     primaryStage.setTitle("Sup!")
 
-    val root = new Group();
-    val s = new Scene(root, 300, 300, Color.IVORY);
+    val root = new StackPane();
+    val s = new Scene(root, 700, 300, Color.IVORY);
 
     val table = new TableView[Person]
-    //table.setEditable(true);
+    table.prefWidthProperty().bind(root.prefHeightProperty())
+    table.setEditable(true);
 
     val firstNameCol = new TableColumn[Person,String]("First Name");
     val lastNameCol = new TableColumn[Person,String]("Last Name");
@@ -68,6 +70,14 @@ class Test extends Application {
     firstNameCol.setMinWidth(50)
     lastNameCol.setMinWidth(50)
     emailCol.setMinWidth(50)
+
+    emailCol.setCellFactory(new Callback[TableColumn[Person, String], TableCell[Person, String]]
+    {
+      def call(personStringTableColumn : TableColumn[Person, String]) : TableCell[Person, String] =
+      {
+        new CustomCell
+      }
+    });
 
     firstNameCol.setCellValueFactory(
       new PropertyValueFactory[Person,String]("firstName")
@@ -87,6 +97,21 @@ class Test extends Application {
 
     primaryStage.setScene(s)
     primaryStage.show()
+  }
+}
+
+
+class CustomCell
+  extends TableCell[Person, String]
+{
+  override def updateItem(item : String, empty : Boolean): Unit = {
+    if ( !empty ) {
+      if ( item.contains("@") ) {
+        setText(item)
+        getStyleClass.add("dangerzone")
+        setStyle("{-fx-background-color: azure; -fx-text-fill: indigo;} .selected {-fx-text-fill: red;}")
+      }
+    }
   }
 }
 
