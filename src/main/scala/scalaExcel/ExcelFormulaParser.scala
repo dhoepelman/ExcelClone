@@ -10,7 +10,7 @@ import scala.util.parsing.combinator._
 class ExcelFormulaParser extends RegexParsers {
   def StringLiteral : Parser[Any] = """\"(\"\"|[^\"]*)\"""".r
   def Number        : Parser[Any] = """\d+(\.\d+)?([e][+-]\d{1,3})?""".r
-  def Boolean       : Parser[Any] = """(?i)\Q(true)|(false)\E""".r
+  def Boolean       : Parser[Any] = """(?i)(true)|(false)""".r
 
   def Cell          : Parser[Any] = """$?[a-z]{1,2}\$?\d{1,5}""".r
   def CellRange     : Parser[Any] = """\$?[a-z]{1,2}\$?\d{1,5}:\$?[a-z]{1,2}\$?\d{1,5}""".r
@@ -33,8 +33,8 @@ class ExcelFormulaParser extends RegexParsers {
   def MultiplicativeExpression = repsep(ExponentationExpression, MultiplicativeOp)
   def MultiplicativeOp = "*" | "/"
   def ExponentationExpression = repsep(PercentExpression, "^")
-  def PercentExpression = UnaryExpression ~ """%+""".r
-  def UnaryExpression = UnaryOp ~ BasicExpression
+  def PercentExpression = UnaryExpression ~ """%*""".r
+  def UnaryExpression = UnaryOp ~ BasicExpression | BasicExpression
   def UnaryOp = "+" | "-"
   def BasicExpression = Primitive | FunctionCall | Reference | ExpressionGroup | ""
 
@@ -54,6 +54,6 @@ object TestParse {
   def main(args: Array[String]) {
     val parser = new ExcelFormulaParser()
 
-    println(parser.parseAll(parser.Number, "1.5"))
+    println(parser.parseAll(parser.Expression, "1 * 2 + 3"))
   }
 }
