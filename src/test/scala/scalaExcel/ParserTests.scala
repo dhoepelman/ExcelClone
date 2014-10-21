@@ -4,6 +4,7 @@ package scalaE
 import org.junit.Test
 import scalaExcel.Parser
 
+
 class ParserTests {
 
   @Test def testArith {
