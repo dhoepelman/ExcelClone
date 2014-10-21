@@ -5,7 +5,7 @@ import org.junit.Test
 import org.junit.Assert._
 
 class ParserTests {
-
+/*
   val parser = new Parser()
 
   def parse(s: String) = parser.parseAll(parser.expr, s)
@@ -33,5 +33,5 @@ class ParserTests {
   @Test def testProdTerm = assertEquals(
       TermMult(TermAdd(TermNum(1), TermNum(2)), TermNum(3)),
       parse("=(1 + 2) * 3"))
-
+*/
 }
