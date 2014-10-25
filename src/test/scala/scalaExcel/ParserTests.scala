@@ -28,8 +28,8 @@ class ParserTests extends ExcelFormulaParser {
   }
 
   @Test def intLiteral= List(-100, -1, 0, 1, 1025).foreach( i => {
-    assertEquals(parsing(i.toString), Const(i)) ;
-    assertEquals(parsing("=" + i.toString), Const(i))
+    assertEquals(parsing(i.toString), Const(i.toDouble)) ;
+    assertEquals(parsing("=" + i.toString), Const(i.toDouble))
   })
   @Test def floatLiteral = List(-500.0, -1.0, 0.0, 1.0, 1.0/3.0, Math.PI).foreach( i => {
     assertEquals(parsing(i.toString), Const(i)) ;
@@ -39,6 +39,18 @@ class ParserTests extends ExcelFormulaParser {
     assertEquals(parsing(i), Const(i.toDouble)) ;
     assertEquals(parsing("=" + i), Const(i.toDouble))
   })
+
+  @Test def booleanLiteral = {
+    assertEquals(parsing("true"), Const(true))
+    assertEquals(parsing("TRUE"), Const(true))
+    assertEquals(parsing("truE"), Const(true))
+    assertEquals(parsing("false"), Const(false))
+    assertEquals(parsing("FALSE"), Const(false))
+    assertEquals(parsing("FAlSe"), Const(false))
+    assertEquals(parsing("=true"), Const(true))
+    assertEquals(parsing("=false"), Const(false))
+    assertEquals(parsing("=TRUE"), Const(true))
+  }
 
   // The following formula's are from http://ewbi.blogs.com/develops/2004/12/excel_formula_p.html
   @Test def complex1 {parsing("=IF(\"a\"={\"a\",\"b\";\"c\",#N/A;-1,TRUE}, \"yes\", \"no\") &   \"  more \"\"test\"\" text\"")}
