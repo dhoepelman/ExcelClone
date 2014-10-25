@@ -35,10 +35,11 @@ class ParserTests extends ExcelFormulaParser {
     assertEquals(Const(i), parsing(i.toString)) ;
     assertEquals(Const(i), parsing("=" + i.toString))
   })
-  @Test def scientificNotationLiteral = List("-1e3", "1.23E+10").foreach( i => {
+  @Test def scientificNotationLiteral = List("1e3", "1.23E+10", "12e5", "-1e2", "1E+02", "8.7E-3", "-9.5E-2").foreach( i => {
     assertEquals(Const(i.toDouble), parsing(i)) ;
     assertEquals(Const(i.toDouble), parsing("=" + i))
   })
+  @Test def invalidScientificNotationLiteral = List("1.0e0.3").foreach( i => assertFail(i) )
 
   @Test def booleanLiteral = {
     assertEquals(Const(true), parsing("true"))
