@@ -7,6 +7,7 @@ import javafx.scene.{layout => jfxsl}
 import javafx.{event => jfxe}
 import javafx.{fxml => jfxf}
 import scalafx.scene.layout.AnchorPane
+import scalafx.scene.control.TableView
 
 class MainController extends jfxf.Initializable {
 
@@ -17,20 +18,22 @@ class MainController extends jfxf.Initializable {
   private var tableContainerDelegate: jfxsl.AnchorPane = _
   private var tableContainer: AnchorPane = _
 
-//  @jfxf.FXML
-//  private var choiceBox: jfxsc.ChoiceBox[String] = _
-//
-
   @jfxf.FXML
   private def makeResizable(event: jfxe.ActionEvent) {
     //make region resizable
   }
 
   def initialize(url: URL, rb: util.ResourceBundle) {
+
+
     tableContainer = new AnchorPane(tableContainerDelegate)
-
-    //TODO add table with data to tableContainer
-    //TODO    or use "mainTable" component and fill it
-
+    val table = SheetBuilder.build(
+      //TODO actual data
+      List("A", "B"),
+      List(100, 200),
+      SheetBuilder.getPlainData(List(List("Cell11", "Cell12"), List("Cell21", "Cell22")))
+    )
+    AnchorPane.setAnchors(table, 0, 0, 0, 0)
+    tableContainer.content = List(table)
   }
 }
