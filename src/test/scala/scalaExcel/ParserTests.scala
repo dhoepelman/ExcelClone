@@ -28,29 +28,36 @@ class ParserTests extends ExcelFormulaParser {
   }
 
   @Test def intLiteral= List(-100, -1, 0, 1, 1025).foreach( i => {
-    assertEquals(parsing(i.toString), Const(i.toDouble)) ;
-    assertEquals(parsing("=" + i.toString), Const(i.toDouble))
+    assertEquals(Const(i.toDouble), parsing(i.toString)) ;
+    assertEquals(Const(i.toDouble), parsing("=" + i.toString))
   })
   @Test def floatLiteral = List(-500.0, -1.0, 0.0, 1.0, 1.0/3.0, Math.PI).foreach( i => {
-    assertEquals(parsing(i.toString), Const(i)) ;
-    assertEquals(parsing("=" + i.toString), Const(i))
+    assertEquals(Const(i), parsing(i.toString)) ;
+    assertEquals(Const(i), parsing("=" + i.toString))
   })
   @Test def scientificNotationLiteral = List("-1e3", "1.23E+10").foreach( i => {
-    assertEquals(parsing(i), Const(i.toDouble)) ;
-    assertEquals(parsing("=" + i), Const(i.toDouble))
+    assertEquals(Const(i.toDouble), parsing(i)) ;
+    assertEquals(Const(i.toDouble), parsing("=" + i))
   })
 
   @Test def booleanLiteral = {
-    assertEquals(parsing("true"), Const(true))
-    assertEquals(parsing("TRUE"), Const(true))
-    assertEquals(parsing("truE"), Const(true))
-    assertEquals(parsing("false"), Const(false))
-    assertEquals(parsing("FALSE"), Const(false))
-    assertEquals(parsing("FAlSe"), Const(false))
-    assertEquals(parsing("=true"), Const(true))
-    assertEquals(parsing("=false"), Const(false))
-    assertEquals(parsing("=TRUE"), Const(true))
+    assertEquals(Const(true), parsing("true"))
+    assertEquals(Const(true), parsing("TRUE"))
+    assertEquals(Const(true), parsing("truE"))
+    assertEquals(Const(false), parsing("false"))
+    assertEquals(Const(false), parsing("FALSE"))
+    assertEquals(Const(false), parsing("FAlSe"))
+    assertEquals(Const(true), parsing("=true"))
+    assertEquals(Const(false), parsing("=false"))
+    assertEquals(Const(true), parsing("=TRUE"))
   }
+
+  @Test def concat1 = assertEquals(BinOp(Concat(), Const(1), Const(1)), parsing("=1 & 1"))
+  @Test def concat2 = assertEquals(BinOp(Concat(), Const("a"), Const("b")), parsing("=\"a\" & \"b\""))
+  @Test def concat3 = assertEquals(BinOp(Concat(), BinOp(Concat(), Const("a"), Const("b")), Const("c")), parsing("=\"a\" & \"b\" & \"c\""))
+  @Test def concat4 = assertEquals(BinOp(Concat(),BinOp(Concat(),BinOp(Concat(),Const("a"),Const("b")),Const("c")),Const("d")), parsing("=\"a\" & \"b\" & \"c\" & \"d\""))
+  @Test def concat5 = assertEquals(BinOp(Concat(), Const("a"), BinOp(Concat(), Const("b"), BinOp(Concat(), Const("c"), Const("d")))), parsing("=\"a\" & (\"b\" & (\"c\" & \"d\"))"))
+  @Test def concat6 = assertEquals(parsing("=\"a\" & \"b\" & \"c\" & \"d\""), parsing("=(((\"a\" & \"b\") & \"c\") & \"d\")"))
 
   // The following formula's are from http://ewbi.blogs.com/develops/2004/12/excel_formula_p.html
   @Test def complex1 {parsing("=IF(\"a\"={\"a\",\"b\";\"c\",#N/A;-1,TRUE}, \"yes\", \"no\") &   \"  more \"\"test\"\" text\"")}
