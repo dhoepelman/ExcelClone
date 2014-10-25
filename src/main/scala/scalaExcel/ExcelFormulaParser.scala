@@ -25,7 +25,7 @@ class ExcelFormulaParser extends RegexParsers {
   def LogicalExpression : Parser[Expr]= ConcatExpression ~ rep(LogicalOp ~ ConcatExpression) ^^ {case e ~ rest => rest.foldLeft(e) { case (l, op ~ r) => BinOp(op, l,r)} }
   def LogicalOp         : Parser[Op]  =  """=|(>=)|(<=)|(<>)|>|<""".r ^^ {case "=" => Eq() case ">=" => GTE() case "<=" => LTE() case "<>" => NEq() case ">" => GT() case "<" => LT()}
 
-  def ConcatExpression  : Parser[Expr]= AddExpression ~ rep("&" ~ AddExpression) ^^ {case e ~ rest => rest.foldLeft(e) { case (l, "&" ~ r) => BinOp(Concat(), l,r)} }
+  def ConcatExpression  : Parser[Expr]= AddExpression ~ rep("&" ~ AddExpression) ^^ {case e ~ rest => rest.foldLeft(e) { case (l, _ ~ r) => BinOp(Concat(), l,r)} }
 
   def AddExpression     : Parser[Expr]= MultExpression ~ rep(AdditiveOp ~ MultExpression ) ^^ {case e ~ rest => rest.foldLeft(e) { case (l, op ~ r) => BinOp(op, l,r)} }
   def AdditiveOp        : Parser[Op]  = """\+|\-""".r ^^  {case "+" => Plus() case "-" => Minus()}
@@ -33,9 +33,9 @@ class ExcelFormulaParser extends RegexParsers {
   def MultExpression    : Parser[Expr]= ExponentExpression ~ rep(AdditiveOp ~ ExponentExpression) ^^ {case e ~ rest => rest.foldLeft(e) { case (l, op ~ r) => BinOp(op,l,r)} }
   def MultiplicativeOp  : Parser[Op]  = """\*|\/""".r ^^  {case "*" => Mul() case "/" => Div()}
 
-  def ExponentExpression: Parser[Expr]= PercentExpression ~ rep("^" ~ PercentExpression ) ^^ {case e ~ rest => rest.foldLeft(e) { case (l, "^" ~ r) => BinOp(Expon(), l,r)} }
+  def ExponentExpression: Parser[Expr]= PercentExpression ~ rep("^" ~ PercentExpression ) ^^ {case e ~ rest => rest.foldLeft(e) { case (l, _ ~ r) => BinOp(Expon(), l,r)} }
 
-  def PercentExpression : Parser[Expr]= UnaryExpression ~ rep("%") ^^ {case e ~ rest => rest.foldLeft(e) { case (l, "%") => UnOp(Percent(), l)}}
+  def PercentExpression : Parser[Expr]= UnaryExpression ~ rep("%") ^^ {case e ~ rest => rest.foldLeft(e) { case (l, _) => UnOp(Percent(), l)}}
 
   def UnaryExpression   : Parser[Expr]= AdditiveOp.? ~ BasicExpression ^^ {case None ~ e => e case Some(op) ~ e => UnOp(op, e)}
 
