@@ -55,9 +55,19 @@ class ParserTests extends ExcelFormulaParser {
   @Test def concat1 = assertEquals(BinOp(Concat(), Const(1), Const(1)), parsing("=1 & 1"))
   @Test def concat2 = assertEquals(BinOp(Concat(), Const("a"), Const("b")), parsing("=\"a\" & \"b\""))
   @Test def concat3 = assertEquals(BinOp(Concat(), BinOp(Concat(), Const("a"), Const("b")), Const("c")), parsing("=\"a\" & \"b\" & \"c\""))
-  @Test def concat4 = assertEquals(BinOp(Concat(),BinOp(Concat(),BinOp(Concat(),Const("a"),Const("b")),Const("c")),Const("d")), parsing("=\"a\" & \"b\" & \"c\" & \"d\""))
+  @Test def concat4 = assertEquals(BinOp(Concat(), BinOp(Concat(),BinOp(Concat(),Const("a"),Const("b")),Const("c")),Const("d")), parsing("=\"a\" & \"b\" & \"c\" & \"d\""))
   @Test def concat5 = assertEquals(BinOp(Concat(), Const("a"), BinOp(Concat(), Const("b"), BinOp(Concat(), Const("c"), Const("d")))), parsing("=\"a\" & (\"b\" & (\"c\" & \"d\"))"))
   @Test def concat6 = assertEquals(parsing("=\"a\" & \"b\" & \"c\" & \"d\""), parsing("=(((\"a\" & \"b\") & \"c\") & \"d\")"))
+
+  @Test def add1 = assertEquals(BinOp(Plus(), Const(1), Const(1)), parsing("=1+1"))
+  @Test def add2 = assertEquals(BinOp(Minus(), Const(1), Const(1)), parsing("=1-1"))
+  @Test def add3 = assertEquals(BinOp(Plus(), BinOp(Minus(),Const(1), Const(2)), Const(3)), parsing("=1 - 2 + 3"))
+
+  @Test def mul1 = assertEquals(BinOp(Mul(), Const(1), Const(1)), parsing("=1*1"))
+  @Test def mul2 = assertEquals(BinOp(Div(), Const(1), Const(1)), parsing("=1/1"))
+  @Test def mul3 = assertEquals(BinOp(Plus(), Const(1), BinOp(Mul(),Const(2), Const(3))), parsing("=1 + 2 * 3"))
+  @Test def mul4 = assertEquals(BinOp(Plus(), Const(1), BinOp(Div(),Const(2), Const(3))), parsing("=1 + 2 / 3"))
+  @Test def mul5 = assertEquals(BinOp(Div(), BinOp(Mul(),Const(1), Const(2)), Const(3)), parsing("=1 * 2 / 3"))
 
   // The following formula's are from http://ewbi.blogs.com/develops/2004/12/excel_formula_p.html
   @Test def complex1 {parsing("=IF(\"a\"={\"a\",\"b\";\"c\",#N/A;-1,TRUE}, \"yes\", \"no\") &   \"  more \"\"test\"\" text\"")}
@@ -81,21 +91,4 @@ class ParserTests extends ExcelFormulaParser {
   // Enable if Array formula's are implemented
   //@Test def example14 {parsing("={SUM(B2:D2*B3:D3)}")}
 
-/*
-  @Test def testBoolLiteralTrue = assertEquals(
-    TermBool(true),
-    parse("true"))
-
-  @Test def testBoolLiteralFalse = assertEquals(
-    TermBool(false),
-    parse("false"))
-
-  @Test def testPlusExpr = assertEquals(
-      TermAdd(TermNum(1), TermNum(2)),
-      parse("=1 + 2"))
-
-  @Test def testProdTerm = assertEquals(
-      TermMult(TermAdd(TermNum(1), TermNum(2)), TermNum(3)),
-      parse("=(1 + 2) * 3"))
-*/
 }
