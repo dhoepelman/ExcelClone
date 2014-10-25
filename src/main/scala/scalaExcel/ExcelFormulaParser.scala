@@ -60,7 +60,7 @@ class ExcelFormulaParser extends RegexParsers {
   def UnaryExpression   : Parser[Expr]  = AdditiveOp.? ~ BasicExpression ^^ {case None ~ e => e case Some(op) ~ e => UnOp(op, e)}
 
   // Transforms a Expr [Op Exprs [Op Expr [...]]] into a BinOp(Op, Expr, BinOp(Op, Expr, ...))
-  def toBinOp(p : Expr ~ List[Op ~ Expr]) = p match { case e ~ rest => rest.foldLeft(e) { case (l, op ~ r) => BinOp(op, l,r) } }
+  def toBinOp(p : Expr ~ List[Op ~ Expr]) = p match { case e ~ rest => rest.foldLeft(e) { case (r, op ~ l) => BinOp(op, l,r) } }
 
   def ErrorExpression   : Parser[Err]= """(?i)(#DIV/0!)|(#N/A)|(#NAME?)|(#NUM!)|(#NULL!)|(#REF!)|(#VALUE!)""".r^^ {case "#DIV/0!" => Err(DivBy0())
   case "#N/A" => Err(NA())
