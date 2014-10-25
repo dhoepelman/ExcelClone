@@ -6,10 +6,11 @@ import scala.util.parsing.combinator._
  * Excel LL grammar based on https://github.com/whatupdave/CilociFormulaEngine/blob/master/Excel.grammar
  */
 class ExcelFormulaParser extends RegexParsers {
-  def Start         : Parser[Expr] = Formula | Bool | Num | Str | ""
+  def Start         : Parser[Expr] = Formula | Bool | Num | Str | Empty
 
   // This String is outside of formula, everything that is not anything else is a string
-  def Str           : Parser[Const]   = """[^=].*""".r                        ^^ { s => Const(s)}
+  def Str           : Parser[Const]   =  """[^=].*""".r                       ^^ { s => Const(s)}
+  def Empty         : Parser[Expr]    = ""                                    ^^^ Const("")
 
   // This string literal can be used inside formula's
   def StringLiteral : Parser[Const]   = """\"(\"\"|[^\"]*)\"""".r             ^^ { s => Const(s.replace("\"\"", "\""))}
