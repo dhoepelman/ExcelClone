@@ -46,20 +46,21 @@ class ParserTests extends ExcelFormulaParser {
   @Test def complex3 {parsing("=IF(R[39]C[11]>65,R[25]C[42],ROUND((R[11]C[11]*IF(OR(AND(R[39]C[11]>=55, R[40]C[11]>=20),AND(R[40]C[11]>=20,R11C3=\"YES\")),R[44]C[11],R[43]C[11]))+(R[14]C[11] *IF(OR(AND(R[39]C[11]>=55,R[40]C[11]>=20),AND(R[40]C[11]>=20,R11C3=\"YES\")), R[45]C[11],R[43]C[11])),0))")}
 
   // The following formula's are from http://homepages.mcs.vuw.ac.nz/~elvis/db/Excel.shtml
-  @Test def example1 {parsing("=1")}
-  @Test def example2 {parsing("=1+1")}
-  @Test def example3 {parsing("=A1")}
-  @Test def example4 {parsing("=$B$2")}
-  @Test def example5 {parsing("=SUM(B5:B15)")}
-  @Test def example6 {parsing("=SUM(B5:B15,D5:D15)")}
-  @Test def example7 {parsing("=SUM(B5:B15 A7:D7)")}
-  @Test def example8 {parsing("=SUM(sheet1!$A$1:$B$2)")}
-  @Test def example9 {parsing("=[data.xls]sheet1!$A$1")}
+  @Test def example01 {parsing("=1")}
+  @Test def example02 {parsing("=1+1")}
+  @Test def example03 {parsing("=A1")}
+  @Test def example04 {parsing("=$B$2")}
+  @Test def example05 {parsing("=SUM(B5:B15)")}
+  @Test def example06 {parsing("=SUM(B5:B15,D5:D15)")}
+  @Test def example07 {parsing("=SUM(B5:B15 A7:D7)")}
+  @Test def example08 {parsing("=SUM(sheet1!$A$1:$B$2)")}
+  @Test def example09 {parsing("=[data.xls]sheet1!$A$1")}
   @Test def example10 {parsing("=SUM((A:A 1:1))")}
   @Test def example11 {parsing("=SUM((A:A A1:B1))")}
   @Test def example12 {parsing("=SUM((D9:D11,(E9:E11,F9:F11)))")}
   @Test def example13 {parsing("=IF(P5=1.0,\"NA\",IF(P5=2.0,\"A\",IF(P5=3.0,\"B\",IF(P5=4.0,\"C\",IF(P5=5.0,\"D\",IF(P5=6.0,\"E\",IF(P5=7.0,\"F\",IF(P5=8.0,\"G\"))))))))")}
-  @Test def example14 {parsing("={SUM(B2:D2*B3:D3)}")}
+  // Enable if Array formula's are implemented
+  //@Test def example14 {parsing("={SUM(B2:D2*B3:D3)}")}
 
 /*
   @Test def testBoolLiteralTrue = assertEquals(
