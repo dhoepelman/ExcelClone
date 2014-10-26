@@ -8,6 +8,7 @@ import javafx.{event => jfxe}
 import javafx.{fxml => jfxf}
 import scalafx.scene.layout.AnchorPane
 import scalafx.scene.control.TableView
+import scalafx.beans.property.ObjectProperty
 
 class MainController extends jfxf.Initializable {
 
@@ -24,8 +25,6 @@ class MainController extends jfxf.Initializable {
   }
 
   def initialize(url: URL, rb: util.ResourceBundle) {
-
-
     tableContainer = new AnchorPane(tableContainerDelegate)
     val table = SheetBuilder.build(
       //TODO actual data
@@ -35,5 +34,8 @@ class MainController extends jfxf.Initializable {
     )
     AnchorPane.setAnchors(table, 0, 0, 0, 0)
     tableContainer.content = List(table)
+
+    //change a cell programatically
+    table.getItems.get(0).get(0).value = new SheetCell("bla", null, null)
   }
 }
