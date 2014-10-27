@@ -33,7 +33,8 @@ class ExcelFormulaParser extends RegexParsers {
     case None ~ e => Const(e)
     case Some(op) ~ e => op match {
       case Minus() => Const(-e)
-      case _       => Const(e)
+      case Plus()  => Const(e)
+      case _       => throw new IllegalStateException() // This should never happen
     }
   }
   def Bool          : Parser[Const] = boolReg ^^ {s => Const(s.toBoolean)}
@@ -59,8 +60,7 @@ class ExcelFormulaParser extends RegexParsers {
 
   def FunctionName      : Parser[String]= """[a-z][\w]*""".r
   def FunctionCall      : Parser[Expr]  = FunctionName ~ "(" ~ Arguments ~ ")" ^^ {
-    case f ~ _ ~ args ~
-    _ => Call(f, args)
+    case f ~ _ ~ args ~ _ => Call(f, args)
   }
   def Arguments         : Parser[List[Expr]] = repsep(Expression, ",")
 
@@ -105,11 +105,16 @@ class ExcelFormulaParser extends RegexParsers {
     case Some(op) ~ e => UnOp(op, e)
   }
 
-  // Transforms a Expr [Op Exprs [Op Expr [...]]] into a BinOp(Op, Expr, BinOp(Op, Expr, ...))
-  def toBinOp(p : Expr ~ List[Op ~ Expr]) = p match { case e ~ rest => rest.foldLeft(e) { case (l, op ~ r) => BinOp(op, l,r) } }
+  // Transforms a Expr [Op Expr [Op Expr [...]]] into a BinOp(Op, Expr, BinOp(Op, Expr, ...))
+  def toBinOp(p : Expr ~ List[Op ~ Expr]) = p match {
+    case e ~ rest => rest.foldLeft(e) {
+      case (l, op ~ r) => BinOp(op, l, r)
+    }
+  }
 
-  def ErrorExpression   : Parser[Err]= """(?i)(#DIV/0!)|(#N/A)|(#NAME?)|(#NUM!)|(#NULL!)|(#REF!)|(#VALUE!)""".r^^ {case "#DIV/0!" => Err(DivBy0())
-    case "#N/A" => Err(NA())
+  def ErrorExpression   : Parser[Err]= """(?i)(#DIV/0!)|(#N/A)|(#NAME?)|(#NUM!)|(#NULL!)|(#REF!)|(#VALUE!)""".r^^ {
+    case "#DIV/0!"  => Err(DivBy0())
+    case "#N/A"     => Err(NA())
     case "#NAME?" => Err(InvalidName())
     case "#NUM!" => Err(NotNumeric())
     case "#NULL!" => Err(Null())
@@ -173,6 +178,6 @@ class ExcelFormulaParser extends RegexParsers {
 object TestParse {
   def main(args: Array[String]) {
     val parser = new ExcelFormulaParser()
-    println(parser.parseAll(parser.Expression, "1 * 5"))
+    println(parser.parseAll(parser.Start, "=1 * 5"))
   }
 }
