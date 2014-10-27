@@ -42,7 +42,7 @@ class ParserTests {
   })
 
   @Test def unOpNegate = List(0, 1, 1024, 1.0 / 3.0) foreach (i => {
-    p test(UnOp(Minus(), Const(i)), "-" + i)
+    p test(Const(-i), "-" + i)
   })
 
   @Test def scientificNotationLiteral =
@@ -50,27 +50,27 @@ class ParserTests {
       .foreach(i => {
         p test(Const(i.toDouble), i)
         p test(Const(i.toDouble), "=" + i)
-        p test(UnOp(Minus(), Const(i.toDouble)), "-" + i)
+        p test(Const(-i.toDouble), "-" + i)
       })
 
   @Test def invalidScientificNotationLiteral =
     List("1.0e0.3", "1e1234", "1e-1234")
       .foreach (i => assertFail(i))
 
+  @Test def booleanLiterals =
+    Map(
+      "true" -> true,
+      "TRUE" -> true,
+      "truE" -> true,
+      "false" -> false,
+      "FALSE" -> false,
+      "FaLSE" -> false
+    ) foreach (kv => {
+      p test(Const(kv._2), kv._1)
+      p test(Const(kv._2), "=" + kv._1)
+    })
+
 /*
-
-  @Test def booleanLiteral = {
-    assertEquals(Const(true), parsing("true"))
-    assertEquals(Const(true), parsing("TRUE"))
-    assertEquals(Const(true), parsing("truE"))
-    assertEquals(Const(false), parsing("false"))
-    assertEquals(Const(false), parsing("FALSE"))
-    assertEquals(Const(false), parsing("FAlSe"))
-    assertEquals(Const(true), parsing("=true"))
-    assertEquals(Const(false), parsing("=false"))
-    assertEquals(Const(true), parsing("=TRUE"))
-  }
-
   @Test def concat1 = assertEquals(BinOp(Concat(), Const(1), Const(1)), parsing("=1 & 1"))
   @Test def concat2 = assertEquals(BinOp(Concat(), Const("a"), Const("b")), parsing("=\"a\" & \"b\""))
   @Test def concat3 = assertEquals(BinOp(Concat(), BinOp(Concat(), Const("a"), Const("b")), Const("c")), parsing("=\"a\" & \"b\" & \"c\""))

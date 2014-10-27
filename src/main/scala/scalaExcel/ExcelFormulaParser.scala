@@ -10,11 +10,8 @@ class ExcelFormulaParser extends RegexParsers {
    * Start parser, this will parse any valid cell value
    **/
   def Start : Parser[Expr] =
-    Expression |
-    Formula    |
-    Bool       |
-    Num        |
-    Str        |
+    Formula   |
+    Primitive |
     Empty
 
   //****************************
@@ -30,8 +27,15 @@ class ExcelFormulaParser extends RegexParsers {
   val numbReg = """\d+(\.\d+)?([eE]([+-])?\d{1,3})?""".r
   val boolReg = """(?i)(true)|(false)""".r
 
-  def StringLit     : Parser[Const] = striReg ^^ {s => Const(s.replace("\"\"", "\"").substring(1, s.length - 1))}
-  def Num           : Parser[Const] = numbReg ^^ {s => Const(s.toDouble)}
+  def StringLit     : Parser[Const]  = striReg ^^ {s => Const(s.replace("\"\"", "\"").substring(1, s.length - 1))}
+  def PosNum        : Parser[Double] = numbReg ^^ {s => s.toDouble}
+  def Num           : Parser[Const]  = AdditiveOp.? ~ PosNum ^^ {
+    case None ~ e => Const(e)
+    case Some(op) ~ e => op match {
+      case Minus() => Const(-e)
+      case _       => Const(e)
+    }
+  }
   def Bool          : Parser[Const] = boolReg ^^ {s => Const(s.toBoolean)}
 
   //****************************
@@ -96,10 +100,10 @@ class ExcelFormulaParser extends RegexParsers {
     }
   }
 
-  def UnaryExpression   : Parser[Expr]
-    = AdditiveOp.? ~ BasicExpression ^^ {
-      case None ~ e => e case Some(op) ~ e => UnOp(op, e)
-    }
+  def UnaryExpression   : Parser[Expr] = AdditiveOp.? ~ BasicExpression ^^ {
+    case None ~ e => e
+    case Some(op) ~ e => UnOp(op, e)
+  }
 
   // Transforms a Expr [Op Exprs [Op Expr [...]]] into a BinOp(Op, Expr, BinOp(Op, Expr, ...))
   def toBinOp(p : Expr ~ List[Op ~ Expr]) = p match { case e ~ rest => rest.foldLeft(e) { case (l, op ~ r) => BinOp(op, l,r) } }
