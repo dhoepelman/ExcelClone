@@ -8,7 +8,7 @@ import scalafx.application.JFXApp
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.scene.Scene
 
-object MainApp extends JFXApp {
+object RunGUI extends JFXApp {
 
   val resource = getClass.getResource("/MainContainer.fxml")
 
