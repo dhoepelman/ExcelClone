@@ -9,6 +9,14 @@ class ParserTests {
 
   val p = new ExcelFormulaParser()
 
+  def test(s1 : String, s2: String) = {
+    val parsed1 = p parsing(s1)
+    val parsed2 = p parsing(s2)
+    if(parsed1 != parsed2) {
+      throw new AssertionError(s"Expected <$s1> and <$s2> to have identical AST, was <$parsed1> and <$parsed2>")
+    }
+  }
+
   def test(e: Expr, s: String) = {
     val parsed = p parsing(s)
     if (parsed != e){
@@ -77,24 +85,24 @@ class ParserTests {
       test(Const(kv._2), "=" + kv._1)
     })
 
+
+  @Test def concat1 = test(BinOp(Concat(), Const(1), Const(1)), "=1 & 1")
+  @Test def concat2 = test(BinOp(Concat(), Const("a"), Const("b")), "=\"a\" & \"b\"")
+  @Test def concat3 = test(BinOp(Concat(), BinOp(Concat(), Const("a"), Const("b")), Const("c")), "=\"a\" & \"b\" & \"c\"")
+  @Test def concat4 = test(BinOp(Concat(), BinOp(Concat(),BinOp(Concat(),Const("a"),Const("b")),Const("c")),Const("d")), "=\"a\" & \"b\" & \"c\" & \"d\"")
+  @Test def concat5 = test(BinOp(Concat(), Const("a"), BinOp(Concat(), Const("b"), BinOp(Concat(), Const("c"), Const("d")))), "=\"a\" & (\"b\" & (\"c\" & \"d\"))")
+  @Test def concat6 = test("=\"a\" & \"b\" & \"c\" & \"d\"", "=(((\"a\" & \"b\") & \"c\") & \"d\")")
+
+  @Test def add1 = test(BinOp(Plus(), Const(1), Const(1)), "=1+1")
+  @Test def add2 = test(BinOp(Minus(), Const(1), Const(1)), "=1-1")
+  @Test def add3 = test(BinOp(Plus(), BinOp(Minus(),Const(1), Const(2)), Const(3)), "=1 - 2 + 3")
+
+  @Test def mul1 = test(BinOp(Mul(), Const(1), Const(1)), "=1*1")
+  @Test def mul2 = test(BinOp(Div(), Const(1), Const(1)), "=1/1")
+  @Test def mul3 = test(BinOp(Plus(), Const(1), BinOp(Mul(),Const(2), Const(3))), "=1 + 2 * 3")
+  @Test def mul4 = test(BinOp(Plus(), Const(1), BinOp(Div(),Const(2), Const(3))), "=1 + 2 / 3")
+  @Test def mul5 = test(BinOp(Div(), BinOp(Mul(),Const(1), Const(2)), Const(3)), "=1 * 2 / 3")
 /*
-  @Test def concat1 = assertEquals(BinOp(Concat(), Const(1), Const(1)), parsing("=1 & 1"))
-  @Test def concat2 = assertEquals(BinOp(Concat(), Const("a"), Const("b")), parsing("=\"a\" & \"b\""))
-  @Test def concat3 = assertEquals(BinOp(Concat(), BinOp(Concat(), Const("a"), Const("b")), Const("c")), parsing("=\"a\" & \"b\" & \"c\""))
-  @Test def concat4 = assertEquals(BinOp(Concat(), BinOp(Concat(),BinOp(Concat(),Const("a"),Const("b")),Const("c")),Const("d")), parsing("=\"a\" & \"b\" & \"c\" & \"d\""))
-  @Test def concat5 = assertEquals(BinOp(Concat(), Const("a"), BinOp(Concat(), Const("b"), BinOp(Concat(), Const("c"), Const("d")))), parsing("=\"a\" & (\"b\" & (\"c\" & \"d\"))"))
-  @Test def concat6 = assertEquals(parsing("=\"a\" & \"b\" & \"c\" & \"d\""), parsing("=(((\"a\" & \"b\") & \"c\") & \"d\")"))
-
-  @Test def add1 = assertEquals(BinOp(Plus(), Const(1), Const(1)), parsing("=1+1"))
-  @Test def add2 = assertEquals(BinOp(Minus(), Const(1), Const(1)), parsing("=1-1"))
-  @Test def add3 = assertEquals(BinOp(Plus(), BinOp(Minus(),Const(1), Const(2)), Const(3)), parsing("=1 - 2 + 3"))
-
-  @Test def mul1 = assertEquals(BinOp(Mul(), Const(1), Const(1)), parsing("=1*1"))
-  @Test def mul2 = assertEquals(BinOp(Div(), Const(1), Const(1)), parsing("=1/1"))
-  @Test def mul3 = assertEquals(BinOp(Plus(), Const(1), BinOp(Mul(),Const(2), Const(3))), parsing("=1 + 2 * 3"))
-  @Test def mul4 = assertEquals(BinOp(Plus(), Const(1), BinOp(Div(),Const(2), Const(3))), parsing("=1 + 2 / 3"))
-  @Test def mul5 = assertEquals(BinOp(Div(), BinOp(Mul(),Const(1), Const(2)), Const(3)), parsing("=1 * 2 / 3"))
-
   // The following formula's are from http://homepages.mcs.vuw.ac.nz/~elvis/db/Excel.shtml
   def example01 {parsing("=1")}
   def example02 {parsing("=1+1")}
