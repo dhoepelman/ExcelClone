@@ -165,14 +165,6 @@ class ExcelFormulaParser extends RegexParsers {
     case NoSuccess(msg, _) => throw new IllegalArgumentException(s"Unable to parse $s: $msg")
   }
 
-  def test(e: Expr, s: String) = {
-    val parsed = parsing(s)
-    parsed equals e match {
-      case true =>
-      case false => throw new AssertionError(s"Expected <$s> to parse to <$e>, but was <$parsed>")
-    }
-  }
-
 }
 // TODO: Remove this once the parser is debugged and unit tests are in place
 object TestParse {

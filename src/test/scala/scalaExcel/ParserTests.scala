@@ -9,10 +9,17 @@ class ParserTests {
 
   val p = new ExcelFormulaParser()
 
+  def test(e: Expr, s: String) = {
+    val parsed = p parsing(s)
+    if (parsed != e){
+      throw new AssertionError(s"Expected <$s> to parse to <$e>, but was <$parsed>")
+    }
+  }
+
   private def assertFail(input: String) = {
     try {
       p parsing(input)
-      fail(s"Parsed $input which should've failed")
+      fail(s"Parsed <$input> which should've failed")
     } catch {
       case e : IllegalArgumentException =>
       case e : Exception => fail(e.getMessage)
@@ -29,28 +36,28 @@ class ParserTests {
   @Test def constAssertEquals = consts foreach
     (i => assertEquals(Const(i), Const(i)))
 
-  @Test def t1 = p test(Const(100), "100")
+  @Test def t1 = test(Const(100), "100")
 
   @Test def intLiteral = List(0, 1, 1025) foreach (i => {
-    p test(Const(i.toDouble), i.toDouble.toString)
-    p test(Const(i.toDouble), "=" + i.toString)
+    test(Const(i.toDouble), i.toDouble.toString)
+    test(Const(i.toDouble), "=" + i.toString)
   })
 
   @Test def floatLiteral = List(500.0, 1.0, 0.0, 1.0, 1.0 / 3.0, Math.PI).foreach(i => {
-    p test(Const(i), i.toString) ;
-    p test(Const(i), "=" + i.toString)
+    test(Const(i), i.toString) ;
+    test(Const(i), "=" + i.toString)
   })
 
   @Test def unOpNegate = List(0, 1, 1024, 1.0 / 3.0) foreach (i => {
-    p test(Const(-i), "-" + i)
+    test(Const(-i), "-" + i)
   })
 
   @Test def scientificNotationLiteral =
     List("1e3", "1.23E+10", "12e5", "1E+02", "8.7E-3")
       .foreach(i => {
-        p test(Const(i.toDouble), i)
-        p test(Const(i.toDouble), "=" + i)
-        p test(Const(-i.toDouble), "-" + i)
+        test(Const(i.toDouble), i)
+        test(Const(i.toDouble), "=" + i)
+        test(Const(-i.toDouble), "-" + i)
       })
 
   @Test def invalidScientificNotationLiteral =
@@ -66,8 +73,8 @@ class ParserTests {
       "FALSE" -> false,
       "FaLSE" -> false
     ) foreach (kv => {
-      p test(Const(kv._2), kv._1)
-      p test(Const(kv._2), "=" + kv._1)
+      test(Const(kv._2), kv._1)
+      test(Const(kv._2), "=" + kv._1)
     })
 
 /*
