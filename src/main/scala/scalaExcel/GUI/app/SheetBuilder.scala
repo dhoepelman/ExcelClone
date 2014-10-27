@@ -5,6 +5,7 @@ import scalafx.collections.ObservableBuffer
 import scalafx.scene.control.TableColumn._
 import scalafx.scene.control.cell.TextFieldTableCell
 import scalafx.beans.property.ObjectProperty
+import javafx.scene.{control => jfxsc}
 
 object SheetBuilder {
 
@@ -26,13 +27,18 @@ object SheetBuilder {
         }
         cellFactory = {
           column =>
-            new TextFieldTableCell[RowBuffer, SheetCell](new SheetCellStringConverter(column)) {
+            val inner = new jfxsc.cell.TextFieldTableCell[RowBuffer, SheetCell](new SheetCellStringConverter(column)){
+              override def startEdit(): Unit = {
+                super.startEdit()
+                //TODO coordinate formulaEditor with this field
+                val textField = new TextField(this.getChildren.get(0).asInstanceOf[jfxsc.TextField])
+                textField.text = getItem.expr
+              }
+            }
+            new TextFieldTableCell[RowBuffer, SheetCell](inner) {
               item.onChange {
                 (_, _, newCell) =>
                   style = if (newCell == null) "" else newCell.stylist(null)
-                //                  graphic = new TextField() {
-                //                    text = if (newCell == null) "" else newCell.objectString.value
-                //                  }
               }
             }
         }
@@ -40,7 +46,7 @@ object SheetBuilder {
       }
   }
 
-  private def getPlainRow(data: List[Any]): RowBuffer = {
+  private def getPlainRow(data: List[String]): RowBuffer = {
     if (data == List())
       new RowBuffer()
     else {
@@ -50,7 +56,7 @@ object SheetBuilder {
     }
   }
 
-  def getPlainData(data: List[List[Any]]): ObservableBuffer[RowBuffer] = {
+  def getPlainData(data: List[List[String]]): ObservableBuffer[RowBuffer] = {
     if (data == List())
       new ObservableBuffer[RowBuffer]()
     else
