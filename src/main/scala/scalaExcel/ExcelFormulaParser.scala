@@ -49,7 +49,7 @@ class ExcelFormulaParser extends RegexParsers {
   def AddExpression     : Parser[Expr]  = MultExpression ~ rep(AdditiveOp ~ MultExpression ) ^^ toBinOp
   def AdditiveOp        : Parser[Op]    = """\+|\-""".r ^^  {case "+" => Plus() case "-" => Minus()}
 
-  def MultExpression    : Parser[Expr]  = ExponentExpression ~ rep(AdditiveOp ~ ExponentExpression) ^^ toBinOp
+  def MultExpression    : Parser[Expr]  = ExponentExpression ~ rep(MultiplicativeOp ~ ExponentExpression) ^^ toBinOp
   def MultiplicativeOp  : Parser[Op]    = """\*|\/""".r ^^  {case "*" => Mul() case "/" => Div()}
 
   def ExponentExpression: Parser[Expr]  = PercentExpression ~ rep(ExponentOp ~ PercentExpression ) ^^ toBinOp
@@ -95,6 +95,6 @@ object TestParse {
   def main(args: Array[String]) {
     val parser = new ExcelFormulaParser()
 
-    println(parser.parseAll(parser.Expression, "1 + 5"))
+    println(parser.parseAll(parser.Expression, "1 * 5"))
   }
 }
