@@ -4,9 +4,10 @@ import java.net.URL
 import java.util
 import javafx.scene.{control => jfxsc}
 import javafx.scene.{layout => jfxsl}
-import javafx.{event => jfxe}
-import javafx.{fxml => jfxf}
+import javafx.{event => jfxe, fxml => jfxf}
 import scalafx.collections.ObservableBuffer
+import scalafx.event
+import scalafx.event.{EventHandlerDelegate, ActionEvent}
 import scalafx.scene.layout.AnchorPane
 import scalafx.scene.control.TableView
 import scalafx.beans.property.ObjectProperty
@@ -44,16 +45,27 @@ class MainController extends jfxf.Initializable {
     table.getSelectionModel.setCellSelectionEnabled(true)
 
     assert(formulaEditor != null)
-    val editor = formulaEditor
-    val b = new ObservableBuffer(table.getSelectionModel.getSelectedCells)
-    b.onChange(
+    val editor = new scalafx.scene.control.TextField(formulaEditor)
+
+    // Display selected cell onto the formula editor
+    val selectedCells = new ObservableBuffer(table.getSelectionModel.getSelectedCells)
+    selectedCells.onChange(
       (source, changes) => {
         source.map(x => (x.getRow, x.getColumn))                  // get coords
               .map(x => table.getItems.get(x._1).get(x._2).value) // get value
               .take(1)                                            // take only one
               .map(x => editor.setText(x.toString))               // print value
-
       }
     )
+
+    // Edits on the formula editor are reflected on the cells
+    formulaEditor.setOnAction(new javafx.event.EventHandler[javafx.event.ActionEvent] {
+      override def handle(e: javafx.event.ActionEvent): Unit = {
+        val editorValue = editor.getText();
+        selectedCells.map(x => (x.getRow, x.getColumn))
+                     .map(x => table.getItems.get(x._1).get(x._2).value = new SheetCell(editorValue, null, null))
+      }
+    })
   }
+
 }
