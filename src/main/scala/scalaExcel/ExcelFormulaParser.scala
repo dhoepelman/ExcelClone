@@ -27,7 +27,7 @@ class ExcelFormulaParser extends RegexParsers {
 
   // This string literal can be used inside formula's
   val striReg = """\"(\"\"|[^\"]*)\"""".r
-  val numbReg = """\d+(\.\d+)?([e][+-]\d{1,3})?""".r
+  val numbReg = """\d+(\.\d+)?([eE]([+-])?\d{1,3})?""".r
   val boolReg = """(?i)(true)|(false)""".r
 
   def StringLit     : Parser[Const] = striReg ^^ {s => Const(s.replace("\"\"", "\"").substring(1, s.length - 1))}

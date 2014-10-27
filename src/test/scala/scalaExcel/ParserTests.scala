@@ -45,12 +45,19 @@ class ParserTests {
     p test(UnOp(Minus(), Const(i)), "-" + i)
   })
 
-//  @Test def scientificNotationLiteral = List("1e3", "1.23E+10", "12e5", "-1e2", "1E+02", "8.7E-3", "-9.5E-2").foreach(i => {
-//    p test(Const(i.toDouble), i)
-//    p test(Const(i.toDouble), "=" + i)
-//  })
+  @Test def scientificNotationLiteral =
+    List("1e3", "1.23E+10", "12e5", "1E+02", "8.7E-3")
+      .foreach(i => {
+        p test(Const(i.toDouble), i)
+        p test(Const(i.toDouble), "=" + i)
+        p test(UnOp(Minus(), Const(i.toDouble)), "-" + i)
+      })
+
+  @Test def invalidScientificNotationLiteral =
+    List("1.0e0.3", "1e1234", "1e-1234")
+      .foreach (i => assertFail(i))
+
 /*
-  @Test def invalidScientificNotationLiteral = List("1.0e0.3").foreach( i => assertFail(i) )
 
   @Test def booleanLiteral = {
     assertEquals(Const(true), parsing("true"))
