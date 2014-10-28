@@ -154,6 +154,12 @@ class ParserTests {
   @Test def rowrange2 = test(RowRange(RowRef(5000, true), RowRef(10000, false)), "=$5000:10000")
   @Test def colrange1 = test(ColRange(ColRef("A", false), ColRef("AZ", false)), "=A:AZ")
 
+  @Test def call0 = test(Call("SUM", List()), "=SUM()")
+  @Test def call1 = test(Call("SUM", List(Const(1))), "=SUM(1)")
+  @Test def call2 = test(Call("SUM", List(Const(1), Const(2))), "=SUM(1,2)")
+  @Test def call3 = test(Call("SUM", List(BinOp(Plus(), Const(1),Const(1)), Const(2))), "=SUM(1 + 1,2)")
+  @Test def callref1 = test(Call("SUM", List(cell("A", false, 1, false))), "=SUM(A1)")
+
   // The following formula's are from http://homepages.mcs.vuw.ac.nz/~elvis/db/Excel.shtml
   @Test def example01 {p parsing("=1")}
   @Test def example02 {p parsing("=1+1")}
