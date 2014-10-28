@@ -125,6 +125,19 @@ class ParserTests {
   // Counterintuïtive, extra test
   @Test def precedenceExpUMin = test("=-2^2", "=(-2)^2")
   @Test def precedenceComplex1 = test("= \"a\" & \"b\" <= -20%^3", "= (\"a\" & \"b\") <= (((-20)%)^3)")
+
+  @Test def singleref =
+    Map (
+      "=B5" -> ("B", false, 5, false),
+      "=C$270" -> ("C", false, 270, true),
+      "=$FF100" -> ("FF", true, 100, false),
+      "=AZ$99" -> ("AZ", false, 99, true)
+    ) foreach (kv => {
+      test(Cell(ColRef(kv._2._1, kv._2._2), RowRef(kv._2._3, kv._2._4)), kv._1)
+  })
+  // -A1 is valid -(A1)
+  // A-5 is valid in Excel, and is for us if we enable defined names. E.g. A-5 => (A) - 5
+  @Test def invalidrefs = List("=$-A5", "=$+A5", "=$B+5", "=$B-5") foreach assertFail
 /*
   // The following formula's are from http://homepages.mcs.vuw.ac.nz/~elvis/db/Excel.shtml
   def example01 {parsing("=1")}
