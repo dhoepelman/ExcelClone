@@ -150,7 +150,7 @@ class ParserTests {
       test(kv._2, kv._1)
     })
 
-  @Test def rowrange1 = test(RowRange(RowRef(1, false), RowRef(5, false)), "=5:5")
+  @Test def rowrange1 = test(RowRange(RowRef(1, false), RowRef(5, false)), "=1:5")
   @Test def rowrange2 = test(RowRange(RowRef(5000, true), RowRef(10000, false)), "=$5000:10000")
   @Test def colrange1 = test(ColRange(ColRef("A", false), ColRef("AZ", false)), "=A:AZ")
 

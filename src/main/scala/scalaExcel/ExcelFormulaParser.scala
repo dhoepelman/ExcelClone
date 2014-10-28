@@ -44,10 +44,10 @@ class ExcelFormulaParser extends RegexParsers {
   //****************************
 
   def BasicExpression   : Parser[Expr]  =
-    Primitive       |
+    ExpressionGroup |
     FunctionCall    |
     Reference       |
-    ExpressionGroup
+    Primitive
 
   def ExpressionGroup   : Parser[Expr]  = "(" ~> Expression <~ ")"
   def Primitive         : Parser[Expr]  =
@@ -58,7 +58,7 @@ class ExcelFormulaParser extends RegexParsers {
 
   def Formula           : Parser[Expr]  = "=" ~> Expression
 
-  def FunctionName      : Parser[String]= """[a-z][\w]*""".r
+  def FunctionName      : Parser[String]= """(?i)[a-z][\w]*""".r
   def FunctionCall      : Parser[Expr]  = FunctionName ~ "(" ~ Arguments ~ ")" ^^ {
     case f ~ _ ~ args ~ _ => Call(f, args)
   }
@@ -136,7 +136,7 @@ class ExcelFormulaParser extends RegexParsers {
     Columnrange |
     Cellref
 
-  def SheetName     : Parser[String] = """[_a-z][\w]*!""".r
+  def SheetName     : Parser[String] = """(?i)[_a-z][\w]*!""".r
   //def DefinedName   : Parser[String]     = """[_a-z][\w]*""".r
 
   def Cellref       : Parser[Cell] = Colref ~ Rowref ^^ {
@@ -170,6 +170,6 @@ class ExcelFormulaParser extends RegexParsers {
 object TestParse {
   def main(args: Array[String]) {
     val parser = new ExcelFormulaParser()
-    println(parser.parseAll(parser.Start, "=1 * 5"))
+    println(parser.parseAll(parser.FunctionCall, "SUM()"))
   }
 }
