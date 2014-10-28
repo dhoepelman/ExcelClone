@@ -166,10 +166,3 @@ class Parser extends RegexParsers {
   }
 
 }
-// TODO: Remove this once the parser is debugged and unit tests are in place
-object TestParse {
-  def main(args: Array[String]) {
-    val parser = new Parser()
-    println(parser.parseAll(parser.FunctionCall, "SUM()"))
-  }
-}
