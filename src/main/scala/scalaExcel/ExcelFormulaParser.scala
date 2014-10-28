@@ -131,10 +131,10 @@ class ExcelFormulaParser extends RegexParsers {
     case Some(s) ~ e => SheetReference(s, e)
   }
   def GridReference =
-    Cellref     |
     Cellrange   |
     Rowrange    |
-    Columnrange
+    Columnrange |
+    Cellref
 
   def SheetName     : Parser[String] = """[_a-z][\w]*!""".r
   //def DefinedName   : Parser[String]     = """[_a-z][\w]*""".r

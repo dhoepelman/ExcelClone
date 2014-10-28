@@ -145,7 +145,7 @@ class ParserTests {
   @Test def rangerefs =
     Map (
       "=A1:B2" -> range("A", false, 1, false, "B", false, 2, false),
-      "=F$6:$C10" -> range("F", false, 6, false, "C", false, 10, false)
+      "=F$6:$C10" -> range("F", false, 6, true, "C", true, 10, false)
     ) foreach (kv => {
       test(kv._2, kv._1)
     })
