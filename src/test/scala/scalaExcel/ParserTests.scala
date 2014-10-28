@@ -126,18 +126,33 @@ class ParserTests {
   @Test def precedenceExpUMin = test("=-2^2", "=(-2)^2")
   @Test def precedenceComplex1 = test("= \"a\" & \"b\" <= -20%^3", "= (\"a\" & \"b\") <= (((-20)%)^3)")
 
+  private def cell(C : String, CA : Boolean, R : Int, RA : Boolean) = Cell(ColRef(C, CA), RowRef(R, RA))
   @Test def singleref =
     Map (
-      "=B5" -> ("B", false, 5, false),
-      "=C$270" -> ("C", false, 270, true),
-      "=$FF100" -> ("FF", true, 100, false),
-      "=AZ$99" -> ("AZ", false, 99, true)
+      "=B5" -> cell("B", false, 5, false),
+      "=C$270" -> cell("C", false, 270, true),
+      "=$FF100" -> cell("FF", true, 100, false),
+      "=AZ$99" -> cell("AZ", false, 99, true)
     ) foreach (kv => {
-      test(Cell(ColRef(kv._2._1, kv._2._2), RowRef(kv._2._3, kv._2._4)), kv._1)
+      test(kv._2, kv._1)
+      test(kv._2, kv._1.toLowerCase)
   })
   // -A1 is valid -(A1)
   // A-5 is valid in Excel, and is for us if we enable defined names. E.g. A-5 => (A) - 5
   @Test def invalidrefs = List("=$-A5", "=$+A5", "=$B+5", "=$B-5") foreach assertFail
+
+  private def range(C1 : String, C1A : Boolean, R1 : Int, R1A : Boolean, C2 : String, C2A : Boolean, R2 : Int, R2A : Boolean) = Range(cell(C1, C1A, R1, R1A), cell(C2, C2A, R2, R2A))
+  @Test def rangerefs =
+    Map (
+      "=A1:B2" -> range("A", false, 1, false, "B", false, 2, false),
+      "=F$6:$C10" -> range("F", false, 6, false, "C", false, 10, false)
+    ) foreach (kv => {
+      test(kv._2, kv._1)
+    })
+
+  private def rowrange1 = test(RowRange(RowRef(1, false), RowRef(5, false)), "=5:5")
+  private def rowrange2 = test(RowRange(RowRef(5000, true), RowRef(10000, false)), "=$5000:10000")
+  private def colrange1 = test(ColRange(ColRef("A", true), ColRef("AZ", false)), "=A:AZ")
 /*
   // The following formula's are from http://homepages.mcs.vuw.ac.nz/~elvis/db/Excel.shtml
   def example01 {parsing("=1")}

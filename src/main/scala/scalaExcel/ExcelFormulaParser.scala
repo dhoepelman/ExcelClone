@@ -146,7 +146,7 @@ class ExcelFormulaParser extends RegexParsers {
     case a ~ r => RowRef(r.toInt, a.isDefined)
   }
   def Colref        : Parser[ColRef] = "$".? ~ """(?i)[a-z]+""".r ^^ {
-    case a ~ c => ColRef(c, a.isDefined)
+    case a ~ c => ColRef(c.toUpperCase, a.isDefined)
   }
 
   // TODO: Remove the ":" from the transformation by using <~ or ~>
