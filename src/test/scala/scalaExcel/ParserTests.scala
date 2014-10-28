@@ -167,19 +167,24 @@ class ParserTests {
   @Test def example04 {p parsing("=$B$2")}
   @Test def example05 {p parsing("=SUM(B5:B15)")}
   @Test def example06 {p parsing("=SUM(B5:B15,D5:D15)")}
-  @Test def example07 {p parsing("=SUM(B5:B15 A7:D7)")}
+  // Enable if we allow complex ranges
+  //@Test def example07 {p parsing("=SUM(B5:B15 A7:D7)")}
   @Test def example08 {p parsing("=SUM(sheet1!$A$1:$B$2)")}
-  @Test def example09 {p parsing("=[data.xls]sheet1!$A$1")}
-  @Test def example10 {p parsing("=SUM((A:A 1:1))")}
-  @Test def example11 {p parsing("=SUM((A:A A1:B1))")}
-  @Test def example12 {p parsing("=SUM((D9:D11,(E9:E11,F9:F11)))")}
+  // Enable if we allow cross-file references
+  //@Test def example09 {p parsing("=[data.xls]sheet1!$A$1")}
+  // Enable if we allow complex ranges
+  //@Test def example10 {p parsing("=SUM((A:A 1:1))")}
+  //@Test def example11 {p parsing("=SUM((A:A A1:B1))")}
+  //@Test def example12 {p parsing("=SUM((D9:D11,(E9:E11,F9:F11)))")}
   @Test def example13 {p parsing("=IF(P5=1.0,\"NA\",IF(P5=2.0,\"A\",IF(P5=3.0,\"B\",IF(P5=4.0,\"C\",IF(P5=5.0,\"D\",IF(P5=6.0,\"E\",IF(P5=7.0,\"F\",IF(P5=8.0,\"G\"))))))))")}
   // Enable if Array formula's are implemented
   //@Test def example14 {parsing("={SUM(B2:D2*B3:D3)}")}
 
   // The following formula's are from http://ewbi.blogs.com/develops/2004/12/excel_formula_p.html
-  @Test @Ignore def complex1 {p parsing("=IF(\"a\"={\"a\",\"b\";\"c\",#N/A;-1,TRUE}, \"yes\", \"no\") &   \"  more \"\"test\"\" text\"")}
-  @Test @Ignore def complex2 {p parsing("=IF(R13C3>DATE(2002,1,6),0,IF(ISERROR(R[41]C[2]),0,IF(R13C3>=R[41]C[2],0, IF(AND(R[23]C[11]>=55,R[24]C[11]>=20),R53C3,0))))")}
-  @Test @Ignore def complex3 {p parsing("=IF(R[39]C[11]>65,R[25]C[42],ROUND((R[11]C[11]*IF(OR(AND(R[39]C[11]>=55, R[40]C[11]>=20),AND(R[40]C[11]>=20,R11C3=\"YES\")),R[44]C[11],R[43]C[11]))+(R[14]C[11] *IF(OR(AND(R[39]C[11]>=55,R[40]C[11]>=20),AND(R[40]C[11]>=20,R11C3=\"YES\")), R[45]C[11],R[43]C[11])),0))")}
+  // Enable if Array formula's are implemented
+  //@Test def complex1 {p parsing("=IF(\"a\"={\"a\",\"b\";\"c\",#N/A;-1,TRUE}, \"yes\", \"no\") &   \"  more \"\"test\"\" text\"")}
+  // Enable if structured references are implemented
+  //@Test def complex2 {p parsing("=IF(R13C3>DATE(2002,1,6),0,IF(ISERROR(R[41]C[2]),0,IF(R13C3>=R[41]C[2],0, IF(AND(R[23]C[11]>=55,R[24]C[11]>=20),R53C3,0))))")}
+  //@Test def complex3 {p parsing("=IF(R[39]C[11]>65,R[25]C[42],ROUND((R[11]C[11]*IF(OR(AND(R[39]C[11]>=55, R[40]C[11]>=20),AND(R[40]C[11]>=20,R11C3=\"YES\")),R[44]C[11],R[43]C[11]))+(R[14]C[11] *IF(OR(AND(R[39]C[11]>=55,R[40]C[11]>=20),AND(R[40]C[11]>=20,R11C3=\"YES\")), R[45]C[11],R[43]C[11])),0))")}
 
 }
