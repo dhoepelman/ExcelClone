@@ -10,15 +10,15 @@ class ParserTests {
   val p = new ExcelFormulaParser()
 
   def test(s1 : String, s2: String) = {
-    val parsed1 = p parsing(s1)
-    val parsed2 = p parsing(s2)
+    val parsed1 = p parsing s1
+    val parsed2 = p parsing s2
     if(parsed1 != parsed2) {
       throw new AssertionError(s"Expected <$s1> and <$s2> to have identical AST, was <$parsed1> and <$parsed2>")
     }
   }
 
   def test(e: Expr, s: String) = {
-    val parsed = p parsing(s)
+    val parsed = p parsing s
     if (parsed != e){
       throw new AssertionError(s"Expected <$s> to parse to <$e>, but was <$parsed>")
     }
@@ -26,7 +26,7 @@ class ParserTests {
 
   private def assertFail(input: String) = {
     try {
-      p parsing(input)
+      p parsing input
       fail(s"Parsed <$input> which should've failed")
     } catch {
       case e : IllegalArgumentException =>
