@@ -1,11 +1,11 @@
-package scalaExcel
+package scalaExcel.formula
 
 import scala.util.parsing.combinator._
 
 /**
  * Excel LL grammar based on https://github.com/whatupdave/CilociFormulaEngine/blob/master/Excel.grammar
  */
-class ExcelFormulaParser extends RegexParsers {
+class Parser extends RegexParsers {
   /**
    * Start parser, this will parse any valid cell value
    **/
@@ -169,7 +169,7 @@ class ExcelFormulaParser extends RegexParsers {
 // TODO: Remove this once the parser is debugged and unit tests are in place
 object TestParse {
   def main(args: Array[String]) {
-    val parser = new ExcelFormulaParser()
+    val parser = new Parser()
     println(parser.parseAll(parser.FunctionCall, "SUM()"))
   }
 }

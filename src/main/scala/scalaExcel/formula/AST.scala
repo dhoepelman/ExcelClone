@@ -1,4 +1,4 @@
-package scalaExcel
+package scalaExcel.formula
 
 sealed abstract class Expr
 

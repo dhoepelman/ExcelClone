@@ -1,13 +1,11 @@
+package scalaExcel.formula
 
-package scalaExcel
-
-import junit.framework.TestCase
-import org.junit._
 import org.junit.Assert._
+import org.junit._
 
 class ParserTests {
 
-  val p = new ExcelFormulaParser()
+  val p = new Parser()
 
   def test(s1 : String, s2: String) = {
     val parsed1 = p parsing s1
