@@ -150,30 +150,30 @@ class ParserTests {
       test(kv._2, kv._1)
     })
 
-  private def rowrange1 = test(RowRange(RowRef(1, false), RowRef(5, false)), "=5:5")
-  private def rowrange2 = test(RowRange(RowRef(5000, true), RowRef(10000, false)), "=$5000:10000")
-  private def colrange1 = test(ColRange(ColRef("A", true), ColRef("AZ", false)), "=A:AZ")
-/*
+  @Test def rowrange1 = test(RowRange(RowRef(1, false), RowRef(5, false)), "=5:5")
+  @Test def rowrange2 = test(RowRange(RowRef(5000, true), RowRef(10000, false)), "=$5000:10000")
+  @Test def colrange1 = test(ColRange(ColRef("A", false), ColRef("AZ", false)), "=A:AZ")
+
   // The following formula's are from http://homepages.mcs.vuw.ac.nz/~elvis/db/Excel.shtml
-  def example01 {parsing("=1")}
-  def example02 {parsing("=1+1")}
-  def example03 {parsing("=A1")}
-  def example04 {parsing("=$B$2")}
-  def example05 {parsing("=SUM(B5:B15)")}
-  def example06 {parsing("=SUM(B5:B15,D5:D15)")}
-  def example07 {parsing("=SUM(B5:B15 A7:D7)")}
-  def example08 {parsing("=SUM(sheet1!$A$1:$B$2)")}
-  def example09 {parsing("=[data.xls]sheet1!$A$1")}
-  def example10 {parsing("=SUM((A:A 1:1))")}
-  def example11 {parsing("=SUM((A:A A1:B1))")}
-  def example12 {parsing("=SUM((D9:D11,(E9:E11,F9:F11)))")}
-  def example13 {parsing("=IF(P5=1.0,\"NA\",IF(P5=2.0,\"A\",IF(P5=3.0,\"B\",IF(P5=4.0,\"C\",IF(P5=5.0,\"D\",IF(P5=6.0,\"E\",IF(P5=7.0,\"F\",IF(P5=8.0,\"G\"))))))))")}
+  @Test def example01 {p parsing("=1")}
+  @Test def example02 {p parsing("=1+1")}
+  @Test def example03 {p parsing("=A1")}
+  @Test def example04 {p parsing("=$B$2")}
+  @Test def example05 {p parsing("=SUM(B5:B15)")}
+  @Test def example06 {p parsing("=SUM(B5:B15,D5:D15)")}
+  @Test def example07 {p parsing("=SUM(B5:B15 A7:D7)")}
+  @Test def example08 {p parsing("=SUM(sheet1!$A$1:$B$2)")}
+  @Test def example09 {p parsing("=[data.xls]sheet1!$A$1")}
+  @Test def example10 {p parsing("=SUM((A:A 1:1))")}
+  @Test def example11 {p parsing("=SUM((A:A A1:B1))")}
+  @Test def example12 {p parsing("=SUM((D9:D11,(E9:E11,F9:F11)))")}
+  @Test def example13 {p parsing("=IF(P5=1.0,\"NA\",IF(P5=2.0,\"A\",IF(P5=3.0,\"B\",IF(P5=4.0,\"C\",IF(P5=5.0,\"D\",IF(P5=6.0,\"E\",IF(P5=7.0,\"F\",IF(P5=8.0,\"G\"))))))))")}
   // Enable if Array formula's are implemented
   //@Test def example14 {parsing("={SUM(B2:D2*B3:D3)}")}
 
   // The following formula's are from http://ewbi.blogs.com/develops/2004/12/excel_formula_p.html
-  def complex1 {parsing("=IF(\"a\"={\"a\",\"b\";\"c\",#N/A;-1,TRUE}, \"yes\", \"no\") &   \"  more \"\"test\"\" text\"")}
-  def complex2 {parsing("=IF(R13C3>DATE(2002,1,6),0,IF(ISERROR(R[41]C[2]),0,IF(R13C3>=R[41]C[2],0, IF(AND(R[23]C[11]>=55,R[24]C[11]>=20),R53C3,0))))")}
-  def complex3 {parsing("=IF(R[39]C[11]>65,R[25]C[42],ROUND((R[11]C[11]*IF(OR(AND(R[39]C[11]>=55, R[40]C[11]>=20),AND(R[40]C[11]>=20,R11C3=\"YES\")),R[44]C[11],R[43]C[11]))+(R[14]C[11] *IF(OR(AND(R[39]C[11]>=55,R[40]C[11]>=20),AND(R[40]C[11]>=20,R11C3=\"YES\")), R[45]C[11],R[43]C[11])),0))")}
-*/
+  @Test @Ignore def complex1 {p parsing("=IF(\"a\"={\"a\",\"b\";\"c\",#N/A;-1,TRUE}, \"yes\", \"no\") &   \"  more \"\"test\"\" text\"")}
+  @Test @Ignore def complex2 {p parsing("=IF(R13C3>DATE(2002,1,6),0,IF(ISERROR(R[41]C[2]),0,IF(R13C3>=R[41]C[2],0, IF(AND(R[23]C[11]>=55,R[24]C[11]>=20),R53C3,0))))")}
+  @Test @Ignore def complex3 {p parsing("=IF(R[39]C[11]>65,R[25]C[42],ROUND((R[11]C[11]*IF(OR(AND(R[39]C[11]>=55, R[40]C[11]>=20),AND(R[40]C[11]>=20,R11C3=\"YES\")),R[44]C[11],R[43]C[11]))+(R[14]C[11] *IF(OR(AND(R[39]C[11]>=55,R[40]C[11]>=20),AND(R[40]C[11]>=20,R11C3=\"YES\")), R[45]C[11],R[43]C[11])),0))")}
+
 }
