@@ -102,6 +102,29 @@ class ParserTests {
   @Test def mul3 = test(BinOp(Plus(), Const(1), BinOp(Mul(),Const(2), Const(3))), "=1 + 2 * 3")
   @Test def mul4 = test(BinOp(Plus(), Const(1), BinOp(Div(),Const(2), Const(3))), "=1 + 2 / 3")
   @Test def mul5 = test(BinOp(Div(), BinOp(Mul(),Const(1), Const(2)), Const(3)), "=1 * 2 / 3")
+
+  @Test def comp =
+    Map (
+      "=" -> Eq(),
+      ">=" -> GTE(),
+      "<=" -> LTE(),
+      "<>" -> NEq(),
+      ">" -> GT(),
+      "<" -> LT()
+    ) foreach (kv => {
+      test(BinOp(kv._2, Const(1), Const(1)), "=1 " + kv._1 + " 1")
+      test(BinOp(kv._2, Const(1), BinOp(Plus(), Const(1), Const(1))), "=1 " + kv._1 + " 1 + 1")
+  })
+
+  @Test def precedenceCompConcat = test("=1 = 1 & 1", "=1 = (1 & 1)")
+  @Test def precedenceConcatAdd = test("=1 & 1 + 1", "=1 & (1+1)")
+  @Test def precedenceAddMul = test("=1 + 5 * 3", "=1 + (5 * 3)")
+  @Test def precedenceMulExp = test("=1 * 2^3", "=1 * (2^3)")
+  @Test def precedenceExpPerc = test("=2%^3","=(2%)^3")
+  @Test def precedencePercUMin = test("=-2%","=(-2)%")
+  // Counterintuïtive, extra test
+  @Test def precedenceExpUMin = test("=-2^2", "=(-2)^2")
+  @Test def precedenceComplex1 = test("= \"a\" & \"b\" <= -20%^3", "= (\"a\" & \"b\") <= (((-20)%)^3)")
 /*
   // The following formula's are from http://homepages.mcs.vuw.ac.nz/~elvis/db/Excel.shtml
   def example01 {parsing("=1")}
