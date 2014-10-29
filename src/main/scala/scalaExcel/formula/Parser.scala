@@ -12,6 +12,7 @@ class Parser extends RegexParsers {
   def Start : Parser[Expr] =
     Formula   |
     Primitive |
+    Str       |
     Empty
 
   //****************************
@@ -23,11 +24,11 @@ class Parser extends RegexParsers {
   def Empty         : Parser[Expr]    = ""             ^^^ Const("")
 
   // This string literal can be used inside formula's
-  val striReg = """\"(\"\"|[^\"]*)\"""".r
+  val striReg = """\"(\"\"|[^\"])*\"""".r
   val numbReg = """\d+(\.\d+)?([eE]([+-])?\d{1,3})?""".r
   val boolReg = """(?i)(true)|(false)""".r
 
-  def StringLit     : Parser[Const]  = striReg ^^ {s => Const(s.replace("\"\"", "\"").substring(1, s.length - 1))}
+  def StringLit     : Parser[Const]  = striReg ^^ {s => Const(s.substring(1, s.length - 1).replace("\"\"", "\""))}
   def PosNum        : Parser[Double] = numbReg ^^ {s => s.toDouble}
   def Num           : Parser[Const]  = AdditiveOp.? ~ PosNum ^^ {
     case None ~ e => Const(e)

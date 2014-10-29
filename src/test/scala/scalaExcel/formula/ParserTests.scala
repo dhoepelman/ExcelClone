@@ -83,6 +83,16 @@ class ParserTests {
       test(Const(kv._2), "=" + kv._1)
     })
 
+  @Test def strings = Map(
+    "" -> "",
+    "hello" -> "hello",
+    "foo bar" -> "foo bar",
+    "foo\"bar" -> "foo\"bar",
+    "=\"hello\"" -> "hello",
+    "=\"hello\"\"foo\"" -> "hello\"foo"
+  ) foreach (kv => test(Const(kv._2), kv._1))
+
+  @Test def stringStartingWithEquals = assertFail("=hello")
 
   @Test def concat1 = test(BinOp(Concat(), Const(1), Const(1)), "=1 & 1")
   @Test def concat2 = test(BinOp(Concat(), Const("a"), Const("b")), "=\"a\" & \"b\"")
@@ -187,5 +197,7 @@ class ParserTests {
   // Enable if structured references are implemented
   //@Test def complex2 {p parsing("=IF(R13C3>DATE(2002,1,6),0,IF(ISERROR(R[41]C[2]),0,IF(R13C3>=R[41]C[2],0, IF(AND(R[23]C[11]>=55,R[24]C[11]>=20),R53C3,0))))")}
   //@Test def complex3 {p parsing("=IF(R[39]C[11]>65,R[25]C[42],ROUND((R[11]C[11]*IF(OR(AND(R[39]C[11]>=55, R[40]C[11]>=20),AND(R[40]C[11]>=20,R11C3=\"YES\")),R[44]C[11],R[43]C[11]))+(R[14]C[11] *IF(OR(AND(R[39]C[11]>=55,R[40]C[11]>=20),AND(R[40]C[11]>=20,R11C3=\"YES\")), R[45]C[11],R[43]C[11])),0))")}
+
+  @Test def whitespaces {p parsing("=\n 1 \t + \t\t\n 4")}
 
 }
