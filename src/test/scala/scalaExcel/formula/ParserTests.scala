@@ -134,6 +134,10 @@ class ParserTests {
   @Test def precedenceExpUMin = test("=-2^2", "=(-2)^2")
   @Test def precedenceComplex1 = test("= \"a\" & \"b\" <= -20%^3", "= (\"a\" & \"b\") <= (((-20)%)^3)")
 
+  @Test def failMultiPercent = assertFail("=1%%")
+  @Test def percentExpr = test(UnOp(Percent(), UnOp(Plus(), Const(1))), "=+1%")
+  @Test def unExpr = test(UnOp(Plus(), Const(1)), "=+1")
+
   private def cell(c: String, ca: Boolean, r: Int, ra: Boolean) = Cell(ColRef(c, ca), RowRef(r, ra))
   @Test def singleref =
     Map (

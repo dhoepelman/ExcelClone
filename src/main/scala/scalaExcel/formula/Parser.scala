@@ -95,7 +95,7 @@ class Parser extends RegexParsers {
   def ExponentExpression: Parser[Expr]  = PercentExpression ~ rep(ExponentOp ~ PercentExpression ) ^^ toBinOp
   def ExponentOp        : Parser[Op]    = "^" ^^^ Expon()
 
-  def PercentExpression : Parser[Expr]  = UnaryExpression ~ rep("%") ^^ {
+  def PercentExpression : Parser[Expr]  = UnaryExpression ~ "%".? ^^ {
     case e ~ rest => rest.foldLeft(e) {
       case (l, _) => UnOp(Percent(), l)
     }
