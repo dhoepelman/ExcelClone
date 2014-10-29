@@ -130,33 +130,34 @@ class Parser extends RegexParsers {
     case None ~ e => e
     case Some(s) ~ e => SheetReference(s, e)
   }
-  def GridReference =
-    Cellrange   |
-    Rowrange    |
-    Columnrange |
-    Cellref
 
-  def SheetName     : Parser[String] = """(?i)[_a-z][\w]*!""".r
+  def GridReference =
+    CellRange_   |
+    RowRange_    |
+    ColumnRange_ |
+    CellRef_
+
+  def SheetName    : Parser[String] = """(?i)[_a-z][\w]*!""".r
   //def DefinedName   : Parser[String]     = """[_a-z][\w]*""".r
 
-  def Cellref       : Parser[Cell] = Colref ~ Rowref ^^ {
+  def CellRef_     : Parser[Cell] = ColRef_ ~ RowRef_ ^^ {
     case r ~ c => Cell(r, c)
   }
-  def Rowref        : Parser[RowRef] = "$".? ~ """\d+""".r ^^ {
+  def RowRef_      : Parser[RowRef] = "$".? ~ """\d+""".r ^^ {
     case a ~ r => RowRef(r.toInt, a.isDefined)
   }
-  def Colref        : Parser[ColRef] = "$".? ~ """(?i)[a-z]+""".r ^^ {
+  def ColRef_      : Parser[ColRef] = "$".? ~ """(?i)[a-z]+""".r ^^ {
     case a ~ c => ColRef(c.toUpperCase, a.isDefined)
   }
 
   // TODO: Remove the ":" from the transformation by using <~ or ~>
-  def Cellrange     : Parser[Range]   = Cellref ~ ":" ~ Cellref ^^ {
+  def CellRange_   : Parser[Range]   = CellRef_ ~ ":" ~ CellRef_ ^^ {
     case start ~ _ ~ end => Range(start, end)
   }
-  def Rowrange      : Parser[RowRange]= Rowref ~ ":" ~ Rowref ^^ {
+  def RowRange_    : Parser[RowRange]= RowRef_ ~ ":" ~ RowRef_ ^^ {
     case r1 ~ _ ~ r2 => RowRange(r1, r2)
   }
-  def Columnrange   : Parser[ColRange]= Colref ~ ":" ~ Colref ^^ {
+  def ColumnRange_ : Parser[ColRange]= ColRef_ ~ ":" ~ ColRef_ ^^ {
     case c1 ~ char ~ c2 => ColRange(c1, c2)
   }
 
