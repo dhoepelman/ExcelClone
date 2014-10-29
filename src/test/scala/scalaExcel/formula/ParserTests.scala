@@ -94,6 +94,10 @@ class ParserTests {
 
   @Test def stringStartingWithEquals = assertFail("=hello")
 
+  @Test def exprGroup = test(Const(1), "=(1)")
+  @Test def exprGroupPerc = test(UnOp(Percent(), Const(1)), "=(1%)")
+  @Test def exprGroupPerc2 = test(UnOp(Percent(), Const(1)), "=(1)%")
+
   @Test def concat1 = test(BinOp(Concat(), Const(1), Const(1)), "=1 & 1")
   @Test def concat2 = test(BinOp(Concat(), Const("a"), Const("b")), "=\"a\" & \"b\"")
   @Test def concat3 = test(BinOp(Concat(), BinOp(Concat(), Const("a"), Const("b")), Const("c")), "=\"a\" & \"b\" & \"c\"")
@@ -124,19 +128,32 @@ class ParserTests {
       test(BinOp(kv._2, Const(1), BinOp(Plus(), Const(1), Const(1))), "=1 " + kv._1 + " 1 + 1")
   })
 
+  @Test def call0 = test(Call("SUM", List()), "=SUM()")
+  @Test def call1 = test(Call("SUM", List(Const(1))), "=SUM(1)")
+  @Test def call2 = test(Call("SUM", List(Const(1), Const(2))), "=SUM(1,2)")
+  @Test def callMultiArg = test(Call("SUM", List(Const(1), Const(2), Const(3))), "=SUM(1,2,3)")
+  @Test def callExpArg = test(Call("SUM", List(BinOp(Plus(), Const(1),Const(1)), Const(2))), "=SUM(1 + 1,2)")
+  @Test def callInCall = test(Call("SUM", List(Call("SUM", List(Const(1))), Const(2))), "=SUM(SUM(1),2)")
+
+  @Test def precedenceCall = test("=SUM(1) + 3", "=(SUM(1)) + 3")
+
   @Test def precedenceCompConcat = test("=1 = 1 & 1", "=1 = (1 & 1)")
+  @Test def precedenceCompConcat2 = test("=1 & 1 = 1", "=(1 & 1) = 1")
   @Test def precedenceConcatAdd = test("=1 & 1 + 1", "=1 & (1+1)")
+  @Test def precedenceConcatAdd2 = test("=1 + 1 & 1", "=(1 + 1)&1")
   @Test def precedenceAddMul = test("=1 + 5 * 3", "=1 + (5 * 3)")
+  @Test def precedenceAddMul2 = test("=1 * 5 + 3", "=(1 * 5) + 3")
   @Test def precedenceMulExp = test("=1 * 2^3", "=1 * (2^3)")
+  @Test def precedenceMulExp2 = test("=1^2 * 3", "=(1^2)*3")
   @Test def precedenceExpPerc = test("=2%^3","=(2%)^3")
   @Test def precedencePercUMin = test("=-2%","=(-2)%")
-  // Counterintuïtive, extra test
-  @Test def precedenceExpUMin = test("=-2^2", "=(-2)^2")
-  @Test def precedenceComplex1 = test("= \"a\" & \"b\" <= -20%^3", "= (\"a\" & \"b\") <= (((-20)%)^3)")
-
   @Test def failMultiPercent = assertFail("=1%%")
   @Test def percentExpr = test(UnOp(Percent(), UnOp(Plus(), Const(1))), "=+1%")
   @Test def unExpr = test(UnOp(Plus(), Const(1)), "=+1")
+  // extra complex tests
+  @Test def precedenceExpUMin = test("=-2^2", "=(-2)^2")
+  @Test def precedenceComplex1 = test("= \"a\" & \"b\" <= -20%^3", "= (\"a\" & \"b\") <= (((-20)%)^3)")
+
 
   private def cell(c: String, ca: Boolean, r: Int, ra: Boolean) = Cell(ColRef(c, ca), RowRef(r, ra))
   @Test def singleref =
@@ -169,10 +186,6 @@ class ParserTests {
   @Test def rowrange2 = test(RowRange(RowRef(5000, true), RowRef(10000, false)), "=$5000:10000")
   @Test def colrange1 = test(ColRange(ColRef("A", false), ColRef("AZ", false)), "=A:AZ")
 
-  @Test def call0 = test(Call("SUM", List()), "=SUM()")
-  @Test def call1 = test(Call("SUM", List(Const(1))), "=SUM(1)")
-  @Test def call2 = test(Call("SUM", List(Const(1), Const(2))), "=SUM(1,2)")
-  @Test def call3 = test(Call("SUM", List(BinOp(Plus(), Const(1),Const(1)), Const(2))), "=SUM(1 + 1,2)")
   @Test def callref1 = test(Call("SUM", List(cell("A", false, 1, false))), "=SUM(A1)")
 
   // The following formula's are from http://homepages.mcs.vuw.ac.nz/~elvis/db/Excel.shtml

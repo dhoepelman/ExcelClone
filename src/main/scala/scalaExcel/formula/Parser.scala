@@ -44,14 +44,15 @@ class Parser extends RegexParsers {
   //* Expressions and formulas *
   //****************************
 
-  def BasicExpression   : Parser[Expr]  =
+  def BasicExpression : Parser[Expr]  =
     ExpressionGroup |
     FunctionCall    |
     Reference       |
     Primitive
 
   def ExpressionGroup   : Parser[Expr]  = "(" ~> Expression <~ ")"
-  def Primitive         : Parser[Expr]  =
+
+  def Primitive : Parser[Expr]  =
     Num              |
     Bool             |
     StringLit        |
@@ -59,13 +60,13 @@ class Parser extends RegexParsers {
 
   def Formula           : Parser[Expr]  = "=" ~> Expression
 
+  def Expression        : Parser[Expr]  = LogicalExpression
+
   def FunctionName      : Parser[String]= """(?i)[a-z][\w]*""".r
   def FunctionCall      : Parser[Expr]  = FunctionName ~ "(" ~ Arguments ~ ")" ^^ {
     case f ~ _ ~ args ~ _ => Call(f, args)
   }
   def Arguments         : Parser[List[Expr]] = repsep(Expression, ",")
-
-  def Expression        : Parser[Expr]  = LogicalExpression
 
   def LogicalExpression : Parser[Expr]  = ConcatExpression ~ rep(LogicalOp ~ ConcatExpression) ^^ toBinOp
   def LogicalOp         : Parser[Op]    =  """=|(>=)|(<=)|(<>)|>|<""".r ^^ {
@@ -113,13 +114,13 @@ class Parser extends RegexParsers {
     }
   }
 
-  def ErrorExpression   : Parser[Err]= """(?i)(#DIV/0!)|(#N/A)|(#NAME?)|(#NUM!)|(#NULL!)|(#REF!)|(#VALUE!)""".r^^ {
-    case "#DIV/0!"  => Err(DivBy0())
-    case "#N/A"     => Err(NA())
-    case "#NAME?" => Err(InvalidName())
-    case "#NUM!" => Err(NotNumeric())
-    case "#NULL!" => Err(Null())
-    case "#REF!" => Err(InvalidRef())
+  def ErrorExpression : Parser[Err]= """(?i)(#DIV/0!)|(#N/A)|(#NAME?)|(#NUM!)|(#NULL!)|(#REF!)|(#VALUE!)""".r^^ {
+    case "#DIV/0!" => Err(DivBy0())
+    case "#N/A"    => Err(NA())
+    case "#NAME?"  => Err(InvalidName())
+    case "#NUM!"   => Err(NotNumeric())
+    case "#NULL!"  => Err(Null())
+    case "#REF!"   => Err(InvalidRef())
     case "#VALUE!" => Err(InvalidValue())
   }
 
@@ -127,7 +128,7 @@ class Parser extends RegexParsers {
   //* References               *
   //****************************
 
-  def Reference     : Parser[Expr] = SheetName.? ~ GridReference ^^ {
+  def Reference : Parser[Expr] = SheetName.? ~ GridReference ^^ {
     case None ~ e => e
     case Some(s) ~ e => SheetReference(s, e)
   }
