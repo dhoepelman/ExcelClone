@@ -14,6 +14,14 @@ object Evaluator {
     }
   }
 
+  def reduce2(f: ((Value, Value) => Value), lhs: Expr, rhs: Expr) = eval(lhs) match {
+    case e: VErr => e
+    case l => eval(rhs) match {
+      case e: VErr => e
+      case r => f(l, r)
+    }
+  }
+
   def applyToDouble(f: (Double => Double))(v: Value) = v match {
     case e: VErr => e
     case VDouble(d) => VDouble(f(d))
@@ -23,6 +31,12 @@ object Evaluator {
   def applyToDoubles(f: (Double, Double) => Double)(lhs: Value, rhs: Value) = (lhs, rhs) match {
     case (VDouble(l), VDouble(r)) => VDouble(f(l, r))
     case es => pickError(es, NotNumeric())
+  }
+
+  def pickError(t: (Value, Value), default: ErrType) = t match {
+    case (e: VErr, _) => e
+    case (_, e: VErr) => e
+    case _ => VErr(default)
   }
 
   def eval(e: Expr): Value = {
@@ -43,7 +57,7 @@ object Evaluator {
   }
 
   def evalBinOp(op: Op, lhs: Expr, rhs: Expr) = op match {
-    case Eq()     => VBool(false)
+    case Eq()     => reduce2(boolEq, lhs, rhs)
     case GT()     => VBool(false)
     case LT()     => VBool(false)
     case GTE()    => VBool(false)
@@ -78,10 +92,11 @@ object Evaluator {
     if (d.ceil == d) d.toInt.toString
     else d.toString
 
-  def pickError(t: (Value, Value), default: ErrType) = t match {
-    case (e: VErr, _) => e
-    case (_, e: VErr) => e
-    case _ => VErr(default)
+  def boolEq(lhs: Value, rhs: Value) = (lhs, rhs) match {
+    case (VBool(l), VBool(r))     => VBool(l == r)
+    case (VDouble(l), VDouble(r)) => VBool(l == r)
+    case (VString(l), VString(r)) => VBool(l == r)
+    case _ => VBool(false)
   }
 
 }
