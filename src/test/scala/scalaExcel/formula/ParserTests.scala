@@ -147,7 +147,8 @@ class ParserTests {
   @Test def precedenceMulExp2 = test("=1^2 * 3", "=(1^2)*3")
   @Test def precedenceExpPerc = test("=2%^3","=(2%)^3")
   @Test def precedencePercUMin = test("=-2%","=(-2)%")
-  @Test def failMultiPercent = assertFail("=1%%")
+  @Test def twoPercent = test(UnOp(Percent(), UnOp(Percent(), Const(1))), "=1%%")
+  @Test def multiPercent = test("=((1%)%)%", "=1%%%")
   @Test def percentExpr = test(UnOp(Percent(), UnOp(Plus(), Const(1))), "=+1%")
   @Test def unExpr = test(UnOp(Plus(), Const(1)), "=+1")
   // extra complex tests
