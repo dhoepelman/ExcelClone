@@ -26,10 +26,16 @@ class EvaluatorTests(name: String, e: Value, v: Any) {
 
 object EvaluatorTests {
 
-  @Parameters(name= "{0}")
+  def lst(name: String, l: List[Tuple2[Any, String]]) =
+    l map (x => (name, tv(x._1), x._2))
+
+  def lstErr(name: String, l: List[Tuple2[ErrType, String]]) =
+    l map (x => (name, VErr(x._1), x._2))
+
+  @Parameters(name= "{0}: <{1}>=<{2}>")
   def data: ju.Collection[Array[jl.Object]] = {
     val list = new ju.ArrayList[Array[jl.Object]]()
-    List[Tuple3[String, Value, AnyRef]](
+    (List[Tuple3[String, Value, AnyRef]](
       ("evalConst", VDouble(10), Const(tv(10))),
       ("evalConst", VBool(true), Const(tv(true))),
       ("evalConst", VBool(false), Const(tv(false))),
@@ -47,28 +53,59 @@ object EvaluatorTests {
       ("binOpConcat =",     VString("abc"), "=\"ab\"& \"c\""),
       ("binOpConcatDouble", VString("ab1"), "=\"ab\"& 1"),
       ("binOpConcatTrue",   VString("abTRUE"), "=\"ab\"& TRUE"),
-      ("binOpConcatFalse",  VString("abFALSE"), "=\"ab\"& FALSE"),
-
-      ("binOp eq bool", VBool(true), "=TRUE = TRUE"),
-      ("binOp eq bool", VBool(false), "=FALSE = TRUE"),
-      ("binOp eq bool", VBool(false), "=TRUE = FALSE"),
-      ("binOp eq bool", VBool(true), "=FALSE = FALSE"),
-      ("binOp eq double", VBool(true), "=1 = 1"),
-      ("binOp eq double", VBool(false), "=1 = 2"),
-      ("binOp eq string", VBool(true), "=\"a\" = \"a\""),
-      ("binOp eq string", VBool(false), "=\"a\" = \"b\""),
-      ("binOp eq combo", VBool(false), "=\"a\" = 1"),
-      ("binOp eq combo", VBool(false), "=\"a\" = TRUE"),
-      ("binOp eq combo", VBool(false), "=1 = TRUE"),
-
-      ("unOpPlus",          VDouble(5), "=+5"),
-      ("unOpPlusString",    VErr(NotNumeric()), "=+\"A\""),
-      ("unOpMin",           VDouble(-5), "=-5"),
-      ("unOpMinString",     VErr(NotNumeric()), "=-\"A\""),
-      ("unOpPercent",       VDouble(0.25), "=25%"),
-      ("unOpPercent2",      VDouble(0.0025), "=25%%"),
-      ("unOpPercentString", VErr(NotNumeric()), "=\"A\"%")
-
+      ("binOpConcatFalse",  VString("abFALSE"), "=\"ab\"& FALSE")
+    ) ++ lst("binop =", List(
+        (true, "=TRUE = TRUE"),
+        (false, "=FALSE = TRUE"),
+        (false, "=TRUE = FALSE"),
+        (true, "=FALSE = FALSE"),
+        (true, "=1 = 1"),
+        (false, "=1 = 2"),
+        (true, "=\"a\" = \"a\""),
+        (false, "=\"a\" = \"b\""),
+        (false, "=\"a\" = 1"),
+        (false, "=\"a\" = TRUE"),
+        (false, "=1 = TRUE")
+      )) ++ lst("binop >", List(
+        (true,  "=2>1"),
+        (false, "=1>1"),
+        (false, "=1>2"),
+        (false, "=1>\"5\""),
+        (false, "=1>TRUE"),
+        (false, "=1>FALSE"),
+        (false, "=FALSE>FALSE"),
+        (false, "=TRUE>TRUE"),
+        (true,  "=TRUE>FALSE"),
+        (false, "=FALSE>TRUE"),
+        (true,  "=\"b\">\"a\""),
+        (false, "=\"a\">\"b\""),
+        (false, "=\"b\">\"b\"")
+      )) ++ lst("binop <", List(
+        (false,  "=2<1"),
+        (false, "=1<1"),
+        (true,  "=1<2"),
+        (false, "=1<\"5\""),
+        (true,  "=1<TRUE"),
+        (true,  "=1<FALSE"),
+        (false, "=TRUE<1"),
+        (false, "=FALSE<1"),
+        (false, "=FALSE<FALSE"),
+        (false, "=TRUE<TRUE"),
+        (false, "=TRUE<FALSE"),
+        (true,  "=FALSE<TRUE"),
+        (false, "=\"b\"<\"a\""),
+        (true,  "=\"a\"<\"b\""),
+        (false, "=\"b\"<\"b\"")
+      )) ++ lst("unop", List(
+        (5, "=+5"),
+        (-5, "=-5"),
+        (0.25, "=25%"),
+        (0.0025, "=25%%")
+      )) ++ lstErr("unop", List(
+        (NotNumeric(), "=+\"A\""),
+        (NotNumeric(), "=-\"A\""),
+        (NotNumeric(), "=\"A\"%")
+      ))
     ) foreach (x => list.add(Array(x._1, x._2, x._3)))
     return list
   }

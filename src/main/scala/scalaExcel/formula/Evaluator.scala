@@ -58,8 +58,8 @@ object Evaluator {
 
   def evalBinOp(op: Op, lhs: Expr, rhs: Expr) = op match {
     case Eq()     => reduce2(boolEq, lhs, rhs)
-    case GT()     => VBool(false)
-    case LT()     => VBool(false)
+    case GT()     => reduce2(boolGt, lhs, rhs)
+    case LT()     => reduce2(boolLt, lhs, rhs)
     case GTE()    => VBool(false)
     case LTE()    => VBool(false)
     case NEq()    => VBool(false)
@@ -96,6 +96,21 @@ object Evaluator {
     case (VBool(l), VBool(r))     => VBool(l == r)
     case (VDouble(l), VDouble(r)) => VBool(l == r)
     case (VString(l), VString(r)) => VBool(l == r)
+    case _ => VBool(false)
+  }
+
+  def boolGt(lhs: Value, rhs: Value) = (lhs, rhs) match {
+    case (VBool(l), VBool(r))     => VBool(l > r)
+    case (VDouble(l), VDouble(r)) => VBool(l > r)
+    case (VString(l), VString(r)) => VBool(l > r)
+    case _ => VBool(false)
+  }
+
+  def boolLt(lhs: Value, rhs: Value) = (lhs, rhs) match {
+    case (VBool(l), VBool(r))     => VBool(l < r)
+    case (VDouble(l), VDouble(r)) => VBool(l < r)
+    case (VString(l), VString(r)) => VBool(l < r)
+    case (VDouble(l), VBool(r))   => VBool(true)
     case _ => VBool(false)
   }
 
