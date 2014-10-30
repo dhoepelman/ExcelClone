@@ -3,11 +3,13 @@ package scalaExcel.formula
 import org.junit.Assert._
 import org.junit._
 
+import scalaExcel.formula.Values.{toVal => tv}
+
 class ParserTests {
 
   val p = new Parser()
 
-  def test(s1 : String, s2: String) = {
+  def test(s1: String, s2: String) = {
     val parsed1 = p parsing s1
     val parsed2 = p parsing s2
     if(parsed1 != parsed2) {
@@ -27,43 +29,43 @@ class ParserTests {
       p parsing input
       fail(s"Parsed <$input> which should've failed")
     } catch {
-      case e : IllegalArgumentException =>
-      case e : Exception => fail(e.getMessage)
+      case e: IllegalArgumentException =>
+      case e: Exception => fail(e.getMessage)
     }
   }
 
   val consts = List(100, 2.5, -10, "foo", true)
 
-  @Test def doubleConstEquaility = assertTrue(Const(10.0) equals Const(10))
+  @Test def doubleConstEquaility = assertTrue(Const(tv(10.0)) equals Const(tv(10)))
 
   @Test def constEquality = consts foreach
-    (i => assertTrue(Const(i) equals Const(i)))
+    (i => assertTrue(Const(tv(i)) equals Const(tv(i))))
 
   @Test def constAssertEquals = consts foreach
-    (i => assertEquals(Const(i), Const(i)))
+    (i => assertEquals(Const(tv(i)), Const(tv(i))))
 
-  @Test def t1 = test(Const(100), "100")
+  @Test def t1 = test(Const(tv(100)), "100")
 
   @Test def intLiteral = List(0, 1, 1025) foreach (i => {
-    test(Const(i.toDouble), i.toDouble.toString)
-    test(Const(i.toDouble), "=" + i.toString)
+    test(Const(tv(i.toDouble)), i.toDouble.toString)
+    test(Const(tv(i.toDouble)), "=" + i.toString)
   })
 
   @Test def floatLiteral = List(500.0, 1.0, 0.0, 1.0, 1.0 / 3.0, Math.PI).foreach(i => {
-    test(Const(i), i.toString) ;
-    test(Const(i), "=" + i.toString)
+    test(Const(tv(i)), i.toString) ;
+    test(Const(tv(i)), "=" + i.toString)
   })
 
   @Test def unOpNegate = List(0, 1, 1024, 1.0 / 3.0) foreach (i => {
-    test(Const(-i), "-" + i)
+    test(Const(tv(-i)), "-" + i)
   })
 
   @Test def scientificNotationLiteral =
     List("1e3", "1.23E+10", "12e5", "1E+02", "8.7E-3")
       .foreach(i => {
-        test(Const(i.toDouble), i)
-        test(Const(i.toDouble), "=" + i)
-        test(Const(-i.toDouble), "-" + i)
+        test(Const(tv(i.toDouble)), i)
+        test(Const(tv(i.toDouble)), "=" + i)
+        test(Const(tv(-i.toDouble)), "-" + i)
       })
 
   @Test def invalidScientificNotationLiteral =
@@ -79,8 +81,8 @@ class ParserTests {
       "FALSE" -> false,
       "FaLSE" -> false
     ) foreach (kv => {
-      test(Const(kv._2), kv._1)
-      test(Const(kv._2), "=" + kv._1)
+      test(Const(tv(kv._2)), kv._1)
+      test(Const(tv(kv._2)), "=" + kv._1)
     })
 
   @Test def strings = Map(
@@ -90,30 +92,30 @@ class ParserTests {
     "foo\"bar" -> "foo\"bar",
     "=\"hello\"" -> "hello",
     "=\"hello\"\"foo\"" -> "hello\"foo"
-  ) foreach (kv => test(Const(kv._2), kv._1))
+  ) foreach (kv => test(Const(tv(kv._2)), kv._1))
 
   @Test def stringStartingWithEquals = assertFail("=hello")
 
-  @Test def exprGroup = test(Const(1), "=(1)")
-  @Test def exprGroupPerc = test(UnOp(Percent(), Const(1)), "=(1%)")
-  @Test def exprGroupPerc2 = test(UnOp(Percent(), Const(1)), "=(1)%")
+  @Test def exprGroup = test(Const(tv(1)), "=(1)")
+  @Test def exprGroupPerc = test(UnOp(Percent(), Const(tv(1))), "=(1%)")
+  @Test def exprGroupPerc2 = test(UnOp(Percent(), Const(tv(1))), "=(1)%")
 
-  @Test def concat1 = test(BinOp(Concat(), Const(1), Const(1)), "=1 & 1")
-  @Test def concat2 = test(BinOp(Concat(), Const("a"), Const("b")), "=\"a\" & \"b\"")
-  @Test def concat3 = test(BinOp(Concat(), BinOp(Concat(), Const("a"), Const("b")), Const("c")), "=\"a\" & \"b\" & \"c\"")
-  @Test def concat4 = test(BinOp(Concat(), BinOp(Concat(),BinOp(Concat(),Const("a"),Const("b")),Const("c")),Const("d")), "=\"a\" & \"b\" & \"c\" & \"d\"")
-  @Test def concat5 = test(BinOp(Concat(), Const("a"), BinOp(Concat(), Const("b"), BinOp(Concat(), Const("c"), Const("d")))), "=\"a\" & (\"b\" & (\"c\" & \"d\"))")
+  @Test def concat1 = test(BinOp(Concat(), Const(tv(1)), Const(tv(1))), "=1 & 1")
+  @Test def concat2 = test(BinOp(Concat(), Const(tv("a")), Const(tv("b"))), "=\"a\" & \"b\"")
+  @Test def concat3 = test(BinOp(Concat(), BinOp(Concat(), Const(tv("a")), Const(tv("b"))), Const(tv("c"))), "=\"a\" & \"b\" & \"c\"")
+  @Test def concat4 = test(BinOp(Concat(), BinOp(Concat(),BinOp(Concat(),Const(tv("a")),Const(tv("b"))),Const(tv("c"))),Const(tv("d"))), "=\"a\" & \"b\" & \"c\" & \"d\"")
+  @Test def concat5 = test(BinOp(Concat(), Const(tv("a")), BinOp(Concat(), Const(tv("b")), BinOp(Concat(), Const(tv("c")), Const(tv("d"))))), "=\"a\" & (\"b\" & (\"c\" & \"d\"))")
   @Test def concat6 = test("=\"a\" & \"b\" & \"c\" & \"d\"", "=(((\"a\" & \"b\") & \"c\") & \"d\")")
 
-  @Test def add1 = test(BinOp(Plus(), Const(1), Const(1)), "=1+1")
-  @Test def add2 = test(BinOp(Minus(), Const(1), Const(1)), "=1-1")
-  @Test def add3 = test(BinOp(Plus(), BinOp(Minus(),Const(1), Const(2)), Const(3)), "=1 - 2 + 3")
+  @Test def add1 = test(BinOp(Plus(), Const(tv(1)), Const(tv(1))), "=1+1")
+  @Test def add2 = test(BinOp(Minus(), Const(tv(1)), Const(tv(1))), "=1-1")
+  @Test def add3 = test(BinOp(Plus(), BinOp(Minus(),Const(tv(1)), Const(tv(2))), Const(tv(3))), "=1 - 2 + 3")
 
-  @Test def mul1 = test(BinOp(Mul(), Const(1), Const(1)), "=1*1")
-  @Test def mul2 = test(BinOp(Div(), Const(1), Const(1)), "=1/1")
-  @Test def mul3 = test(BinOp(Plus(), Const(1), BinOp(Mul(),Const(2), Const(3))), "=1 + 2 * 3")
-  @Test def mul4 = test(BinOp(Plus(), Const(1), BinOp(Div(),Const(2), Const(3))), "=1 + 2 / 3")
-  @Test def mul5 = test(BinOp(Div(), BinOp(Mul(),Const(1), Const(2)), Const(3)), "=1 * 2 / 3")
+  @Test def mul1 = test(BinOp(Mul(), Const(tv(1)), Const(tv(1))), "=1*1")
+  @Test def mul2 = test(BinOp(Div(), Const(tv(1)), Const(tv(1))), "=1/1")
+  @Test def mul3 = test(BinOp(Plus(), Const(tv(1)), BinOp(Mul(),Const(tv(2)), Const(tv(3)))), "=1 + 2 * 3")
+  @Test def mul4 = test(BinOp(Plus(), Const(tv(1)), BinOp(Div(),Const(tv(2)), Const(tv(3)))), "=1 + 2 / 3")
+  @Test def mul5 = test(BinOp(Div(), BinOp(Mul(),Const(tv(1)), Const(tv(2))), Const(tv(3))), "=1 * 2 / 3")
 
   @Test def comp =
     Map (
@@ -124,16 +126,16 @@ class ParserTests {
       ">" -> GT(),
       "<" -> LT()
     ) foreach (kv => {
-      test(BinOp(kv._2, Const(1), Const(1)), "=1 " + kv._1 + " 1")
-      test(BinOp(kv._2, Const(1), BinOp(Plus(), Const(1), Const(1))), "=1 " + kv._1 + " 1 + 1")
+      test(BinOp(kv._2, Const(tv(1)), Const(tv(1))), "=1 " + kv._1 + " 1")
+      test(BinOp(kv._2, Const(tv(1)), BinOp(Plus(), Const(tv(1)), Const(tv(1)))), "=1 " + kv._1 + " 1 + 1")
   })
 
   @Test def call0 = test(Call("SUM", List()), "=SUM()")
-  @Test def call1 = test(Call("SUM", List(Const(1))), "=SUM(1)")
-  @Test def call2 = test(Call("SUM", List(Const(1), Const(2))), "=SUM(1,2)")
-  @Test def callMultiArg = test(Call("SUM", List(Const(1), Const(2), Const(3))), "=SUM(1,2,3)")
-  @Test def callExpArg = test(Call("SUM", List(BinOp(Plus(), Const(1),Const(1)), Const(2))), "=SUM(1 + 1,2)")
-  @Test def callInCall = test(Call("SUM", List(Call("SUM", List(Const(1))), Const(2))), "=SUM(SUM(1),2)")
+  @Test def call1 = test(Call("SUM", List(Const(tv(1)))), "=SUM(1)")
+  @Test def call2 = test(Call("SUM", List(Const(tv(1)), Const(tv(2)))), "=SUM(1,2)")
+  @Test def callMultiArg = test(Call("SUM", List(Const(tv(1)), Const(tv(2)), Const(tv(3)))), "=SUM(1,2,3)")
+  @Test def callExpArg = test(Call("SUM", List(BinOp(Plus(), Const(tv(1)),Const(tv(1))), Const(tv(2)))), "=SUM(1 + 1,2)")
+  @Test def callInCall = test(Call("SUM", List(Call("SUM", List(Const(tv(1)))), Const(tv(2)))), "=SUM(SUM(1),2)")
 
   @Test def precedenceCall = test("=SUM(1) + 3", "=(SUM(1)) + 3")
 
@@ -147,10 +149,11 @@ class ParserTests {
   @Test def precedenceMulExp2 = test("=1^2 * 3", "=(1^2)*3")
   @Test def precedenceExpPerc = test("=2%^3","=(2%)^3")
   @Test def precedencePercUMin = test("=-2%","=(-2)%")
-  @Test def twoPercent = test(UnOp(Percent(), UnOp(Percent(), Const(1))), "=1%%")
-  @Test def multiPercent = test("=((1%)%)%", "=1%%%")
-  @Test def percentExpr = test(UnOp(Percent(), UnOp(Plus(), Const(1))), "=+1%")
-  @Test def unExpr = test(UnOp(Plus(), Const(1)), "=+1")
+
+  @Test def twoPercent = test(UnOp(Percent(), UnOp(Percent(), Const(tv(1)))), "=1%%")
+  @Test def percentExpr = test(UnOp(Percent(), UnOp(Plus(), Const(tv(1)))), "=+1%")
+  @Test def unExpr = test(UnOp(Plus(), Const(tv(1))), "=+1")
+
   // extra complex tests
   @Test def precedenceExpUMin = test("=-2^2", "=(-2)^2")
   @Test def precedenceComplex1 = test("= \"a\" & \"b\" <= -20%^3", "= (\"a\" & \"b\") <= (((-20)%)^3)")
