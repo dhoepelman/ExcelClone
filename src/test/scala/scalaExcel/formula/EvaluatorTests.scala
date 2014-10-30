@@ -1,40 +1,60 @@
 
 package scalaExcel.formula
 
+import java.{util => ju, lang => jl}
 import org.junit.Assert._
-import org.junit._
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
+import org.junit.runners.Parameterized.Parameters
 
 import scalaExcel.formula.Evaluator.eval
 import scalaExcel.formula.Values.{toVal => tv}
 
-class EvaluatorTests {
+@RunWith(value = classOf[Parameterized])
+class EvaluatorTests(name: String, e: Value, v: Any) {
 
   val p = new Parser()
 
-  def teval(e: Value, v: Expr) = assertEquals(e, eval(v))
-  def teval(e: Value, v: String) = assertEquals(e, eval(p parsing v))
+  @Test def x = v match {
+    case v: Expr   => assertEquals(e, eval(v))
+    case v: String => assertEquals(e, eval(p parsing v))
+    case _ => throw new IllegalArgumentException("Can't test something else")
+  }
 
-  @Test def evalConst = teval(VDouble(10), Const(tv(10)))
+}
 
-  @Test def binOpSum = teval(VDouble(5), "=2 + 3")
-  @Test def binOpSumString = teval(VErr(NotNumeric()), "=2 + \"a\"")
-  @Test def binOpSumBool = teval(VErr(NotNumeric()), "=2 + TRUE")
+object EvaluatorTests {
 
-  @Test def binOpMul = teval(VDouble(6), "=2 * 3")
-  @Test def binOpMulString = teval(VErr(NotNumeric()), "=2 * \"a\"")
-  @Test def binOpMulBool = teval(VErr(NotNumeric()), "=2 * TRUE")
+  @Parameters(name= "{0}")
+  def data: ju.Collection[Array[jl.Object]] = {
+    val list = new ju.ArrayList[Array[jl.Object]]()
+    List[Tuple3[String, Value, AnyRef]](
+      ("evalConst", VDouble(10), Const(tv(10))),
 
-  @Test def binOpConcat = teval(VString("abc"), "=\"ab\"& \"c\"")
-  @Test def binOpConcatDouble = teval(VString("ab1"), "=\"ab\"& 1")
-  @Test def binOpConcatTrue = teval(VString("abTRUE"), "=\"ab\"& TRUE")
-  @Test def binOpConcatFalse = teval(VString("abFALSE"), "=\"ab\"& FALSE")
+      ("binOpSum",       VDouble(5), "=2 + 3"),
+      ("binOpSumString", VErr(NotNumeric()), "=2 + \"a\""),
+      ("binOpSumBool",   VErr(NotNumeric()), "=2 + TRUE"),
 
-  @Test def unOpPlus          = teval(VDouble(5), "=+5")
-  @Test def unOpPlusString    = teval(VErr(NotNumeric()), "=+\"A\"")
-  @Test def unOpMin           = teval(VDouble(-5), "=-5")
-  @Test def unOpMinString     = teval(VErr(NotNumeric()), "=-\"A\"")
-  @Test def unOpPercent       = teval(VDouble(0.25), "=25%")
-  @Test def unOpPercentString = teval(VErr(NotNumeric()), "=\"A\"%")
+      ("binOpMul",       VDouble(6), "=2 * 3"),
+      ("binOpMulString", VErr(NotNumeric()), "=2 * \"a\""),
+      ("binOpMulBool",   VErr(NotNumeric()), "=2 * TRUE"),
+
+      ("binOpConcat =",     VString("abc"), "=\"ab\"& \"c\""),
+      ("binOpConcatDouble", VString("ab1"), "=\"ab\"& 1"),
+      ("binOpConcatTrue",   VString("abTRUE"), "=\"ab\"& TRUE"),
+      ("binOpConcatFalse",  VString("abFALSE"), "=\"ab\"& FALSE"),
+
+      ("unOpPlus",          VDouble(5), "=+5"),
+      ("unOpPlusString",    VErr(NotNumeric()), "=+\"A\""),
+      ("unOpMin",           VDouble(-5), "=-5"),
+      ("unOpMinString",     VErr(NotNumeric()), "=-\"A\""),
+      ("unOpPercent",       VDouble(0.25), "=25%"),
+      ("unOpPercentString", VErr(NotNumeric()), "=\"A\"%")
+    ) foreach (x => list.add(Array(x._1, x._2, x._3)))
+    return list
+  }
+
 
 }
 
