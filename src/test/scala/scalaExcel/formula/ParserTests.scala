@@ -151,6 +151,7 @@ class ParserTests {
   @Test def precedencePercUMin = test("=-2%","=(-2)%")
 
   @Test def twoPercent = test(UnOp(Percent(), UnOp(Percent(), Const(tv(1)))), "=1%%")
+  @Test def multiPercent = test("=((1%)%)%", "=1%%%")
   @Test def percentExpr = test(UnOp(Percent(), UnOp(Plus(), Const(tv(1)))), "=+1%")
   @Test def unExpr = test(UnOp(Plus(), Const(tv(1))), "=+1")
 
