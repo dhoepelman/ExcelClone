@@ -60,9 +60,9 @@ object Evaluator {
     case Eq()     => reduce2(boolEq, lhs, rhs)
     case GT()     => reduce2(boolGt, lhs, rhs)
     case LT()     => reduce2(boolLt, lhs, rhs)
-    case GTE()    => VBool(false)
-    case LTE()    => VBool(false)
-    case NEq()    => VBool(false)
+    case GTE()    => reduce2(boolGte, lhs, rhs)
+    case LTE()    => reduce2(boolLte, lhs, rhs)
+    case NEq()    => reduce2(boolNe, lhs, rhs)
     case Concat() => reduce(concat, VString(""), List(lhs, rhs))
     case Plus()   => reduce(applyToDoubles(_ + _), VDouble(0), List(lhs, rhs))
     case Minus()  => VDouble(0)
@@ -112,6 +112,20 @@ object Evaluator {
     case (VString(l), VString(r)) => VBool(l < r)
     case (VDouble(l), VBool(r))   => VBool(true)
     case _ => VBool(false)
+  }
+
+  def boolGte(lhs: Value, rhs: Value) = boolGt(lhs, rhs) match {
+    case VBool(true) => VBool(true)
+    case _ => boolEq(lhs, rhs)
+  }
+
+  def boolLte(lhs: Value, rhs: Value) = boolLt(lhs, rhs) match {
+    case VBool(true) => VBool(true)
+    case _ => boolEq(lhs, rhs)
+  }
+
+  def boolNe(lhs: Value, rhs: Value) = boolEq(lhs, rhs) match {
+    case VBool(b) => VBool(!b)
   }
 
 }

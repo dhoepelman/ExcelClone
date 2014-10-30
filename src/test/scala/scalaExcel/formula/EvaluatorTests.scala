@@ -32,7 +32,7 @@ object EvaluatorTests {
   def lstErr(name: String, l: List[Tuple2[ErrType, String]]) =
     l map (x => (name, VErr(x._1), x._2))
 
-  @Parameters(name= "{0}: <{1}>=<{2}>")
+  @Parameters(name= "{0}: <{1}> : <{2}>")
   def data: ju.Collection[Array[jl.Object]] = {
     val list = new ju.ArrayList[Array[jl.Object]]()
     (List[Tuple3[String, Value, AnyRef]](
@@ -66,6 +66,18 @@ object EvaluatorTests {
         (false, "=\"a\" = 1"),
         (false, "=\"a\" = TRUE"),
         (false, "=1 = TRUE")
+      )) ++ lst("binop <>", List(
+        (!true, "=TRUE <> TRUE"),
+        (!false, "=FALSE <> TRUE"),
+        (!false, "=TRUE <> FALSE"),
+        (!true, "=FALSE <> FALSE"),
+        (!true, "=1 <> 1"),
+        (!false, "=1 <> 2"),
+        (!true, "=\"a\" <> \"a\""),
+        (!false, "=\"a\" <> \"b\""),
+        (!false, "=\"a\" <> 1"),
+        (!false, "=\"a\" <> TRUE"),
+        (!false, "=1 <> TRUE")
       )) ++ lst("binop >", List(
         (true,  "=2>1"),
         (false, "=1>1"),
@@ -96,6 +108,36 @@ object EvaluatorTests {
         (false, "=\"b\"<\"a\""),
         (true,  "=\"a\"<\"b\""),
         (false, "=\"b\"<\"b\"")
+      )) ++ lst("binop >=", List(
+        (true,  "=2>=1"),
+        (true,  "=1>=1"),
+        (false, "=1>=2"),
+        (false, "=1>=\"5\""),
+        (false, "=1>=TRUE"),
+        (false, "=1>=FALSE"),
+        (true,  "=FALSE>=FALSE"),
+        (true,  "=TRUE>=TRUE"),
+        (true,  "=TRUE>=FALSE"),
+        (false, "=FALSE>=TRUE"),
+        (true,  "=\"b\">=\"a\""),
+        (false, "=\"a\">=\"b\""),
+        (true,  "=\"b\">=\"b\"")
+      )) ++ lst("binop <=", List(
+        (false, "=2<=1"),
+        (true,  "=1<=1"),
+        (true,  "=1<=2"),
+        (false, "=1<=\"5\""),
+        (true,  "=1<=TRUE"),
+        (true,  "=1<=FALSE"),
+        (false, "=TRUE<=1"),
+        (false, "=FALSE<=1"),
+        (true,  "=FALSE<=FALSE"),
+        (true,  "=TRUE<=TRUE"),
+        (false, "=TRUE<=FALSE"),
+        (true,  "=FALSE<=TRUE"),
+        (false, "=\"b\"<=\"a\""),
+        (true,  "=\"a\"<=\"b\""),
+        (true,  "=\"b\"<=\"b\"")
       )) ++ lst("unop", List(
         (5, "=+5"),
         (-5, "=-5"),
