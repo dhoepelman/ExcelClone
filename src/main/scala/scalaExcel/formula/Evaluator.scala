@@ -24,10 +24,11 @@ object Evaluator {
     }
   }
 
-  def applyToDouble(f: (Double => Double))(v: Value) = v match {
-    case e: VErr => e
+  def applyToDouble(f: (Double => Double))(v: Value): Value = v match {
     case VDouble(d) => VDouble(f(d))
-    case _ => VErr(NotNumeric())
+    case VBool(b)   => applyToDouble(f)(boolToVDouble(b))
+    case e: VErr    => e
+    case _          => VErr(InvalidValue())
   }
 
   def applyToDoubles(f: (Double, Double) => Double)(lhs: Value, rhs: Value): Value = (lhs, rhs) match {
@@ -42,6 +43,8 @@ object Evaluator {
     case (_, e: VErr) => e
     case _ => VErr(default)
   }
+
+  def boolToVDouble(b: Boolean) = VDouble(if (b) 1.0 else 0.0)
 
   def eval(e: Expr): Value = {
     e match {
@@ -70,10 +73,15 @@ object Evaluator {
   }
 
   def evalUnOp(op: Op, v: Expr) = op match {
-    case Plus()    => applyToDouble(+ _)(eval(v))
+    case Plus()    => unOpPlus(eval(v))
     case Minus()   => applyToDouble(- _)(eval(v))
     case Percent() => applyToDouble(_ / 100)(eval(v))
     case _ => VErr(NA())
+  }
+
+  def unOpPlus(v: Value) = v match {
+    case VString(v) => VString(v)
+    case v          => applyToDouble(+ _)(v)
   }
 
   def concat(lhs: Value, rhs: Value): Value = (lhs, rhs) match {
@@ -142,8 +150,6 @@ object Evaluator {
     }
     case _ => VErr(InvalidValue())
   }
-
-  def boolToVDouble(b: Boolean) = VDouble(if (b) 1.0 else 0.0)
 
   def evalCall(f: String, args: List[Expr]) = {
     f match {

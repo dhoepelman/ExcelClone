@@ -205,13 +205,17 @@ object EvaluatorTests {
         (InvalidValue(), "=2^\"a\"")
       )) ++ lst("unop", List(
         (5, "=+5"),
+        ("A", "=+\"A\""),
         (-5, "=-5"),
+        (-1, "=-TRUE"),
+        (0, "=-FALSE"),
         (0.25, "=25%"),
-        (0.0025, "=25%%")
+        (0.0025, "=25%%"),
+        (0.01, "=TRUE%"),
+        (0, "=FALSE%")
       )) ++ lstErr("unop", List(
-        (NotNumeric(), "=+\"A\""),
-        (NotNumeric(), "=-\"A\""),
-        (NotNumeric(), "=\"A\"%")
+        (InvalidValue(), "=-\"A\""),
+        (InvalidValue(), "=\"A\"%")
       )) ++ lstErr("call unknown function", List(
         (InvalidName(), "=FOOBAR11()")
       )) ++ lst("call SUM", List(
