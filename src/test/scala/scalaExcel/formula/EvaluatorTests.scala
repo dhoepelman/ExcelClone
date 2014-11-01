@@ -8,6 +8,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
 
+import math.pow
 import scalaExcel.formula.Evaluator.eval
 import scalaExcel.formula.Values.{toVal => tv}
 
@@ -173,6 +174,27 @@ object EvaluatorTests {
         (DivBy0(), "=1 / 0"),
         (NotNumeric(), "=2 / \"a\""),
         (NotNumeric(), "=2 / TRUE")
+      )) ++ lst("binop / divide", (
+        (Map[Double,List[Double]](
+          -2.0 -> List(-2, -1, 0, 1, 2),
+          -0.5 -> List(-2, -1, 0, 1, 2),
+          0.0  -> List(0.5, 1, 2),
+          0.5  -> List(-2, -1, -0.5, 0, 1, 0.5, 2),
+          1.0  -> List(-2, -1, -0.5, 0, 1, 0.5, 2),
+          2.0  -> List(-2, -1, -0.5, 0, 1, 0.5, 2)
+        ) map (x => {
+            (x._1, x._2 map (y => (pow(x._1, y), "=" + x._1 + s"^$y")))
+          })
+        ).values.toList.flatten
+      )) ++ lstErr("binop ^ errors", List(
+        (DivBy0(), "=0^-2"),
+        (DivBy0(), "=0^-1"),
+        (DivBy0(), "=0^-0.5"),
+        (NotNumeric(), "=0^0"),
+        (NotNumeric(), "=-2^-0.5"),
+        (NotNumeric(), "=-0.5^-0.5"),
+        (NotNumeric(), "=-2^0.5"),
+        (NotNumeric(), "=-0.5^0.5")
       )) ++ lst("unop", List(
         (5, "=+5"),
         (-5, "=-5"),
