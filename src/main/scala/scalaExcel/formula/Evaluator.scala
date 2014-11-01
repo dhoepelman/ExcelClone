@@ -103,6 +103,7 @@ object Evaluator {
     case (VBool(l), VBool(r))     => VBool(l > r)
     case (VDouble(l), VDouble(r)) => VBool(l > r)
     case (VString(l), VString(r)) => VBool(l > r)
+    case (VBool(l), VDouble(r))   => VBool(true)
     case _ => VBool(false)
   }
 

@@ -65,7 +65,8 @@ object EvaluatorTests {
         (false, "=\"a\" = \"b\""),
         (false, "=\"a\" = 1"),
         (false, "=\"a\" = TRUE"),
-        (false, "=1 = TRUE")
+        (false, "=1 = TRUE"),
+        (false, "=TRUE = 1")
       )) ++ lst("binop <>", List(
         (!true, "=TRUE <> TRUE"),
         (!false, "=FALSE <> TRUE"),
@@ -77,7 +78,8 @@ object EvaluatorTests {
         (!false, "=\"a\" <> \"b\""),
         (!false, "=\"a\" <> 1"),
         (!false, "=\"a\" <> TRUE"),
-        (!false, "=1 <> TRUE")
+        (!false, "=1 <> TRUE"),
+        (true, "= TRUE <> 1")
       )) ++ lst("binop >", List(
         (true,  "=2>1"),
         (false, "=1>1"),
@@ -85,6 +87,8 @@ object EvaluatorTests {
         (false, "=1>\"5\""),
         (false, "=1>TRUE"),
         (false, "=1>FALSE"),
+        (true,  "=TRUE>1"),
+        (true,  "=FALSE>1"),
         (false, "=FALSE>FALSE"),
         (false, "=TRUE>TRUE"),
         (true,  "=TRUE>FALSE"),
@@ -101,6 +105,8 @@ object EvaluatorTests {
         (true,  "=1<FALSE"),
         (false, "=TRUE<1"),
         (false, "=FALSE<1"),
+        (false, "=TRUE<1"),
+        (false, "=FALSE<1"),
         (false, "=FALSE<FALSE"),
         (false, "=TRUE<TRUE"),
         (false, "=TRUE<FALSE"),
@@ -115,6 +121,8 @@ object EvaluatorTests {
         (false, "=1>=\"5\""),
         (false, "=1>=TRUE"),
         (false, "=1>=FALSE"),
+        (true,  "=TRUE>=1"),
+        (true,  "=FALSE>=1"),
         (true,  "=FALSE>=FALSE"),
         (true,  "=TRUE>=TRUE"),
         (true,  "=TRUE>=FALSE"),
@@ -129,6 +137,8 @@ object EvaluatorTests {
         (false, "=1<=\"5\""),
         (true,  "=1<=TRUE"),
         (true,  "=1<=FALSE"),
+        (false, "=TRUE<=1"),
+        (false, "=FALSE<=1"),
         (false, "=TRUE<=1"),
         (false, "=FALSE<=1"),
         (true,  "=FALSE<=FALSE"),
