@@ -65,7 +65,7 @@ object Evaluator {
     case NEq()    => reduce2(boolNe, lhs, rhs)
     case Concat() => reduce2(concat, lhs, rhs)
     case Plus()   => reduce2(applyToDoubles(_ + _), lhs, rhs)
-    case Minus()  => VDouble(0)
+    case Minus()  => reduce2(applyToDoubles(_ - _), lhs, rhs)
     case Mul()    => reduce2(applyToDoubles(_ * _), lhs, rhs)
     case Div()    => VDouble(0)
     case Expon()  => VDouble(0)

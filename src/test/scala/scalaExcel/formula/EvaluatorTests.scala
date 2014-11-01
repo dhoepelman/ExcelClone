@@ -145,12 +145,23 @@ object EvaluatorTests {
         ("TRUEFALSE", "=TRUE & FALSE")
       )) ++ lst("binop + add", List(
         (5, "=2 + 3"),
-        (2.4, "=1.4 + 1")
+        (2.4, "=1.4 + 1"),
+        (-10, "=-20 + 10"),
+        (-30, "=-20 + -10")
       )) ++ lstErr("binop + errors", List(
         (NotNumeric(), "=2 + \"a\""),
         (NotNumeric(), "=2 + TRUE")
+      )) ++ lst("binop - minus", List(
+        (1, "=3 - 2"),
+        (0.5, "=1.5 - 1"),
+        (-30, "=-10 - 20"),
+        (-10, "=-20 - -10")
+      )) ++ lstErr("binop - errors", List(
+        (NotNumeric(), "=2 - \"a\""),
+        (NotNumeric(), "=2 - TRUE")
       )) ++ lst("binop * multiply", List(
-        (6, "=2 * 3")
+        (6, "=2 * 3"),
+        (5, "=2.5 * 2")
       )) ++ lstErr("binop * errors", List(
         (NotNumeric(), "=2 * \"a\""),
         (NotNumeric(), "=2 * TRUE")
