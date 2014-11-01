@@ -67,7 +67,7 @@ object Evaluator {
     case Plus()   => reduce2(applyToDoubles(_ + _), lhs, rhs)
     case Minus()  => reduce2(applyToDoubles(_ - _), lhs, rhs)
     case Mul()    => reduce2(applyToDoubles(_ * _), lhs, rhs)
-    case Div()    => VDouble(0)
+    case Div()    => reduce2(doubleDiv, lhs, rhs)
     case Expon()  => VDouble(0)
     case _ => VErr(NA())
   }
@@ -127,6 +127,11 @@ object Evaluator {
 
   def boolNe(lhs: Value, rhs: Value) = boolEq(lhs, rhs) match {
     case VBool(b) => VBool(!b)
+  }
+
+  def doubleDiv(lhs: Value, rhs: Value) = rhs match {
+    case VDouble(0) => VErr(DivBy0())
+    case _ => applyToDoubles(_ / _)(lhs, rhs)
   }
 
 }

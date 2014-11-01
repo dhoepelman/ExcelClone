@@ -165,6 +165,14 @@ object EvaluatorTests {
       )) ++ lstErr("binop * errors", List(
         (NotNumeric(), "=2 * \"a\""),
         (NotNumeric(), "=2 * TRUE")
+      )) ++ lst("binop / divide", List(
+        (2, "=6 / 3"),
+        (2.5, "=10 / 4"),
+        (0, "=0 / 1")
+      )) ++ lstErr("binop / errors", List(
+        (DivBy0(), "=1 / 0"),
+        (NotNumeric(), "=2 / \"a\""),
+        (NotNumeric(), "=2 / TRUE")
       )) ++ lst("unop", List(
         (5, "=+5"),
         (-5, "=-5"),
