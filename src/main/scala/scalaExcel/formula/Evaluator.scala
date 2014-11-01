@@ -1,6 +1,8 @@
 
 package scalaExcel.formula
 
+import math.pow
+
 object Evaluator {
 
   def reduce(f: ((Value, Value) => Value), r: Value, args: List[Expr]): Value = r match {
@@ -68,7 +70,7 @@ object Evaluator {
     case Minus()  => reduce2(applyToDoubles(_ - _), lhs, rhs)
     case Mul()    => reduce2(applyToDoubles(_ * _), lhs, rhs)
     case Div()    => reduce2(doubleDiv, lhs, rhs)
-    case Expon()  => VDouble(0)
+    case Expon()  => reduce2(doubleExpon, lhs, rhs)
     case _ => VErr(NA())
   }
 
@@ -133,5 +135,19 @@ object Evaluator {
     case VDouble(0) => VErr(DivBy0())
     case _ => applyToDoubles(_ / _)(lhs, rhs)
   }
+
+  def doubleExpon(base: Value, expon: Value): Value = (base, expon) match {
+    case (VDouble(0), VDouble(0)) => VErr(NotNumeric())
+    case (VBool(b), v)            => doubleExpon(boolToVDouble(b), v)
+    case (v, VBool(b))            => doubleExpon(v, boolToVDouble(b))
+    case (VDouble(b), VDouble(e)) => pow(b, e) match {
+      case d => if (d.isInfinity) VErr(DivBy0())
+                else if (d.isNaN) VErr(NotNumeric())
+                else VDouble(d)
+    }
+    case _ => VErr(InvalidValue())
+  }
+
+  def boolToVDouble(b: Boolean) = VDouble(if (b) 1.0 else 0.0)
 
 }

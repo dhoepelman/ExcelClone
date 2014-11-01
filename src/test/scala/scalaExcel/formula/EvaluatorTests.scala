@@ -185,7 +185,10 @@ object EvaluatorTests {
         ) map (x => {
             (x._1, x._2 map (y => (pow(x._1, y), "=" + x._1 + s"^$y")))
           })
-        ).values.toList.flatten
+        ).values.toList.flatten ++ List(
+          (1, "=TRUE^1"),
+          (0, "=FALSE^1")
+        )
       )) ++ lstErr("binop ^ errors", List(
         (DivBy0(), "=0^-2"),
         (DivBy0(), "=0^-1"),
@@ -194,7 +197,9 @@ object EvaluatorTests {
         (NotNumeric(), "=-2^-0.5"),
         (NotNumeric(), "=-0.5^-0.5"),
         (NotNumeric(), "=-2^0.5"),
-        (NotNumeric(), "=-0.5^0.5")
+        (NotNumeric(), "=-0.5^0.5"),
+        (InvalidValue(), "=\"a\"^2"),
+        (InvalidValue(), "=2^\"a\"")
       )) ++ lst("unop", List(
         (5, "=+5"),
         (-5, "=-5"),
