@@ -30,9 +30,11 @@ object Evaluator {
     case _ => VErr(NotNumeric())
   }
 
-  def applyToDoubles(f: (Double, Double) => Double)(lhs: Value, rhs: Value) = (lhs, rhs) match {
+  def applyToDoubles(f: (Double, Double) => Double)(lhs: Value, rhs: Value): Value = (lhs, rhs) match {
     case (VDouble(l), VDouble(r)) => VDouble(f(l, r))
-    case es => pickError(es, NotNumeric())
+    case (VBool(b), v)            => applyToDoubles(f)(boolToVDouble(b), v)
+    case (v, VBool(b))            => applyToDoubles(f)(v, boolToVDouble(b))
+    case es => pickError(es, InvalidValue())
   }
 
   def pickError(t: (Value, Value), default: ErrType) = t match {
@@ -44,16 +46,9 @@ object Evaluator {
   def eval(e: Expr): Value = {
     e match {
       case Const(c) => c
-      case Call(f, args) => evalCall(f, args)
       case BinOp(op, lhs, rhs) => evalBinOp(op, lhs, rhs)
       case UnOp(op, v) => evalUnOp(op, v)
-      case _ => VErr(NA())
-    }
-  }
-
-  def evalCall(f: String, args: List[Expr]) = {
-    f match {
-      case "SUM" => reduce(applyToDoubles(_ + _), VDouble(0), args)
+      case Call(f, args) => evalCall(f, args)
       case _ => VErr(NA())
     }
   }
@@ -131,23 +126,30 @@ object Evaluator {
     case VBool(b) => VBool(!b)
   }
 
-  def doubleDiv(lhs: Value, rhs: Value) = rhs match {
-    case VDouble(0) => VErr(DivBy0())
-    case _ => applyToDoubles(_ / _)(lhs, rhs)
+  def doubleDiv(lhs: Value, rhs: Value) = applyToDoubles(_ / _)(lhs, rhs) match {
+    case VDouble(d) =>  if (d.isInfinity) VErr(DivBy0())
+                        else VDouble(d)
+    case x => x
   }
 
   def doubleExpon(base: Value, expon: Value): Value = (base, expon) match {
     case (VDouble(0), VDouble(0)) => VErr(NotNumeric())
-    case (VBool(b), v)            => doubleExpon(boolToVDouble(b), v)
-    case (v, VBool(b))            => doubleExpon(v, boolToVDouble(b))
-    case (VDouble(b), VDouble(e)) => pow(b, e) match {
-      case d => if (d.isInfinity) VErr(DivBy0())
-                else if (d.isNaN) VErr(NotNumeric())
-                else VDouble(d)
+    case (b, e) => applyToDoubles(pow)(base, expon) match {
+      case VDouble(d) => if (d.isInfinity) VErr(DivBy0())
+                         else if (d.isNaN) VErr(NotNumeric())
+                         else VDouble(d)
+      case x => x
     }
     case _ => VErr(InvalidValue())
   }
 
   def boolToVDouble(b: Boolean) = VDouble(if (b) 1.0 else 0.0)
+
+  def evalCall(f: String, args: List[Expr]) = {
+    f match {
+      case "SUM" => reduce(applyToDoubles(_ + _), VDouble(0), args)
+      case _ => VErr(InvalidName())
+    }
+  }
 
 }

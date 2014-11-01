@@ -148,32 +148,35 @@ object EvaluatorTests {
         (5, "=2 + 3"),
         (2.4, "=1.4 + 1"),
         (-10, "=-20 + 10"),
-        (-30, "=-20 + -10")
+        (-30, "=-20 + -10"),
+        (5, "=4 + TRUE")
       )) ++ lstErr("binop + errors", List(
-        (NotNumeric(), "=2 + \"a\""),
-        (NotNumeric(), "=2 + TRUE")
+        (InvalidValue(), "=2 + \"a\"")
       )) ++ lst("binop - minus", List(
         (1, "=3 - 2"),
         (0.5, "=1.5 - 1"),
         (-30, "=-10 - 20"),
-        (-10, "=-20 - -10")
+        (-10, "=-20 - -10"),
+        (1, "=2 - TRUE"),
+        (-2, "=FALSE - 2")
       )) ++ lstErr("binop - errors", List(
-        (NotNumeric(), "=2 - \"a\""),
-        (NotNumeric(), "=2 - TRUE")
+        (InvalidValue(), "=2 - \"a\"")
       )) ++ lst("binop * multiply", List(
         (6, "=2 * 3"),
-        (5, "=2.5 * 2")
+        (5, "=2.5 * 2"),
+        (4, "=4 * TRUE"),
+        (0, "=FALSE * 3")
       )) ++ lstErr("binop * errors", List(
-        (NotNumeric(), "=2 * \"a\""),
-        (NotNumeric(), "=2 * TRUE")
+        (InvalidValue(), "=2 * \"a\"")
       )) ++ lst("binop / divide", List(
         (2, "=6 / 3"),
         (2.5, "=10 / 4"),
-        (0, "=0 / 1")
+        (0, "=0 / 1"),
+        (2, "=2 / TRUE")
       )) ++ lstErr("binop / errors", List(
         (DivBy0(), "=1 / 0"),
-        (NotNumeric(), "=2 / \"a\""),
-        (NotNumeric(), "=2 / TRUE")
+        (DivBy0(), "=1 / FALSE"),
+        (InvalidValue(), "=2 / \"a\"")
       )) ++ lst("binop / divide", (
         (Map[Double,List[Double]](
           -2.0 -> List(-2, -1, 0, 1, 2),
@@ -209,6 +212,13 @@ object EvaluatorTests {
         (NotNumeric(), "=+\"A\""),
         (NotNumeric(), "=-\"A\""),
         (NotNumeric(), "=\"A\"%")
+      )) ++ lstErr("call unknown function", List(
+        (InvalidName(), "=FOOBAR11()")
+      )) ++ lst("call SUM", List(
+        (1, "=SUM(1)"),
+        (10, "=SUM(1,2,3,4)")
+      )) ++ lstErr("call SUM invalids", List(
+        (InvalidValue(), "=SUM(\"A\")")
       ))
     ) foreach (x => list.add(Array(x._1, x._2, x._3)))
     return list
