@@ -35,26 +35,30 @@ object EvaluatorTests {
   @Parameters(name= "{0}: <{1}> : <{2}>")
   def data: ju.Collection[Array[jl.Object]] = {
     val list = new ju.ArrayList[Array[jl.Object]]()
-    (List[Tuple3[String, Value, AnyRef]](
-      ("evalConst", VDouble(10), Const(tv(10))),
-      ("evalConst", VBool(true), Const(tv(true))),
-      ("evalConst", VBool(false), Const(tv(false))),
-      ("evalConst", VString("hi"), Const(tv("hi"))),
-      ("evalConst", VString("hi"), "=\"hi\""),
-
-      ("binOpSum",       VDouble(5), "=2 + 3"),
-      ("binOpSumString", VErr(NotNumeric()), "=2 + \"a\""),
-      ("binOpSumBool",   VErr(NotNumeric()), "=2 + TRUE"),
-
-      ("binOpMul",       VDouble(6), "=2 * 3"),
-      ("binOpMulString", VErr(NotNumeric()), "=2 * \"a\""),
-      ("binOpMulBool",   VErr(NotNumeric()), "=2 * TRUE"),
-
-      ("binOpConcat =",     VString("abc"), "=\"ab\"& \"c\""),
-      ("binOpConcatDouble", VString("ab1"), "=\"ab\"& 1"),
-      ("binOpConcatTrue",   VString("abTRUE"), "=\"ab\"& TRUE"),
-      ("binOpConcatFalse",  VString("abFALSE"), "=\"ab\"& FALSE")
-    ) ++ lst("binop =", List(
+    (
+      List[Tuple3[String, Value, AnyRef]](
+        ("evalConst", VDouble(10), Const(tv(10))),
+        ("evalConst", VBool(true), Const(tv(true))),
+        ("evalConst", VBool(false), Const(tv(false))),
+        ("evalConst", VString("hi"), Const(tv("hi"))),
+        ("evalConst", VString("hi"), "=\"hi\"")
+      ) ++ lst("binop + add", List(
+        (5, "=2 + 3"),
+        (2.4, "=1.4 + 1")
+      )) ++ lstErr("binop + errors", List(
+        (NotNumeric(), "=2 + \"a\""),
+        (NotNumeric(), "=2 + TRUE")
+      )) ++ lst("binop * multiply", List(
+        (6, "=2 * 3")
+      )) ++ lstErr("binop * errors", List(
+        (NotNumeric(), "=2 * \"a\""),
+        (NotNumeric(), "=2 * TRUE")
+      )) ++ lst("binop & concat", List(
+        ("abc", "=\"ab\"& \"c\""),
+        ("ab1", "=\"ab\"& 1"),
+        ("1ab", "=1 & \"ab\""),
+        ("TRUEab", "=TRUE & \"ab\"")
+      )) ++ lst("binop =", List(
         (true, "=TRUE = TRUE"),
         (false, "=FALSE = TRUE"),
         (false, "=TRUE = FALSE"),
@@ -162,6 +166,4 @@ object EvaluatorTests {
     return list
   }
 
-
 }
-
