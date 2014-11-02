@@ -6,31 +6,31 @@ import scalaExcel.GUI.model.DataModelFactory.DataTable
 
 object Mediator {
 
-  private var dataModel: DataModel = null
-  private var controller: ViewManager = null
+  private var _dataModel: DataModel = null
+  private var _controller: ViewManager = null
 
   def initialize() = {
     println("Mediator initializing...")
-    dataModel = new DataModel()
-    dataModel.populateDataModel(null)
+    _dataModel = new DataModel()
+    _dataModel.populateDataModel(null)
   }
 
-  def getDataTable: DataTable = dataModel.dataTable
+  def dataTable: DataTable = _dataModel.dataTable
 
-  def registerController(manager: ViewManager) =
-    controller = manager
+  def controller = _controller
+  def controller_= (manager:ViewManager): Unit = _controller = manager
 
   def getCellObservable(index: (Int, Int)): ObservableSheetCell =
-    dataModel.getCellObservable(index._1, index._2)
+    _dataModel.getCellObservable(index._1, index._2)
 
   def getCell(index: (Int, Int)): SheetCell =
-    dataModel.getCell(index._1, index._2)
+    _dataModel.getCell(index._1, index._2)
 
   def getCellValue(index: (Int, Int)): Any =
-    dataModel.getCellValue(index._1, index._2)
+    _dataModel.getCellValue(index._1, index._2)
 
   def getEditingCellIndex: (Int, Int) = {
-    val cell = controller.getTableView.getEditingCell
+    val cell = _controller.getTableView.getEditingCell
     (cell.getRow, cell.getColumn)
   }
 
@@ -43,16 +43,16 @@ object Mediator {
   }
 
   def changeCellExpr(index: (Int, Int), expr: String) =
-    dataModel.changeCellExpr(index, expr)
+    _dataModel.changeCellExpr(index, expr)
 
   def changeCellStylist(index: (Int, Int), stylist: Any => String) =
-    dataModel.changeCellStylist(index, stylist)
+    _dataModel.changeCellStylist(index, stylist)
 
   def changeCellFormatter(index: (Int, Int), formatter: Any => String) =
-    dataModel.changeCellFormatter(index, formatter)
+    _dataModel.changeCellFormatter(index, formatter)
 
   def changeEditorText(expr: String) {
-    controller.changeEditorText(expr)
+    _controller.changeEditorText(expr)
   }
 
 }

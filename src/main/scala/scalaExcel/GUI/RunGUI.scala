@@ -8,7 +8,6 @@ import javafx.{scene => jfxs}
 import java.io.IOException
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.scene.Scene
-import rx.lang.{scala => rx}
 import scalaExcel.GUI.controller.Mediator
 import scalaExcel.GUI.view.ViewManager
 
@@ -24,9 +23,8 @@ object RunGUI extends JFXApp {
 
   val loader = new jfxf.FXMLLoader(resource)
   val root = loader.load[jfxs.Parent]
-  val controller = loader.getController[ViewManager]
 
-  Mediator.registerController(controller)
+  Mediator.controller = loader.getController[ViewManager]
 
   stage = new PrimaryStage() {
     title = "Scala Excel"

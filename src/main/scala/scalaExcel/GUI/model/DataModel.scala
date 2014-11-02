@@ -5,7 +5,9 @@ import scalaExcel.GUI.model.DataModelFactory.DataTable
 class DataModel() {
   private val defaultData = List(List("Cell11", "Cell12"), List("Cell21", "Cell22"))
 
-  val dataTable = DataModelFactory.buildDefaultDataTable
+  private val _dataTable = DataModelFactory.buildDefaultDataTable
+
+  def dataTable = _dataTable
 
   private def populateDataTable(data: List[List[String]]) =
     data.view.zipWithIndex.foreach {
@@ -17,7 +19,7 @@ class DataModel() {
   private def populateDataTableWithDefault(raw: DataTable): Unit =
     populateDataTable(defaultData)
 
-  def getCellObservable(index: (Int, Int)): ObservableSheetCell = dataTable.get(index._1).get(index._2)
+  def getCellObservable(index: (Int, Int)): ObservableSheetCell = _dataTable.get(index._1).get(index._2)
 
   def getCell(index: (Int, Int)): SheetCell = getCellObservable(index).value
 
@@ -25,7 +27,7 @@ class DataModel() {
 
   def populateDataModel(data: List[List[String]]) =
     if (data == null)
-      populateDataTableWithDefault(dataTable)
+      populateDataTableWithDefault(_dataTable)
     else
       populateDataTable(data)
 
