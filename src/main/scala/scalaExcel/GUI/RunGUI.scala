@@ -1,4 +1,4 @@
-package scalaExcel.GUI.app
+package scalaExcel.GUI.view
 
 import java.io.IOException
 import javafx.{fxml => jfxf, scene => jfxs}
