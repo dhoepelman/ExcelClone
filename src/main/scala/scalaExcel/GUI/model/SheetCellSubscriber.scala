@@ -17,15 +17,23 @@ class SheetCellSubscriber(model_ : DataModel, expr_ : String, index_ : (Int, Int
     model_.cellEvaluated(index_, expr_, value, this)
   }
 
-  val subscription : Subscription = {
-    println("Subscribing " + index_ + " for " + refs)
-    if (refs == List()) {
-      model_.cellEvaluated(index_, expr_, evaluator(List()), this)
+  val subscription: Subscription = {
+    if (refs.contains(index_)) {
+      //TODO show some form of error
+      println("Circular dependency for " + index_ + "!")
+      model_.foundCircularDependency(index_, expr_)
       null
-    } else {
-      val subjects = refs.map(x => model_.getCellObservable(x).subject)
-      val obs = compose(subjects)
-      obs.subscribe(transformer)
+    }
+    else {
+      println("Subscribing " + index_ + " for " + refs)
+      if (refs == List()) {
+        model_.cellEvaluated(index_, expr_, evaluator(List()), this)
+        null
+      } else {
+        val subjects = refs.map(x => model_.getCellObservable(x).subject)
+        val obs = compose(subjects)
+        obs.subscribe(transformer)
+      }
     }
   }
 

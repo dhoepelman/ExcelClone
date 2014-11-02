@@ -15,7 +15,7 @@ object Mediator {
     dataModel.populateDataModel(null)
   }
 
-  def getDataTable: DataTable = dataModel.getDataTable
+  def getDataTable: DataTable = dataModel.dataTable
 
   def registerController(manager: ViewManager) =
     controller = manager

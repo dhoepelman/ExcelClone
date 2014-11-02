@@ -1,12 +1,11 @@
 package scalaExcel.GUI.model
 
 import scalaExcel.GUI.model.DataModelFactory.DataTable
-import rx.lang.scala.Subscription
 
 class DataModel() {
   private val defaultData = List(List("Cell11", "Cell12"), List("Cell21", "Cell22"))
 
-  private val dataTable = DataModelFactory.buildDefaultDataTable
+  val dataTable = DataModelFactory.buildDefaultDataTable
 
   private def populateDataTable(data: List[List[String]]) =
     data.view.zipWithIndex.foreach {
@@ -24,8 +23,6 @@ class DataModel() {
 
   def getCellValue(index: (Int, Int)): Any = getCell(index).evaluated
 
-  def getDataTable = dataTable
-
   def populateDataModel(data: List[List[String]]) =
     if (data == null)
       populateDataTableWithDefault(dataTable)
@@ -38,11 +35,11 @@ class DataModel() {
   }
 
   def cellEvaluated(index: (Int, Int), expr: String, value: Any, subscriber: SheetCellSubscriber) = {
-    println("Cell " + index + " evaluated to " + value + " with subs ")
+    println("Cell " + index + " evaluated to " + value + " with subs " + subscriber.subscription)
     val observable = getCellObservable(index)
     if (observable.value != null) {
       val oldSubscription = observable.value.subscription
-      if (oldSubscription != null)
+      if (oldSubscription != null && oldSubscription != subscriber.subscription)
         oldSubscription.unsubscribe()
     }
     observable.value = SheetCell.markEvaluated(index, observable.value, expr, value, subscriber.subscription)
@@ -56,5 +53,10 @@ class DataModel() {
   def changeCellFormatter(index: (Int, Int), formatter: Any => String) = {
     val observable = getCellObservable(index)
     observable.value = SheetCell.modifyFormatter(index, observable.value, formatter)
+  }
+
+  def foundCircularDependency(index: (Int, Int), expr: String) = {
+    val observable = getCellObservable(index)
+    observable.value = SheetCell.newError(index, observable.value, expr)
   }
 }
