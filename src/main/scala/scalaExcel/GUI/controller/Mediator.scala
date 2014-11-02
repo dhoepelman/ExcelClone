@@ -1,6 +1,6 @@
 package scalaExcel.GUI.controller
 
-import scalaExcel.GUI.model.{SheetCell, ObservableCell, DataModel}
+import scalaExcel.GUI.model.{SheetCell, ObservableSheetCell, DataModel}
 import scalaExcel.GUI.view.SheetBuilder
 
 object Mediator {
@@ -17,40 +17,35 @@ object Mediator {
     tableView != null
   }
 
-  def getCellObservable(location: (Int, Int)): ObservableCell =
-    dataModel.getCellObservable(location._1, location._2)
+  def getCellObservable(index: (Int, Int)): ObservableSheetCell =
+    dataModel.getCellObservable(index._1, index._2)
 
-  def getCell(location: (Int, Int)): SheetCell =
-    dataModel.getCell(location._1, location._2)
+  def getCell(index: (Int, Int)): SheetCell =
+    dataModel.getCell(index._1, index._2)
 
-  def getCellValue(location: (Int, Int)): Any =
-    dataModel.getCellValue(location._1, location._2)
+  def getCellValue(index: (Int, Int)): Any =
+    dataModel.getCellValue(index._1, index._2)
 
-  def getEditingCellLocation: (Int, Int) = {
+  def getEditingCellindex: (Int, Int) = {
     val cell = tableView.getEditingCell
     (cell.getRow, cell.getColumn)
   }
 
-  def cellEvaluated(location: (Int, Int), value: Any) = {
-    println("Cell " + location + " evaluated to " + value)
-    val observable = getCellObservable(location._1, location._2)
-    if (observable.value != null)
-      observable.value = SheetCell.markEvaluated(location, observable.value, value)
-  }
-
   def getTableView = tableView
 
-  def changeEditingCellExpr(expr: String): SheetCell = {
-    val location = getEditingCellLocation
-    val cell = getCell(location._1, location._2)
-    println("Editing cell " + location + " changed expression to " + expr)
-    SheetCell.modifyExpr(location, cell, expr)
+  def composeEditingCell(expr: String): SheetCell = {
+    val index = getEditingCellindex
+    val cell = getCell(index)
+    println("Editing cell " + index + " changed expression to " + expr)
+    SheetCell.modifyExpr(index, cell, expr)
   }
 
-  def changeCellExpr(location: (Int, Int), expr: String) = {
-    val observable = getCellObservable(location._1, location._2)
-    println("Cell " + location + " changed expression to " + expr)
-    observable.value = SheetCell.modifyExpr(location, observable.value, expr)
-  }
+  def changeCellExpr(index: (Int, Int), expr: String) =
+    dataModel.changeCellExpr(index, expr)
 
+  def changeCellStylist(index: (Int, Int), stylist: Any => String) =
+    dataModel.changeCellStylist(index, stylist)
+
+  def changeCellFormatter(index: (Int, Int), formatter: Any => String) =
+    dataModel.changeCellFormatter(index, formatter)
 }

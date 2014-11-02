@@ -4,7 +4,7 @@ import scalafx.collections.ObservableBuffer
 
 object DataModelFactory {
 
-  type DataRow = ObservableBuffer[ObservableCell]
+  type DataRow = ObservableBuffer[ObservableSheetCell]
   type DataTable = ObservableBuffer[DataRow]
 
   private val defaultSize = (2, 2)
@@ -13,7 +13,7 @@ object DataModelFactory {
                              columns: Int): DataTable = {
     new DataTable() ++=
       List.range(0, rows).map(i => new DataRow() ++=
-        List.range(0, columns).map(j => new ObservableCell(i, j, null)))
+        List.range(0, columns).map(j => new ObservableSheetCell(i, j, null)))
   }
 
   def buildDefaultDataTable: DataTable = {

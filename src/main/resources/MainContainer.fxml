@@ -98,7 +98,7 @@
                        <GridPane AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
                            <children>
                                <Label text="f(x)=" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                               <TextField fx:id="formulaEditor" promptText="formula editor" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                               <TextField fx:id="formulaEditorDelegate" onAction="#handleEditorChange" promptText="formula editor" GridPane.columnIndex="1" GridPane.rowIndex="0" />
                            </children>
                            <columnConstraints>
                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="40" minWidth="20.0" prefWidth="25" />

@@ -2,8 +2,9 @@ package scalaExcel.GUI.model
 
 import rx.lang.scala.subjects.BehaviorSubject
 import scalafx.beans.property.ObjectProperty
+import scalaExcel.GUI.controller.Mediator
 
-class ObservableCell(row: Int, column: Int, cell_ : SheetCell) extends ObjectProperty(cell_, "cell", cell_) {
+class ObservableSheetCell(row: Int, column: Int, cell_ : SheetCell) extends ObjectProperty(cell_, "cell", cell_) {
   val subject = BehaviorSubject[List[(Int, Int, SheetCell)]](List((row, column, cell_)))
   subject.subscribe({
     cells => {
@@ -19,9 +20,10 @@ class ObservableCell(row: Int, column: Int, cell_ : SheetCell) extends ObjectPro
       } + " to " + {
         if (newValue == null) "null" else newValue.verboseString
       })
-      if (newValue != null) {
+      if (newValue != null && newValue.evaluated == null)
+        Mediator.changeCellExpr((row, column), newValue.expr)
+      else
         subject.onNext(List((row, column, newValue)))
-      }
     }
   })
 }

@@ -1,40 +1,28 @@
 package scalaExcel.GUI.model
 
 import scalaExcel.GUI.model.DataModelFactory.DataTable
+import rx.lang.scala.Subscription
 
 class DataModel() {
   private val defaultData = List(List("Cell11", "Cell12"), List("Cell21", "Cell22"))
 
   private val dataTable = DataModelFactory.buildDefaultDataTable
 
-  private def defaultCellBuilder(location: (Int, Int), expr: String): SheetCell =
-    if (expr.toString.endsWith("1")) {
-      SheetCell.newYellow(location, expr)
-    } else {
-      SheetCell.newNormal(location, expr)
-    }
-
-  private def populateDataTable(raw: DataTable,
-                                data: List[List[String]],
-                                cellBuilder: ((Int, Int), String) => SheetCell) =
-    raw.view.zip(data).view.zipWithIndex.foreach {
-      case ((rawRow, dataRow), i) => rawRow.view.zip(dataRow).view.zipWithIndex.foreach {
-        case ((cell, expr), j) => cell.value = SheetCell.newNormal((i, j), expr)
+  private def populateDataTable(data: List[List[String]]) =
+    data.view.zipWithIndex.foreach {
+      case (row, i) => row.view.zipWithIndex.foreach {
+        case (expr, j) => changeCellExpr((i, j), expr)
       }
     }
 
-  private def populateDataTable(raw: DataTable,
-                                data: List[List[String]]): Unit =
-    populateDataTable(raw, data, defaultCellBuilder)
-
   private def populateDataTableWithDefault(raw: DataTable): Unit =
-    populateDataTable(raw, defaultData, defaultCellBuilder)
+    populateDataTable(defaultData)
 
-  def getCellObservable(row: Int, column: Int): ObservableCell = dataTable.get(row).get(column)
+  def getCellObservable(index: (Int, Int)): ObservableSheetCell = dataTable.get(index._1).get(index._2)
 
-  def getCell(row: Int, column: Int): SheetCell = getCellObservable(row, column).value
+  def getCell(index: (Int, Int)): SheetCell = getCellObservable(index).value
 
-  def getCellValue(row: Int, column: Int): Any = getCell(row, column).evaluated
+  def getCellValue(index: (Int, Int)): Any = getCell(index).evaluated
 
   def getDataTable = dataTable
 
@@ -42,6 +30,31 @@ class DataModel() {
     if (data == null)
       populateDataTableWithDefault(dataTable)
     else
-      populateDataTable(dataTable, data)
+      populateDataTable(data)
 
+  def changeCellExpr(index: (Int, Int), expr: String) = {
+    println("Cell " + index + " changing expression to " + expr)
+    new SheetCellSubscriber(this, expr, index)
+  }
+
+  def cellEvaluated(index: (Int, Int), expr: String, value: Any, subscriber: SheetCellSubscriber) = {
+    println("Cell " + index + " evaluated to " + value + " with subs ")
+    val observable = getCellObservable(index)
+    if (observable.value != null) {
+      val oldSubscription = observable.value.subscription
+      if (oldSubscription != null)
+        oldSubscription.unsubscribe()
+    }
+    observable.value = SheetCell.markEvaluated(index, observable.value, expr, value, subscriber.subscription)
+  }
+
+  def changeCellStylist(index: (Int, Int), stylist: Any => String) = {
+    val observable = getCellObservable(index)
+    observable.value = SheetCell.modifyStylist(index, observable.value, stylist)
+  }
+
+  def changeCellFormatter(index: (Int, Int), formatter: Any => String) = {
+    val observable = getCellObservable(index)
+    observable.value = SheetCell.modifyFormatter(index, observable.value, formatter)
+  }
 }
