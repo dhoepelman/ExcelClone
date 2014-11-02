@@ -45,9 +45,9 @@ object SheetCell {
 
   def newError(index: (Int, Int), cell: SheetCell, expr: String): SheetCell =
     if (cell != null)
-      new SheetCellImpl(index, expr, cell.formatter, makeError, new ErroneousEvaluation(expr), null)
+      new SheetCellImpl(index, expr, cell.formatter, cell.stylist, new ErroneousEvaluation(expr), null)
     else
-      new SheetCellImpl(index, expr, null, makeError, new ErroneousEvaluation(expr), null)
+      new SheetCellImpl(index, expr, null, null, new ErroneousEvaluation(expr), null)
 
   private class SheetCellImpl(index_ : (Int, Int),
                               expr_ : String,

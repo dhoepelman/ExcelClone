@@ -9,6 +9,7 @@ import scalaExcel.GUI.model.SheetCell
 import scalaExcel.GUI.model.DataModelFactory.{DataTable, DataRow}
 import scalaExcel.GUI.model.SheetCellStringConverter.SheetCellStringConverter
 import scalaExcel.GUI.controller.Mediator
+import scalaExcel.GUI.util.ErroneousEvaluation
 
 object SheetBuilder {
   type TableColumns = ObservableBuffer[javafx.scene.control.TableColumn[DataRow, SheetCell]]
@@ -42,7 +43,15 @@ object SheetBuilder {
             new TextFieldTableCell[DataRow, SheetCell](inner) {
               item.onChange {
                 (_, _, newCell) =>
-                  style = if (newCell == null) "" else newCell.stylist(null)
+                  style = {
+                    if (newCell == null)
+                      ""
+                    else if (newCell.evaluated.isInstanceOf[ErroneousEvaluation])
+                      SheetCell.makeError(null)
+                    else
+                      newCell.stylist(null)
+
+                  }
               }
             }
         }
