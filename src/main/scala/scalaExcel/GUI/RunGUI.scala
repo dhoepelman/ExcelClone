@@ -1,14 +1,20 @@
-package scalaExcel.GUI.view
-
-import java.io.IOException
-import javafx.{fxml => jfxf, scene => jfxs}
+package scalaExcel.GUI
 
 import scalafx.Includes._
 import scalafx.application.JFXApp
+import javafx.{scene => jfxs}
+import javafx.{fxml => jfxf}
+import javafx.{scene => jfxs}
+import java.io.IOException
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.scene.Scene
+import rx.lang.{scala => rx}
+import scalaExcel.GUI.controller.Mediator
+import scalaExcel.GUI.view.ViewManager
 
 object RunGUI extends JFXApp {
+
+  Mediator.initialize()
 
   val resource = getClass.getResource("/MainContainer.fxml")
 
@@ -18,12 +24,15 @@ object RunGUI extends JFXApp {
 
   val loader = new jfxf.FXMLLoader(resource)
   val root = loader.load[jfxs.Parent]
-  //val controller = loader.getController[MainController]
+  val controller = loader.getController[ViewManager]
+
+  Mediator.registerController(controller)
 
   stage = new PrimaryStage() {
     title = "Scala Excel"
-    scene = new Scene(root, 800, 600){
+    scene = new Scene(root, 800, 600) {
       stylesheets add "MainStyle.css"
     }
   }
+
 }
