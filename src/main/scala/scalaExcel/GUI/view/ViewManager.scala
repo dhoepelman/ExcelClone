@@ -44,7 +44,7 @@ class ViewManager extends jfxf.Initializable {
     tableContainer = new AnchorPane(tableContainerDelegate)
     formulaEditor = new TextField(formulaEditorDelegate)
 
-    table = Mediator.getTableView
+    table = SheetBuilder.build(null, null, Mediator.getDataTable)
     AnchorPane.setAnchors(table, 0, 0, 0, 0)
     tableContainer.content = List(table)
 
@@ -60,12 +60,14 @@ class ViewManager extends jfxf.Initializable {
     val selectedCells = new ObservableBuffer(selectionModel.getSelectedCells)
     selectedCells.onChange(
       (source, changes) => {
-        source.take(1).map(x => Mediator.getCell(x.getRow, x.getColumn))
-          .map(x => {
-          formulaEditor.setText(x.exprString)
-        })
+        source.take(1).map(x =>
+          changeEditorText(Mediator.getCell(x.getRow, x.getColumn).exprString))
       }
     )
   }
+
+  def changeEditorText(text: String) = formulaEditor.setText(text)
+
+  def getTableView: TableView[DataRow] = table
 
 }

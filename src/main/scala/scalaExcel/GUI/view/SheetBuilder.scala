@@ -8,6 +8,7 @@ import javafx.scene.{control => jfxsc}
 import scalaExcel.GUI.model.SheetCell
 import scalaExcel.GUI.model.DataModelFactory.{DataTable, DataRow}
 import scalaExcel.GUI.model.SheetCellStringConverter.SheetCellStringConverter
+import scalaExcel.GUI.controller.Mediator
 
 object SheetBuilder {
   type TableColumns = ObservableBuffer[javafx.scene.control.TableColumn[DataRow, SheetCell]]
@@ -35,6 +36,7 @@ object SheetBuilder {
                 //TODO coordinate formulaEditor with this field
                 val textField = new TextField(this.getChildren.get(0).asInstanceOf[jfxsc.TextField])
                 textField.text = getItem.expr
+                Mediator.changeEditorText(getItem.expr)
               }
             }
             new TextFieldTableCell[DataRow, SheetCell](inner) {
