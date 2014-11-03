@@ -20,25 +20,25 @@ class Parser extends RegexParsers {
   //****************************
 
   // This String is outside of formula, everything that is not anything else is a string
-  def Str           : Parser[Const]   = """[^=].*""".r ^^ {s => Const(s)}
-  def Empty         : Parser[Expr]    = ""             ^^^ Const("")
+  def Str           : Parser[Const]   = """[^=].*""".r ^^ {s => Const(VString(s))}
+  def Empty         : Parser[Expr]    = ""             ^^^ Const(VString(""))
 
   // This string literal can be used inside formula's
   val striReg = """\"(\"\"|[^\"])*\"""".r
   val numbReg = """\d+(\.\d+)?([eE]([+-])?\d{1,3})?""".r
   val boolReg = """(?i)(true)|(false)""".r
 
-  def StringLit     : Parser[Const]  = striReg ^^ {s => Const(s.substring(1, s.length - 1).replace("\"\"", "\""))}
+  def StringLit     : Parser[Const]  = striReg ^^ {s => Const(VString(s.substring(1, s.length - 1).replace("\"\"", "\"")))}
   def PosNum        : Parser[Double] = numbReg ^^ {s => s.toDouble}
   def Num           : Parser[Const]  = AdditiveOp.? ~ PosNum ^^ {
-    case None ~ e => Const(e)
+    case None ~ e => Const(VDouble(e))
     case Some(op) ~ e => op match {
-      case Minus() => Const(-e)
-      case Plus()  => Const(e)
+      case Minus() => Const(VDouble(-e))
+      case Plus()  => Const(VDouble(e))
       case _       => throw new IllegalStateException() // This should never happen
     }
   }
-  def Bool          : Parser[Const] = boolReg ^^ {s => Const(s.toBoolean)}
+  def Bool          : Parser[Const] = boolReg ^^ {s => Const(VBool(s.toBoolean))}
 
   //****************************
   //* Expressions and formulas *
