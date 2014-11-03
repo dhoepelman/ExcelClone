@@ -114,17 +114,30 @@ class ViewManager extends jfxf.Initializable {
                         .distinctUntilChanged(x => x._1)
                         .subscribe(x => Mediator.changeCellExpr((x._2._1, x._2._2), x._1))
 
+    backgroundColorStream.map(colorToWeb)
+                          .combineLatest(selectionStream)
+                          .distinctUntilChanged(x => x._1)
+                          .subscribe(x => Mediator.changeCellStylist(x._2, _=>"-fx-background-color: " + x._1 + ";"))
+
 
     // Update formula editor when selection changes
     // TODO change all the tools to fit the cell
-    selectedCellStream.subscribe(x => changeEditorText(x.exprString))
+    selectedCellStream.subscribe(x => {
+      changeEditorText(x.exprString)
+      //changeBackgroundColorPicker(Color.web(x.stylist)) // TODO split fields of stylist
+    })
 
 
 
   }
 
   def changeEditorText(text: String) = formulaEditor.setText(text)
+  def changeBackgroundColorPicker(color: Color) = backgroundColorPicker.setValue(color)
 
   def getTableView: TableView[DataRow] = table
+
+  def colorToWeb(c : Color): String = {
+    return "#%02X%02X%02X".format((c.getRed() * 255).asInstanceOf[Int], (c.getGreen() * 255).asInstanceOf[Int], (c.getBlue() * 255).asInstanceOf[Int])
+  }
 
 }
