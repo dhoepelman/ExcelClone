@@ -44,7 +44,6 @@
                         </AnchorPane>
                         <AnchorPane layoutX="10.0" layoutY="10.0" GridPane.columnIndex="1">
                             <children>
-                                <Button alignment="CENTER" mnemonicParsing="false" text="Button" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                                 <ColorPicker fx:id="backgroundColorPickerDelegate"></ColorPicker>
                             </children>
                         </AnchorPane>
