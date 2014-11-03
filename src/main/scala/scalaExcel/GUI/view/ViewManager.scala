@@ -60,7 +60,7 @@ class ViewManager extends jfxf.Initializable {
     val selectedCells = new ObservableBuffer(selectionModel.getSelectedCells)
     selectedCells.onChange(
       (source, changes) => {
-        source.take(1).map(x =>
+        source.take(1).foreach(x =>
           changeEditorText(Mediator.getCell(x.getRow, x.getColumn).exprString))
       }
     )
