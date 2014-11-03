@@ -10,6 +10,7 @@ import javafx.scene.{layout => jfxsl}
 import javafx.{event => jfxe, fxml => jfxf}
 import rx.lang.scala._
 
+import scala.collection.mutable
 import scalafx.scene.layout.AnchorPane
 import scalaExcel.GUI.controller.Mediator
 import scalaExcel.GUI.model.SheetCell
@@ -46,13 +47,6 @@ class ViewManager extends jfxf.Initializable {
   private def makeResizable(event: jfxe.ActionEvent) {
     //make region resizable
   }
-
-//  @jfxf.FXML
-//  private def handleEditorChange(event: jfxe.ActionEvent) {
-//    val editorValue = formulaEditor.getText
-//    val selectedCells = new ObservableBuffer(table.getSelectionModel.getSelectedCells)
-//
-//  }
 
   def initialize(url: URL, rb: util.ResourceBundle) {
 
@@ -111,13 +105,16 @@ class ViewManager extends jfxf.Initializable {
 
     // Changes on formula editor are reflected on the selected cell
     formulaEditorStream.combineLatest(selectionStream)
-                        .distinctUntilChanged(x => x._1)
-                        .subscribe(x => Mediator.changeCellExpr((x._2._1, x._2._2), x._1))
+                        .map(x => new {val position = x._2; val formula = x._1})
+                        .distinctUntilChanged(x => x.formula)
+                        .subscribe(x => Mediator.changeCellExpr((x.position._1, x.position._2), x.formula))
 
+    // Changes on backgroundColorPicker are reflected on the selected cell
     backgroundColorStream.map(colorToWeb)
                           .combineLatest(selectionStream)
-                          .distinctUntilChanged(x => x._1)
-                          .subscribe(x => Mediator.changeCellStylist(x._2, _=>"-fx-background-color: " + x._1 + ";"))
+                          .map(x => new { val position = x._2; val colour = x._1}) // For better readability
+                          .distinctUntilChanged(x => x.colour)
+                          .subscribe(x => Mediator.changeCellStylist(x.position, _=>"-fx-background-color: " + x.colour + ";"))
 
 
     // Update formula editor when selection changes
@@ -127,8 +124,6 @@ class ViewManager extends jfxf.Initializable {
       //changeBackgroundColorPicker(Color.web(x.stylist)) // TODO split fields of stylist
     })
 
-
-
   }
 
   def changeEditorText(text: String) = formulaEditor.setText(text)
@@ -137,7 +132,11 @@ class ViewManager extends jfxf.Initializable {
   def getTableView: TableView[DataRow] = table
 
   def colorToWeb(c : Color): String = {
-    return "#%02X%02X%02X".format((c.getRed() * 255).asInstanceOf[Int], (c.getGreen() * 255).asInstanceOf[Int], (c.getBlue() * 255).asInstanceOf[Int])
+    return "#%02X%02X%02X".format(
+      (c.getRed() * 255).asInstanceOf[Int],
+      (c.getGreen() * 255).asInstanceOf[Int],
+      (c.getBlue() * 255).asInstanceOf[Int])
   }
+
 
 }
