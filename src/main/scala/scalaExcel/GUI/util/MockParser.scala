@@ -7,7 +7,7 @@ import scalaExcel.formula.{ACell, VDouble}
 // TODO this should be renamed, into CellEvaluator or something...
 object MockParser {
 
-  val p = new Parser();
+  val p = new Parser
 
   def parse(formula: String): (List[(Int, Int)], (List[Any]) => Any) = {
 
