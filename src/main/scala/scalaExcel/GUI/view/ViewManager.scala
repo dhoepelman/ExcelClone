@@ -2,6 +2,8 @@ package scalaExcel.GUI.view
 
 import java.net.URL
 import java.util
+import javafx.event.{ActionEvent, EventHandler}
+import javafx.scene.paint.Color
 import javafx.scene.{input => jfxsi}
 import javafx.scene.{control => jfxsc}
 import javafx.scene.{layout => jfxsl}
@@ -33,6 +35,10 @@ class ViewManager extends jfxf.Initializable {
   private var formulaEditor: TextField = _
 
   @jfxf.FXML
+  private var backgroundColorPickerDelegate: javafx.scene.control.ColorPicker = _
+  private var backgroundColorPicker: scalafx.scene.control.ColorPicker = _
+
+  @jfxf.FXML
   private var testButtonDelegate: jfxsc.Button = _
   private var testButton: Button = _
 
@@ -41,24 +47,19 @@ class ViewManager extends jfxf.Initializable {
     //make region resizable
   }
 
-  @jfxf.FXML
-  private def handleEditorChange(event: jfxe.ActionEvent) {
-    val editorValue = formulaEditor.getText
-    val selectedCells = new ObservableBuffer(table.getSelectionModel.getSelectedCells)
-    selectedCells.map(x => Mediator.changeCellExpr((x.getRow, x.getColumn), editorValue))
-  }
+//  @jfxf.FXML
+//  private def handleEditorChange(event: jfxe.ActionEvent) {
+//    val editorValue = formulaEditor.getText
+//    val selectedCells = new ObservableBuffer(table.getSelectionModel.getSelectedCells)
+//
+//  }
 
   def initialize(url: URL, rb: util.ResourceBundle) {
 
-    assert(tableContainerDelegate != null)
-    assert(formulaEditorDelegate != null)
-    assert(testButtonDelegate != null)
+    backgroundColorPicker = new ColorPicker(backgroundColorPickerDelegate);
     tableContainer = new AnchorPane(tableContainerDelegate)
     formulaEditor = new TextField(formulaEditorDelegate)
     testButton = new Button(testButtonDelegate)
-    assert(tableContainer != null)
-    assert(formulaEditor != null)
-    assert(testButton != null)
 
     table = TableViewBuilder.build(null, null, Mediator.dataTable)
     AnchorPane.setAnchors(table, 0, 0, 0, 0)
@@ -82,16 +83,44 @@ class ViewManager extends jfxf.Initializable {
     })
     obs.subscribe(x => println("Test button clicked"))
 
-    // Create cell selection stream
+    // Create cell selection stream (indices)
     val selectedCells = new ObservableBuffer(selectionModel.getSelectedCells)
     val selectionStream = Observable.create[(Int, Int)](o => new Subscription {
       selectedCells.onChange((source, changes) => {
         o.onNext((source.map(x => (x.getRow, x.getColumn)).head))
       })
+    }).distinctUntilChanged
+    // Selected cell stream
+    val selectedCellStream = selectionStream.map(x => Mediator.getCell(x._1, x._2));
+
+    val backgroundColorStream = Observable.create[Color](o => new Subscription {
+      backgroundColorPicker.delegate.setOnAction(new EventHandler[ActionEvent] {
+        override def handle(event: ActionEvent): Unit = {
+          o.onNext(backgroundColorPicker.value.value)
+        }
+      })
     })
 
+    val formulaEditorStream = Observable.create[String](o => new Subscription {
+      formulaEditor.delegate.setOnAction(new EventHandler[ActionEvent] {
+        override def handle(event: ActionEvent): Unit = {
+          o.onNext(formulaEditor.getText)
+        }
+      })
+    })
+
+    // Changes on formula editor are reflected on the selected cell
+    formulaEditorStream.combineLatest(selectionStream)
+                        .distinctUntilChanged(x => x._1)
+                        .subscribe(x => Mediator.changeCellExpr((x._2._1, x._2._2), x._1))
+
+
     // Update formula editor when selection changes
-    selectionStream.subscribe(x => changeEditorText(Mediator.getCell(x._1, x._2).exprString))
+    // TODO change all the tools to fit the cell
+    selectedCellStream.subscribe(x => changeEditorText(x.exprString))
+
+
+
   }
 
   def changeEditorText(text: String) = formulaEditor.setText(text)
