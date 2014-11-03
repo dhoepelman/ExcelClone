@@ -9,17 +9,17 @@ import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
 
 import math.pow
-import scalaExcel.formula.Evaluator.eval
+import scalaExcel.formula.Evaluator.{eval, Ctx}
 import scalaExcel.formula.Values.{toVal => tv}
 
 @RunWith(value = classOf[Parameterized])
-class EvaluatorTests(name: String, e: Value, v: Any) {
+class EvaluatorTests(name: String, e: Value, v: Any, ctx: Ctx) {
 
   val p = new Parser()
 
   @Test def x = v match {
-    case v: Expr   => assertEquals(e, eval(v))
-    case v: String => assertEquals(e, eval(p parsing v))
+    case v: Expr   => assertEquals(e, eval(ctx, v))
+    case v: String => assertEquals(e, eval(ctx, p parsing v))
     case _ => throw new IllegalArgumentException("Can't test something else")
   }
 
@@ -27,22 +27,28 @@ class EvaluatorTests(name: String, e: Value, v: Any) {
 
 object EvaluatorTests {
 
-  def lst(name: String, l: List[Tuple2[Any, String]]) =
-    l map (x => (name, tv(x._1), x._2))
+  type TestTuple = (String, Value, AnyRef, Ctx)
 
-  def lstErr(name: String, l: List[Tuple2[ErrType, String]]) =
-    l map (x => (name, VErr(x._1), x._2))
+  val ectx = Map[ACell, Value]();
+  def lst(name: String, l: List[Tuple2[Any, String]]) =
+    lstCtx(name, l map (x => (x._1, x._2, ectx)))
+
+  def lstCtx(name: String, l: List[Tuple3[Any, String, Ctx]]) =
+    l map (x => (name, tv(x._1), x._2, x._3))
+
+  def lstErr(name: String, l: List[Tuple2[ErrType, String]]): List[TestTuple] =
+    l map (x => (name, VErr(x._1), x._2, ectx))
 
   @Parameters(name= "{0}: <{1}> : <{2}>")
   def data: ju.Collection[Array[jl.Object]] = {
     val list = new ju.ArrayList[Array[jl.Object]]()
     (
-      (List[Tuple3[String, Value, AnyRef]](
-        ("evalConst", VDouble(10), Const(tv(10))),
-        ("evalConst", VBool(true), Const(tv(true))),
-        ("evalConst", VBool(false), Const(tv(false))),
-        ("evalConst", VString("hi"), Const(tv("hi"))),
-        ("evalConst", VString("hi"), "=\"hi\"")
+      (List[TestTuple](
+        ("evalConst", VDouble(10), Const(tv(10)), ectx),
+        ("evalConst", VBool(true), Const(tv(true)), ectx),
+        ("evalConst", VBool(false), Const(tv(false)), ectx),
+        ("evalConst", VString("hi"), Const(tv("hi")), ectx),
+        ("evalConst", VString("hi"), "=\"hi\"", ectx)
       )) ++ lst("binop =", List(
         (true, "=TRUE = TRUE"),
         (false, "=FALSE = TRUE"),
@@ -225,8 +231,14 @@ object EvaluatorTests {
         (10, "=SUM(1,2,3,4)")
       )) ++ lstErr("call SUM invalids", List(
         (InvalidValue(), "=SUM(\"A\")")
+      )) ++ lstCtx("cell reference", List(
+        (4, "=A1", Map(ACell("A", 1) -> VDouble(4))),
+        (8, "=A1*2", Map(ACell("A", 1) -> VDouble(4)))
       ))
-    ) foreach (x => list.add(Array(x._1, x._2, x._3)))
+    ) foreach ({
+      case (a, b, c, ctx) => list.add(Array(a, b, c, ctx))
+    })
+
     return list
   }
 

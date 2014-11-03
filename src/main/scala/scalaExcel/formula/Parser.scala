@@ -163,6 +163,8 @@ class Parser extends RegexParsers {
     case c1 ~ char ~ c2 => ColRange(c1, c2)
   }
 
+  def parse(s: String) = parseAll(Start, s)
+
   def parsing(s: String) = parseAll(Start, s) match {
     case Success (t, _) => t
     case NoSuccess(msg, _) => throw new IllegalArgumentException(s"Unable to parse $s: $msg")
