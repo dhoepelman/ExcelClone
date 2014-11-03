@@ -18,7 +18,8 @@ object Mediator {
   def dataTable: DataTable = _dataModel.dataTable
 
   def controller = _controller
-  def controller_= (manager:ViewManager): Unit = _controller = manager
+
+  def controller_=(manager: ViewManager): Unit = _controller = manager
 
   def getCellObservable(index: (Int, Int)): ObservableSheetCell =
     _dataModel.getCellObservable(index._1, index._2)

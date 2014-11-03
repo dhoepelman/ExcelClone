@@ -44,7 +44,7 @@ class ViewManager extends jfxf.Initializable {
     tableContainer = new AnchorPane(tableContainerDelegate)
     formulaEditor = new TextField(formulaEditorDelegate)
 
-    table = SheetBuilder.build(null, null, Mediator.dataTable)
+    table = TableViewBuilder.build(null, null, Mediator.dataTable)
     AnchorPane.setAnchors(table, 0, 0, 0, 0)
     tableContainer.content = List(table)
 

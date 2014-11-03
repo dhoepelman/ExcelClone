@@ -9,9 +9,9 @@ import scalaExcel.GUI.model.SheetCell
 import scalaExcel.GUI.model.DataModelFactory.{DataTable, DataRow}
 import scalaExcel.GUI.model.SheetCellStringConverter.SheetCellStringConverter
 import scalaExcel.GUI.controller.Mediator
-import scalaExcel.GUI.util.ErroneousEvaluation
+import scalaExcel.GUI.util.{CircularEvaluation, ErroneousEvaluation}
 
-object SheetBuilder {
+object TableViewBuilder {
   type TableColumns = ObservableBuffer[javafx.scene.control.TableColumn[DataRow, SheetCell]]
 
   private val defaultHeaders = List("A", "B")
@@ -46,11 +46,11 @@ object SheetBuilder {
                   style = {
                     if (newCell == null)
                       ""
-                    else if (newCell.evaluated.isInstanceOf[ErroneousEvaluation])
-                      SheetCell.makeError(null)
-                    else
-                      newCell.stylist(null)
-
+                    else newCell.evaluated match {
+                      case x: ErroneousEvaluation => SheetCell.makeError(null)
+                      case x: CircularEvaluation => SheetCell.makeError(null)
+                      case _ => newCell.stylist(null)
+                    }
                   }
               }
             }

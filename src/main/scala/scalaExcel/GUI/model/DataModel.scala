@@ -1,6 +1,8 @@
 package scalaExcel.GUI.model
 
 import scalaExcel.GUI.model.DataModelFactory.DataTable
+import scalaExcel.GUI.util.{CircularEvaluation, ErroneousEvaluation}
+import rx.lang.scala.Subject
 
 class DataModel() {
   private val defaultData = List(List("Cell11", "Cell12"), List("Cell21", "Cell22"))
@@ -36,6 +38,13 @@ class DataModel() {
     new SheetCellSubscriber(this, expr, index)
   }
 
+  def propagateChange(newValue: SheetCell, index: (Int, Int), subject: Subject[List[(Int, Int, SheetCell)]]) {
+    newValue.evaluated match {
+      case x: CircularEvaluation => Unit
+      case _ => subject.onNext(List((index._1, index._2, newValue)))
+    }
+  }
+
   def cellEvaluated(index: (Int, Int), expr: String, value: Any, subscriber: SheetCellSubscriber) = {
     println("Cell " + index + " evaluated to " + value + " with subs " + subscriber.subscription)
     val observable = getCellObservable(index)
@@ -44,7 +53,9 @@ class DataModel() {
       if (oldSubscription != null && oldSubscription != subscriber.subscription)
         oldSubscription.unsubscribe()
     }
-    observable.value = SheetCell.markEvaluated(index, observable.value, expr, value, subscriber.subscription)
+    val newValue = SheetCell.markEvaluated(index, observable.value, expr, value, subscriber.subscription)
+    observable.value = newValue
+    propagateChange(newValue, index, observable.subject)
   }
 
   def changeCellStylist(index: (Int, Int), stylist: Any => String) = {
@@ -55,10 +66,5 @@ class DataModel() {
   def changeCellFormatter(index: (Int, Int), formatter: Any => String) = {
     val observable = getCellObservable(index)
     observable.value = SheetCell.modifyFormatter(index, observable.value, formatter)
-  }
-
-  def foundCircularDependency(index: (Int, Int), expr: String) = {
-    val observable = getCellObservable(index)
-    observable.value = SheetCell.newError(index, observable.value, expr)
   }
 }

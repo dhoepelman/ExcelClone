@@ -1,7 +1,7 @@
 package scalaExcel.GUI.model
 
 import rx.lang.scala.Subscription
-import scalaExcel.GUI.util.{ErroneousEvaluation, AwaitingEvaluation}
+import scalaExcel.GUI.util.{CircularEvaluation, ErroneousEvaluation, AwaitingEvaluation}
 
 sealed trait SheetCell {
   val expr: String
@@ -39,15 +39,9 @@ object SheetCell {
 
   def markEvaluated(index: (Int, Int), cell: SheetCell, expr: String, value: Any, subscription: Subscription): SheetCell =
     if (cell != null)
-      new SheetCellImpl(index, expr, cell.formatter, cell.stylist, value, subscription)
-    else
-      new SheetCellImpl(index, expr, null, null, value, subscription)
-
-  def newError(index: (Int, Int), cell: SheetCell, expr: String): SheetCell =
-    if (cell != null)
-      new SheetCellImpl(index, expr, cell.formatter, cell.stylist, new ErroneousEvaluation(expr), null)
-    else
-      new SheetCellImpl(index, expr, null, null, new ErroneousEvaluation(expr), null)
+    new SheetCellImpl(index, expr, cell.formatter, cell.stylist, value, subscription)
+  else
+    new SheetCellImpl(index, expr, null, null, value, subscription)
 
   private class SheetCellImpl(index_ : (Int, Int),
                               expr_ : String,

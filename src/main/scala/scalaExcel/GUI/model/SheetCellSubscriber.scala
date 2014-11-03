@@ -1,7 +1,7 @@
 package scalaExcel.GUI.model
 
 import rx.lang.scala.{Subscription, Subject, Observable}
-import scalaExcel.GUI.util.MockParser
+import scalaExcel.GUI.util.{CircularEvaluation, MockParser}
 
 class SheetCellSubscriber(model_ : DataModel, expr_ : String, index_ : (Int, Int)) {
 
@@ -19,9 +19,9 @@ class SheetCellSubscriber(model_ : DataModel, expr_ : String, index_ : (Int, Int
 
   val subscription: Subscription = {
     if (refs.contains(index_)) {
-      //TODO show some form of error
+      //TODO indirect circular dependency
       println("Circular dependency for " + index_ + "!")
-      model_.foundCircularDependency(index_, expr_)
+      model_.cellEvaluated(index_, expr_, new CircularEvaluation(expr_), this)
       null
     }
     else {

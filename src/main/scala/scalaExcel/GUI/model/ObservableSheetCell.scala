@@ -2,8 +2,8 @@ package scalaExcel.GUI.model
 
 import rx.lang.scala.subjects.BehaviorSubject
 import scalafx.beans.property.ObjectProperty
+import scalaExcel.GUI.util.{AwaitingEvaluation, ErroneousEvaluation}
 import scalaExcel.GUI.controller.Mediator
-import scalaExcel.GUI.util.{ErroneousEvaluation, AwaitingEvaluation}
 
 class ObservableSheetCell(row: Int, column: Int, cell_ : SheetCell) extends ObjectProperty(cell_, "cell", cell_) {
   val subject = BehaviorSubject[List[(Int, Int, SheetCell)]](List((row, column, cell_)))
@@ -22,7 +22,7 @@ class ObservableSheetCell(row: Int, column: Int, cell_ : SheetCell) extends Obje
       newValue.evaluated match {
         case x: AwaitingEvaluation => Mediator.changeCellExpr((row, column), newValue.expr)
         case x: ErroneousEvaluation => Unit //TODO maybe dialog
-        case _ => subject.onNext(List((row, column, newValue)))
+        case _ => Unit
       }
     }
   })
