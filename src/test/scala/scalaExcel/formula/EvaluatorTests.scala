@@ -251,9 +251,9 @@ object EvaluatorTests {
         (3, "=SUM(A1:A2)", newCtx(Map("A1" -> 1, "A2" -> 2))),
         (6, "=SUM(A1:A2,1+2)", newCtx(Map("A1" -> 1, "A2" -> 2)))
       )) ++ lstErr("just a range", List(
-         (InvalidValue(), "=A1:A3"),
-         (InvalidValue(), "=2 + A1:A3"),
-         (InvalidValue(), "=A1:A3%")
+        (InvalidValue(), "=A1:A3"),
+        (InvalidValue(), "=2 + A1:A3"),
+        (InvalidValue(), "=A1:A3%")
       )) ++ lst("function ROWS", List(
         (4, "=ROWS(A2:A5)"),
         (1, "=ROWS(B31:B31)"),
