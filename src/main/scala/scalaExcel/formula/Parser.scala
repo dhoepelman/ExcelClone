@@ -61,7 +61,7 @@ class Parser extends RegexParsers {
   def Arguments         : Parser[List[Expr]] = repsep(Expression, ",")
 
   def LogicalExpression : Parser[Expr]  = ConcatExpression ~ rep(LogicalOp ~ ConcatExpression) ^^ toBinOp
-  def LogicalOp         : Parser[Op]    =  """=|(>=)|(<=)|(<>)|>|<""".r ^^ {
+  def LogicalOp         : Parser[Op2]    =  """=|(>=)|(<=)|(<>)|>|<""".r ^^ {
     case "=" => Eq()
     case ">=" => GTE()
     case "<=" => LTE()
@@ -71,22 +71,22 @@ class Parser extends RegexParsers {
   }
 
   def ConcatExpression  : Parser[Expr]  = AddExpression ~ rep(ConcatOp ~ AddExpression) ^^ toBinOp
-  def ConcatOp          : Parser[Op]    = "&" ^^^ Concat()
+  def ConcatOp          : Parser[Op2]    = "&" ^^^ Concat()
 
-  def AddExpression     : Parser[Expr]  = MultExpression ~ rep(AdditiveOp ~ MultExpression ) ^^ toBinOp
-  def AdditiveOp        : Parser[Op]    = """\+|\-""".r ^^  {
+  def AddExpression           : Parser[Expr]  = MultExpression ~ rep(AdditiveOp ~ MultExpression ) ^^ toBinOp
+  def AdditiveOp[T >: OpAll] : Parser[T]    = """\+|\-""".r ^^  {
     case "+" => Plus()
     case "-" => Minus()
   }
 
   def MultExpression    : Parser[Expr]  = ExponentExpression ~ rep(MultiplicativeOp ~ ExponentExpression) ^^ toBinOp
-  def MultiplicativeOp  : Parser[Op]    = """\*|\/""".r ^^  {
+  def MultiplicativeOp  : Parser[Op2]    = """\*|\/""".r ^^  {
     case "*" => Mul()
     case "/" => Div()
   }
 
   def ExponentExpression: Parser[Expr]  = PercentExpression ~ rep(ExponentOp ~ PercentExpression ) ^^ toBinOp
-  def ExponentOp        : Parser[Op]    = "^" ^^^ Expon()
+  def ExponentOp        : Parser[Op2]    = "^" ^^^ Expon()
 
   def PercentExpression : Parser[Expr]  = UnaryExpression ~ rep("%") ^^ {
     case e ~ rest => rest.foldLeft(e) {
@@ -94,13 +94,13 @@ class Parser extends RegexParsers {
     }
   }
 
-  def UnaryExpression   : Parser[Expr] = AdditiveOp.? ~ BasicExpression ^^ {
+  def UnaryExpression   : Parser[Expr] = AdditiveOp[Op1].? ~ BasicExpression ^^ {
     case None ~ e => e
     case Some(op) ~ e => UnOp(op, e)
   }
 
   // Transforms a Expr [Op Expr [Op Expr [...]]] into a BinOp(Op, Expr, BinOp(Op, Expr, ...))
-  def toBinOp(p : Expr ~ List[Op ~ Expr]) = p match {
+  def toBinOp(p : Expr ~ List[Op2 ~ Expr]) = p match {
     case e ~ rest => rest.foldLeft(e) {
       case (l, op ~ r) => BinOp(op, l, r)
     }
