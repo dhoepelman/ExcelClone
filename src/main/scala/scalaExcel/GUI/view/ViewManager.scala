@@ -9,6 +9,7 @@ import javafx.scene.{layout => jfxsl}
 import javafx.{event => jfxe, fxml => jfxf}
 import rx.lang.scala._
 
+import scala.annotation.meta.field
 import scala.collection.mutable
 import scala.util._
 import scalafx.scene.layout.AnchorPane
@@ -40,6 +41,10 @@ class ViewManager extends jfxf.Initializable {
   private var backgroundColorPicker: scalafx.scene.control.ColorPicker = _
 
   @jfxf.FXML
+  private var fontColorPickerDelegate: javafx.scene.control.ColorPicker = _
+  private var fontColorPicker: scalafx.scene.control.ColorPicker = _
+
+  @jfxf.FXML
   private var testButtonDelegate: jfxsc.Button = _
   private var testButton: Button = _
 
@@ -50,7 +55,8 @@ class ViewManager extends jfxf.Initializable {
 
   def initialize(url: URL, rb: java.util.ResourceBundle) {
 
-    backgroundColorPicker = new ColorPicker(backgroundColorPickerDelegate);
+    backgroundColorPicker = new ColorPicker(backgroundColorPickerDelegate)
+    fontColorPicker = new ColorPicker(fontColorPickerDelegate)
     tableContainer = new AnchorPane(tableContainerDelegate)
     formulaEditor = new TextField(formulaEditorDelegate)
     testButton = new Button(testButtonDelegate)
@@ -75,18 +81,45 @@ class ViewManager extends jfxf.Initializable {
 
     // Create cell selection stream (indices)
     val selectedCells = new ObservableBuffer(selectionModel.getSelectedCells)
-    val selectionStream = Observable.create[(Int, Int)](o => new Subscription {
+    val selectionStream = null +: Observable.create[(Int, Int)](o => new Subscription {
       selectedCells.onChange((source, changes) => {
         o.onNext((source.map(x => (x.getRow, x.getColumn)).head))
       })
-    }).distinctUntilChanged
+    })
+
+    // Update formula editor when selection changes
     // Selected cell stream
-    val selectedCellStream = selectionStream.map(x => Mediator.getCell(x._1, x._2));
+    val selectedCellStream = selectionStream
+      .filter(x => x!=null)
+      .map(x => Mediator.getCell(x._1, x._2));
+
+    // Change the formula editor
+    selectedCellStream.subscribe(x => {
+      changeEditorText(x.exprString)
+    })
+
+    // Update colorpickers when selection changes
+    selectedCellStream.map(x => x.stylist.apply())
+      .map(x => fieldsFromCss(x).getOrElse("-fx-background-color", "#FFFFFF"))
+      .map(x => Color.web(x))
+      .subscribe(x => changeBackgroundColorPicker(x))
+    selectedCellStream.map(x => x.stylist.apply())
+      .map(x => fieldsFromCss(x).getOrElse("-fx-text-fill", "#000000"))
+      .map(x => Color.web(x))
+      .subscribe(x => changeFontColorPicker(x))
+
 
     val backgroundColorStream = Observable.create[Color](o => new Subscription {
       backgroundColorPicker.delegate.setOnAction(new EventHandler[ActionEvent] {
         override def handle(event: ActionEvent): Unit = {
           o.onNext(backgroundColorPicker.value.value)
+        }
+      })
+    })
+    val fontColorStream = Observable.create[Color](o => new Subscription {
+      fontColorPicker.delegate.setOnAction(new EventHandler[ActionEvent] {
+        override def handle(event: ActionEvent): Unit = {
+          o.onNext(fontColorPicker.value.value)
         }
       })
     })
@@ -99,55 +132,79 @@ class ViewManager extends jfxf.Initializable {
       })
     })
 
-    // Changes on formula editor are reflected on the selected cell
+    // Changes on formula editor are pushed to the selected cell
     formulaEditorStream.combineLatest(selectionStream)
-                        .map(x => new {val position = x._2; val formula = x._1}) // For better readability
-                        .distinctUntilChanged(x => x.formula)
-                        .subscribe(x => Mediator.changeCellExpr((x.position._1, x.position._2), x.formula))
+          .map(x => new {val position = x._2; val formula = x._1}) // For better readability
+          .distinctUntilChanged(x => x.formula)
+          .filter(x => x.position != null)
+          .subscribe(x => Mediator.changeCellExpr((x.position._1, x.position._2), x.formula))
 
-    // Changes on backgroundColorPicker are reflected on the selected cell
-    backgroundColorStream.map(colorToWeb)
-                          .combineLatest(selectionStream)
-                          .map(x => new { val position = x._2; val colour = x._1}) // For better readability
-                          .distinctUntilChanged(x => x.colour)
-                          .subscribe(x => Mediator.changeCellStylist(x.position, _=>"-fx-background-color: " + x.colour + ";"))
-
-
-    // Update formula editor when selection changes
-    // TODO change all the tools to fit the cell
-    selectedCellStream.subscribe(x => {
-      changeEditorText(x.exprString)
-    })
-
-    selectedCellStream.map(x => x.stylist.apply())
-                      .map(x => fieldsFromCss(x).getOrElse("-fx-background-color", "#FFFFFF"))
-                      .map(x => Color.web(x))
-                      .subscribe(x => changeBackgroundColorPicker(x))
-//                      .subscribe(x => println(x))
-
+    // Changes on the ColorPickers are pushed to the model
+    backgroundColorStream.map(x => "-fx-background-color: " + colorToWeb(x))
+          .merge(fontColorStream.map(x => "-fx-text-fill: " + colorToWeb(x)))
+          .combineLatest(selectionStream)
+          .filter(x => x._2 != null)
+          .distinctUntilChanged(x => x._1)
+          .map(x => (x._2, x._1, Mediator.getCell(x._2._1, x._2._2).stylist()))
+          //.map(x => {printmy("original: " + x._3); x})
+          .map(x => (x._1, setCssField(x._3, x._2)))
+          .subscribe(x => {
+            //printmy(x)
+            Mediator.changeCellStylist(x._1, _=>x._2)
+          })
   }
+
+
+
 
   def changeEditorText(text: String) = formulaEditor.setText(text)
   def changeBackgroundColorPicker(color: Color) = backgroundColorPicker.setValue(color)
+  def changeFontColorPicker(color: Color) = fontColorPicker.setValue(color)
 
   def tableView: TableView[DataRow] = table
 
+
+
+  /*******************************************
+      Utility functions
+   *******************************************/
+
+
   def colorToWeb(c : Color): String =
       "#%02X%02X%02X".format(
-      (c.getRed() * 255).asInstanceOf[Int],
-      (c.getGreen() * 255).asInstanceOf[Int],
-      (c.getBlue() * 255).asInstanceOf[Int])
+        (c.getRed() * 255).asInstanceOf[Int],
+        (c.getGreen() * 255).asInstanceOf[Int],
+        (c.getBlue() * 255).asInstanceOf[Int])
+
 
   def fieldsFromCss(css : String) : (scala.collection.mutable.Map[String, String]) = {
     val bodyRe = """([^:;{}]+:[^:;{}]+;?)""".r
-
     val map = new mutable.HashMap[String, String]
     bodyRe.findAllIn(css)
           .map(pair => pair.split(":"))
-          .map(tokens => (tokens(0).trim -> tokens(1).trim.replace(";","")))
+          .map(tokens => tokens(0).trim -> tokens(1).trim.replace(";",""))
           .foreach(x => map += x) // TODO there's probably a more FP way
-
     return map
   }
+
+  def fieldsToCss(fields : scala.collection.mutable.Map[String, String]) : String = {
+    val sb = new StringBuilder;
+    fields.foreach(x => sb ++= x._1 + ": " + x._2 + "; ")
+    return "" + sb//"{" + sb + "}"
+  }
+
+  def setCssField(css: String, field: String, value: String) : String = {
+    val fields = fieldsFromCss(css)
+    fields(field) = value
+    fieldsToCss(fields)
+  }
+
+  def setCssField(css: String, property: String) : String = {
+    val tokens = property.split(":").map(x => x.trim)
+    setCssField(css, tokens(0), tokens(1))
+  }
+
+  // Stand out
+  def printmy(any: Any) = println(" - " + any)
 
 }

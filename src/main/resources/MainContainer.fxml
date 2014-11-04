@@ -49,7 +49,7 @@
                         </AnchorPane>
                         <AnchorPane GridPane.columnIndex="2">
                             <children>
-                                <Button alignment="CENTER" mnemonicParsing="false" text="Button" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" GridPane.halignment="CENTER" />
+                                <ColorPicker fx:id="fontColorPickerDelegate"></ColorPicker>
                             </children>
                         </AnchorPane>
                         <AnchorPane GridPane.columnIndex="3">
