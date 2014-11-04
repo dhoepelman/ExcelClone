@@ -35,21 +35,27 @@
                         </Menu>
                     </menus>
                 </MenuBar>
-                <GridPane alignment="CENTER" gridLinesVisible="true">
+                <GridPane alignment="CENTER" gridLinesVisible="true" prefHeight="42">
                     <children>
                         <AnchorPane>
                             <children>
                                 <Button fx:id="testButtonDelegate" alignment="CENTER" layoutX="7.0" mnemonicParsing="false" text="ButtonT" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                             </children>
                         </AnchorPane>
-                        <AnchorPane layoutX="10.0" layoutY="10.0" GridPane.columnIndex="1">
+                        <AnchorPane GridPane.columnIndex="1">
                             <children>
-                                <ColorPicker fx:id="backgroundColorPickerDelegate"></ColorPicker>
+                                <VBox alignment="CENTER">
+                                    <Label>Background</Label>
+                                    <ColorPicker fx:id="backgroundColorPickerDelegate"></ColorPicker>
+                                </VBox>
                             </children>
                         </AnchorPane>
                         <AnchorPane GridPane.columnIndex="2">
                             <children>
-                                <ColorPicker fx:id="fontColorPickerDelegate"></ColorPicker>
+                                <VBox alignment="CENTER">
+                                    <Label>Font</Label>
+                                    <ColorPicker fx:id="fontColorPickerDelegate"></ColorPicker>
+                                </VBox>
                             </children>
                         </AnchorPane>
                         <AnchorPane GridPane.columnIndex="3">
