@@ -1,7 +1,7 @@
 
 package scalaExcel.formula
 
-import math.pow
+import math.{pow, abs}
 
 object Evaluator {
 
@@ -103,7 +103,7 @@ object Evaluator {
       case Const(c) => c
       case BinOp(op, lhs, rhs) => evalBinOp(ctx, op, desugar(lhs), desugar(rhs))
       case UnOp(op, v) => evalUnOp(ctx, op, desugar(v))
-      case Call(f, args) => evalCall(ctx, f, desugarArgs(args))
+      case Call(f, args) => evalCall(ctx, f, args)
       case c: ACell => ctx(c)
       case _ => VErr(NA())
     }
@@ -193,14 +193,18 @@ object Evaluator {
     case _ => VErr(InvalidValue())
   }
 
-  def evalCall(ctx: Ctx, f: String, args: List[Expr]) =
-    f match {
-      case "SUM" => reduce(ctx, applyToDoubles(_ + _), VDouble(0), args)
+  def evalCall(ctx: Ctx, fn: String, args: List[Expr]) =
+    fn match {
+      case "SUM" => reduce(ctx, applyToDoubles(_ + _), VDouble(0), desugarArgs(args))
+      case "ROWS" => evalCallRows(args)
       case _ => VErr(InvalidName())
     }
 
-  def evalCell(ctx: Ctx, col: ColRef, row: RowRef) = (col, row) match {
-    case (ColRef(c, _), RowRef(r, _)) => eval(ctx, ACell(c, r))
+  def evalCallRows(args: List[Expr]) = args match {
+    case List(Range(Cell(_, RowRef(r1, _)), Cell(_, RowRef(r2, _)))) => {
+      VDouble(abs(r2 - r1) + 1)
+    }
+    case _ => throw new Exception("Wrong number of arguments")
   }
 
 }
