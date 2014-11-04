@@ -98,15 +98,12 @@ class ViewManager extends jfxf.Initializable {
       changeEditorText(x.exprString)
     })
 
-    // Update colorpickers when selection changes
-    selectedCellStream.map(x => x.stylist.apply())
-      .map(x => fieldsFromCss(x).getOrElse("-fx-background-color", "#FFFFFF"))
-      .map(x => Color.web(x))
-      .subscribe(x => changeBackgroundColorPicker(x))
-    selectedCellStream.map(x => x.stylist.apply())
-      .map(x => fieldsFromCss(x).getOrElse("-fx-text-fill", "#000000"))
-      .map(x => Color.web(x))
-      .subscribe(x => changeFontColorPicker(x))
+    // Update color pickers when selection changes
+    selectedCellStream.map(x => fieldsFromCss(x.stylist.apply()))
+      .subscribe(fields => {
+        changeBackgroundColorPicker(Color.web(fields.getOrElse("-fx-background-color", "#FFFFFF")))
+        changeFontColorPicker      (Color.web(fields.getOrElse("-fx-text-fill",        "#000000")))
+      })
 
 
     val backgroundColorStream = Observable.create[Color](o => new Subscription {
@@ -146,12 +143,8 @@ class ViewManager extends jfxf.Initializable {
           .filter(x => x._2 != null)
           .distinctUntilChanged(x => x._1)
           .map(x => (x._2, x._1, Mediator.getCell(x._2._1, x._2._2).stylist()))
-          //.map(x => {printmy("original: " + x._3); x})
           .map(x => (x._1, setCssField(x._3, x._2)))
-          .subscribe(x => {
-            //printmy(x)
-            Mediator.changeCellStylist(x._1, _=>x._2)
-          })
+          .subscribe(x => Mediator.changeCellStylist(x._1, _=>x._2))
   }
 
 
