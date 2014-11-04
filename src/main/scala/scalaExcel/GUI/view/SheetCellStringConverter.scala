@@ -1,7 +1,8 @@
-package scalaExcel.GUI.model
+package scalaExcel.GUI.view
 
 import scalafx.util.StringConverter
 import scalaExcel.GUI.controller.Mediator
+import scalaExcel.GUI.model.SheetCell
 
 object SheetCellStringConverter {
 
@@ -9,6 +10,7 @@ object SheetCellStringConverter {
     override def toString(cell: SheetCell): String = if (cell == null) "" else cell.toString
 
     override def fromString(expression: String): SheetCell = {
+      // return a mock cell instance
       Mediator.editingCellChanged(expression)
     }
   }

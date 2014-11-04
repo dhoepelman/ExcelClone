@@ -35,7 +35,9 @@ class DataModel() {
 
   def changeCellExpression(index: (Int, Int), expression: String) = {
     println("Cell " + index + " changing expression to " + expression)
+    // pass the interpretation to an evaluator instance
     val evaluator = new SheetCellEvaluator(this, expression, index)
+    // start listening for changes on references
     if (evaluator.derivedObservable != null)
       evaluator.derivedObservable.connect
   }

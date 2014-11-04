@@ -7,7 +7,7 @@ import scalafx.scene.control.cell.TextFieldTableCell
 import javafx.scene.{control => jfxsc}
 import scalaExcel.GUI.model.SheetCell
 import scalaExcel.GUI.model.DataModelFactory.{DataTable, DataRow}
-import scalaExcel.GUI.model.SheetCellStringConverter.SheetCellStringConverter
+import SheetCellStringConverter.SheetCellStringConverter
 import scalaExcel.GUI.controller.Mediator
 import scalaExcel.GUI.util.{CircularEvaluation, ErroneousEvaluation}
 
@@ -31,9 +31,10 @@ object TableViewBuilder {
         }
         cellFactory = {
           column =>
-            new TextFieldTableCell[DataRow, SheetCell](new SheetTableCell) {
+            new TextFieldTableCell[DataRow, SheetCell](new SheetCellView) {
               item.onChange {
                 (_, _, newCell) =>
+                  // apply cell customization
                   style = {
                     if (newCell == null)
                       ""
