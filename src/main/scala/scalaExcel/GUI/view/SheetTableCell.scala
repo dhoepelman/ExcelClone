@@ -10,13 +10,14 @@ import scalaExcel.GUI.controller.Mediator
 class SheetTableCell() extends jfxsc.cell.TextFieldTableCell[DataRow, SheetCell](new SheetCellStringConverter) {
     override def startEdit(): Unit = {
       super.startEdit()
+      // when cell is being edited, show expression (not value)
       val textField = new TextField(this.getChildren.get(0).asInstanceOf[jfxsc.TextField])
-      textField.text = getItem.expr
-      Mediator.changeEditorText(getItem.expr)
+      textField.text = getItem.expression
+      Mediator.changeEditorText(getItem.expression)
     }
 
     override def commitEdit(p1: SheetCell): Unit = {
-      //super.commitEdit()
+      // do not commit changes directly (the data model will update)
       super.cancelEdit()
     }
 }

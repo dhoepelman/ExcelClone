@@ -36,14 +36,15 @@ object Mediator {
     (cell.getRow, cell.getColumn)
   }
 
-  def changeEditingCell(expr: String): SheetCell = {
-    println("Editing cell changed expression to " + expr)
-    changeEditorText(expr)
-    _dataModel.changeCellExpr(editingCellIndex, expr)
+  def editingCellChanged(expression: String): SheetCell = {
+    println("Editing cell changed expression to " + expression)
+    changeEditorText(expression)
+    _dataModel.changeCellExpression(editingCellIndex, expression)
+    SheetCell.newNormal(expression)
   }
 
-  def changeCellExpr(index: (Int, Int), expr: String) =
-    _dataModel.changeCellExpr(index, expr)
+  def changeCellExpression(index: (Int, Int), expression: String) =
+    _dataModel.changeCellExpression(index, expression)
 
   def changeCellStylist(index: (Int, Int), stylist: Any => String) =
     _dataModel.changeCellStylist(index, stylist)
@@ -51,12 +52,8 @@ object Mediator {
   def changeCellFormatter(index: (Int, Int), formatter: Any => String) =
     _dataModel.changeCellFormatter(index, formatter)
 
-  def changeEditorText(expr: String) {
-    _controller.changeEditorText(expr)
-  }
-
-  def portCellSubscription(index: (Int, Int), cell:SheetCell, subscription: Subscription) {
-    _dataModel.portCellSubscription(index, cell, subscription)
+  def changeEditorText(expression: String) {
+    _controller.changeEditorText(expression)
   }
 
 }

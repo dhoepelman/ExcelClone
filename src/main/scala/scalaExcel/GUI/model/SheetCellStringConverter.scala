@@ -8,8 +8,8 @@ object SheetCellStringConverter {
   class SheetCellStringConverter extends StringConverter[SheetCell] {
     override def toString(cell: SheetCell): String = if (cell == null) "" else cell.toString
 
-    override def fromString(expr: String): SheetCell = {
-      Mediator.changeEditingCell(expr)
+    override def fromString(expression: String): SheetCell = {
+      Mediator.editingCellChanged(expression)
     }
   }
 
