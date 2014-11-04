@@ -55,6 +55,10 @@ class ViewManager extends jfxf.Initializable {
 
   def initialize(url: URL, rb: java.util.ResourceBundle) {
 
+    //
+    // Initialisation of GUI object handles
+    //
+
     backgroundColorPicker = new ColorPicker(backgroundColorPickerDelegate)
     fontColorPicker = new ColorPicker(fontColorPickerDelegate)
     tableContainer = new AnchorPane(tableContainerDelegate)
@@ -69,15 +73,10 @@ class ViewManager extends jfxf.Initializable {
     selectionModel.setCellSelectionEnabled(true)
     selectionModel.setSelectionMode(SelectionMode.MULTIPLE)
 
-    // Test button click stream
-    val obs = Observable.create[Unit](o => new Subscription {
-      testButton.setOnMouseClicked(new jfxe.EventHandler[jfxsi.MouseEvent] {
-        def handle(mouseEvent: jfxsi.MouseEvent): Unit = {
-          o.onNext()
-        }
-      })
-    })
-    obs.subscribe(x => println("Test button clicked"))
+
+    //
+    // Create streams
+    //
 
     // Create cell selection stream (indices)
     val selectedCells = new ObservableBuffer(selectionModel.getSelectedCells)
@@ -86,26 +85,12 @@ class ViewManager extends jfxf.Initializable {
         o.onNext((source.map(x => (x.getRow, x.getColumn)).head))
       })
     })
-
-    // Update formula editor when selection changes
-    // Selected cell stream
+    // Create cell selection stream (SheetCell)
     val selectedCellStream = selectionStream
       .filter(x => x!=null)
       .map(x => Mediator.getCell(x._1, x._2));
 
-    // Change the formula editor
-    selectedCellStream.subscribe(x => {
-      changeEditorText(x.exprString)
-    })
-
-    // Update color pickers when selection changes
-    selectedCellStream.map(x => fieldsFromCss(x.stylist.apply()))
-      .subscribe(fields => {
-        changeBackgroundColorPicker(Color.web(fields.getOrElse("-fx-background-color", "#FFFFFF")))
-        changeFontColorPicker      (Color.web(fields.getOrElse("-fx-text-fill",        "#000000")))
-      })
-
-
+    // The user input on the background colour
     val backgroundColorStream = Observable.create[Color](o => new Subscription {
       backgroundColorPicker.delegate.setOnAction(new EventHandler[ActionEvent] {
         override def handle(event: ActionEvent): Unit = {
@@ -113,6 +98,7 @@ class ViewManager extends jfxf.Initializable {
         }
       })
     })
+    // The user input on the font colour
     val fontColorStream = Observable.create[Color](o => new Subscription {
       fontColorPicker.delegate.setOnAction(new EventHandler[ActionEvent] {
         override def handle(event: ActionEvent): Unit = {
@@ -120,7 +106,7 @@ class ViewManager extends jfxf.Initializable {
         }
       })
     })
-
+    // The user input on the formula
     val formulaEditorStream = Observable.create[String](o => new Subscription {
       formulaEditor.delegate.setOnAction(new EventHandler[ActionEvent] {
         override def handle(event: ActionEvent): Unit = {
@@ -128,6 +114,23 @@ class ViewManager extends jfxf.Initializable {
         }
       })
     })
+
+
+    //
+    // Behaviour
+    //
+
+    // Update toolbar when selection changes
+    // Update the formula editor
+    selectedCellStream.subscribe(x => {
+      changeEditorText(x.exprString)
+    })
+    // Update color pickers when selection changes
+    selectedCellStream.map(x => fieldsFromCss(x.stylist.apply()))
+          .subscribe(fields => {
+            changeBackgroundColorPicker(Color.web(fields.getOrElse("-fx-background-color", "#FFFFFF")))
+            changeFontColorPicker      (Color.web(fields.getOrElse("-fx-text-fill",        "#000000")))
+          })
 
     // Changes on formula editor are pushed to the selected cell
     formulaEditorStream.combineLatest(selectionStream)
