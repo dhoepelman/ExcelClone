@@ -1,7 +1,7 @@
 package scalaExcel.GUI.model
 
 import rx.lang.scala.Subscription
-import scalaExcel.GUI.util.{CircularEvaluation, ErroneousEvaluation, AwaitingEvaluation}
+import scalaExcel.GUI.util.AwaitingEvaluation
 
 sealed trait SheetCell {
   val expr: String
@@ -22,29 +22,31 @@ object SheetCell {
   val makeGreen = (_: Any) => "-fx-background-color: #008000;"
   val makeError = (_: Any) => "-fx-background-color: #FF0000;"
 
-  def newNormal(index: (Int, Int), expr: String): SheetCell =
-    new SheetCellImpl(index, expr, null, null, null, null)
+  def newNormal(expr: String): SheetCell =
+    new SheetCellImpl(expr, null, null, null, null)
 
-  def newEmpty(index: (Int, Int)): SheetCell =
-    new SheetCellImpl(index, "", null, null, null, null)
+  def newEmpty(): SheetCell =
+    new SheetCellImpl( "", null, null, null, null)
 
-  def modifyExpr(index: (Int, Int), cell: SheetCell, expr: String): SheetCell =
-    new SheetCellImpl(index, expr, cell.formatter, cell.stylist, new AwaitingEvaluation(expr), null)
+  def modifyExpr(cell: SheetCell, expr: String, subscription: Subscription): SheetCell =
+    new SheetCellImpl(expr, cell.formatter, cell.stylist, new AwaitingEvaluation(expr), subscription)
 
-  def modifyStylist(index: (Int, Int), cell: SheetCell, stylist: Any => String): SheetCell =
-    new SheetCellImpl(index, cell.expr, cell.formatter, stylist, cell.evaluated, null)
+  def modifySubscription(cell: SheetCell, subscription: Subscription): SheetCell =
+    new SheetCellImpl(cell.expr, cell.formatter, cell.stylist, cell.evaluated, subscription)
 
-  def modifyFormatter(index: (Int, Int), cell: SheetCell, formatter: Any => String): SheetCell =
-    new SheetCellImpl(index, cell.expr, formatter, cell.stylist, cell.evaluated, null)
+  def modifyStylist(cell: SheetCell, stylist: Any => String): SheetCell =
+    new SheetCellImpl(cell.expr, cell.formatter, stylist, cell.evaluated, null)
 
-  def markEvaluated(index: (Int, Int), cell: SheetCell, expr: String, value: Any, subscription: Subscription): SheetCell =
+  def modifyFormatter(cell: SheetCell, formatter: Any => String): SheetCell =
+    new SheetCellImpl(cell.expr, formatter, cell.stylist, cell.evaluated, null)
+
+  def markEvaluated(cell: SheetCell, expr: String, value: Any): SheetCell =
     if (cell != null)
-    new SheetCellImpl(index, expr, cell.formatter, cell.stylist, value, subscription)
-  else
-    new SheetCellImpl(index, expr, null, null, value, subscription)
+      new SheetCellImpl(expr, cell.formatter, cell.stylist, value, cell.subscription)
+    else
+      new SheetCellImpl(expr, null, null, value, null)
 
-  private class SheetCellImpl(index_ : (Int, Int),
-                              expr_ : String,
+  private class SheetCellImpl(expr_ : String,
                               formatter_ : Any => String,
                               stylist_ : Any => String,
                               evaluated_ : Any,
@@ -58,7 +60,7 @@ object SheetCell {
     override def toString: String = formatter(if (evaluated == null) "" else evaluated)
 
     def verboseString: String = {
-      "Cell{expr=" + expr + ", formatting=" + formatter(null) + ", styling=" + stylist(null) + ", evaluated=" + evaluated + "}"
+      "Cell{expr=" + expr + ", fmt=" + formatter(null) + ", sty=" + stylist(null) + ", eval=" + evaluated + ", subs=" + subscription + "}"
     }
 
     def exprString: String = expr

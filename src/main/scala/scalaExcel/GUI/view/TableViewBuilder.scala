@@ -31,16 +31,7 @@ object TableViewBuilder {
         }
         cellFactory = {
           column =>
-            val inner = new jfxsc.cell.TextFieldTableCell[DataRow, SheetCell](new SheetCellStringConverter) {
-              override def startEdit(): Unit = {
-                super.startEdit()
-                //TODO coordinate formulaEditor with this field
-                val textField = new TextField(this.getChildren.get(0).asInstanceOf[jfxsc.TextField])
-                textField.text = getItem.expr
-                Mediator.changeEditorText(getItem.expr)
-              }
-            }
-            new TextFieldTableCell[DataRow, SheetCell](inner) {
+            new TextFieldTableCell[DataRow, SheetCell](new SheetTableCell) {
               item.onChange {
                 (_, _, newCell) =>
                   style = {

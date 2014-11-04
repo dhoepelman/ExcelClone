@@ -9,7 +9,7 @@ object SheetCellStringConverter {
     override def toString(cell: SheetCell): String = if (cell == null) "" else cell.toString
 
     override def fromString(expr: String): SheetCell = {
-      Mediator.composeEditingCell(expr)
+      Mediator.changeEditingCell(expr)
     }
   }
 

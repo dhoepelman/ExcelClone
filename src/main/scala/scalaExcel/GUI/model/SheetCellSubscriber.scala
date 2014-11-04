@@ -2,44 +2,45 @@ package scalaExcel.GUI.model
 
 import rx.lang.scala.{Subscription, Subject, Observable}
 import scalaExcel.GUI.util.{CircularEvaluation, MockParser}
+import rx.lang.scala.schedulers.TrampolineScheduler
 
 class SheetCellSubscriber(model_ : DataModel, expr_ : String, index_ : (Int, Int)) {
-
-  private val combiner = (x: List[(Int, Int, SheetCell)], y: List[(Int, Int, SheetCell)]) => x ++ y
+  println("Instantiating subscriber for " + expr_)
+  private val combiner = (x: List[(Set[(Int, Int)], SheetCell)], y: List[(Set[(Int, Int)], SheetCell)]) => x ++ y
 
   val (refs, evaluator) = MockParser.parse(expr_)
 
-  //TODO unnecessary if evaluator is coordinate agnostic
-  private val transformer = (changes: List[(Int, Int, SheetCell)]) => {
-    val value = evaluator(changes.map(change =>
-      if (change._3 == null) null else change._3.evaluated))
-    println("Value of " + index_ + " updated to " + value)
-    model_.cellEvaluated(index_, expr_, value, this)
+  def changeReducer(partial: (Set[(Int, Int)], List[Any]), change: (Set[(Int, Int)], SheetCell)): (Set[(Int, Int)], List[Any]) = {
+    (partial._1 ++ change._1, partial._2 :+ change._2.evaluated)
+  }
+
+  private val transformer = (changes: List[(Set[(Int, Int)], SheetCell)]) => {
+    val (previousEmitters, values) = changes.foldLeft(Set[(Int, Int)](), List[Any]())(changeReducer)
+    if (previousEmitters.contains(index_)) {
+      println("Circular dependency for " + index_ + "!")
+      model_.cellEvaluated(index_, expr_, new CircularEvaluation(expr_), null)
+    } else {
+      val value = evaluator(values)
+      println("Value of " + index_ + " updated to " + value)
+      model_.cellEvaluated(index_, expr_, value, previousEmitters)
+    }
   }
 
   val subscription: Subscription = {
-    if (refs.contains(index_)) {
-      //TODO indirect circular dependency
-      println("Circular dependency for " + index_ + "!")
-      model_.cellEvaluated(index_, expr_, new CircularEvaluation(expr_), this)
+    println("Subscribing " + index_ + " for " + refs)
+    if (refs == List()) {
+      model_.cellEvaluated(index_, expr_, evaluator(List()), null)
       null
-    }
-    else {
-      println("Subscribing " + index_ + " for " + refs)
-      if (refs == List()) {
-        model_.cellEvaluated(index_, expr_, evaluator(List()), this)
-        null
-      } else {
-        val subjects = refs.map(x => model_.getCellObservable(x).subject)
-        val obs = compose(subjects)
-        obs.subscribe(transformer)
-      }
+    } else {
+      val subjects = refs.map(x => model_.getCellObservable(x).valueEmitter)
+      val obs = composeSubjects(subjects)
+      obs.subscribeOn(TrampolineScheduler()).subscribe(transformer)
     }
   }
 
-  private def compose(subjects: List[Subject[List[(Int, Int, SheetCell)]]]): Observable[List[(Int, Int, SheetCell)]] = subjects match {
+  private def composeSubjects(subjects: List[Subject[List[(Set[(Int, Int)], SheetCell)]]]): Observable[List[(Set[(Int, Int)], SheetCell)]] = subjects match {
     case List(s1) => s1
     case List(s1, s2) => s1.combineLatestWith(s2)(combiner)
-    case ss => compose(ss.init).combineLatestWith(ss.last)(combiner)
+    case ss => composeSubjects(ss.init).combineLatestWith(ss.last)(combiner)
   }
 }

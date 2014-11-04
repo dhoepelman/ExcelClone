@@ -59,9 +59,9 @@ class ViewManager extends jfxf.Initializable {
     AnchorPane.setAnchors(table, 0, 0, 0, 0)
     tableContainer.content = List(table)
 
-    Mediator.changeCellStylist((0, 0), SheetCell.makeYellow)
-    Mediator.changeCellExpr((0, 0), "new")
-    Mediator.changeCellStylist((0, 1), SheetCell.makeGreen)
+//    Mediator.changeCellStylist((0, 0), SheetCell.makeYellow)
+//    Mediator.changeCellExpr((0, 0), "new")
+//    Mediator.changeCellStylist((0, 1), SheetCell.makeGreen)
 
     val selectionModel = table.getSelectionModel
     selectionModel.setCellSelectionEnabled(true)
@@ -134,7 +134,7 @@ class ViewManager extends jfxf.Initializable {
   def changeEditorText(text: String) = formulaEditor.setText(text)
   def changeBackgroundColorPicker(color: Color) = backgroundColorPicker.setValue(color)
 
-  def getTableView: TableView[DataRow] = table
+  def tableView: TableView[DataRow] = table
 
   def colorToWeb(c : Color): String =
       "#%02X%02X%02X".format(
