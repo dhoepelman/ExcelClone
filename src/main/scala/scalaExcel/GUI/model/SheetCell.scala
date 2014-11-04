@@ -18,9 +18,9 @@ sealed trait SheetCell {
 object SheetCell {
   //TODO apply() if necessary
 
-  val makeYellow = (_: Any) => "-fx-background-color: yellow;"
-  val makeGreen = (_: Any) => "-fx-background-color: green;"
-  val makeError = (_: Any) => "-fx-background-color: red;"
+  val makeYellow = (_: Any) => "-fx-background-color: #FFFF00;"
+  val makeGreen = (_: Any) => "-fx-background-color: #008000;"
+  val makeError = (_: Any) => "-fx-background-color: #FF0000;"
 
   def newNormal(index: (Int, Int), expr: String): SheetCell =
     new SheetCellImpl(index, expr, null, null, null, null)
