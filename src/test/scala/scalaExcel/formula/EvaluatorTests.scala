@@ -253,10 +253,12 @@ object EvaluatorTests {
          (InvalidValue(), "=A1:A3"),
          (InvalidValue(), "=2 + A1:A3"),
          (InvalidValue(), "=A1:A3%")
-      )) ++ lst("function COLUMNS", List(
+      )) ++ lst("function ROWS", List(
         (4, "=ROWS(A2:A5)"),
         (1, "=ROWS(B31:B31)"),
         (10, "=ROWS(A14:A5)")
+      )) ++ lstCtx("function AVG", List(
+        (5, "=AVERAGE(A1:A2)", newCtx(Map("A1" -> 3, "A2" -> 7)))
       ))
     ) foreach ({
       case (a, b, c, ctx) => list.add(Array(a, b, c, ctx))

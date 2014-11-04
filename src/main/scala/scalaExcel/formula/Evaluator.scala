@@ -197,6 +197,7 @@ object Evaluator {
     fn match {
       case "SUM" => reduce(ctx, applyToDoubles(_ + _), VDouble(0), desugarArgs(args))
       case "ROWS" => evalCallRows(args)
+      case "AVERAGE" => evalIn(ctx, BinOp(Div(), Call("SUM", args), Call("ROWS", args)))
       case _ => VErr(InvalidName())
     }
 
