@@ -56,7 +56,8 @@ object EvaluatorTests {
         ("evalConst", VBool(true), Const(tv(true)), ectx),
         ("evalConst", VBool(false), Const(tv(false)), ectx),
         ("evalConst", VString("hi"), Const(tv("hi")), ectx),
-        ("evalConst", VString("hi"), "=\"hi\"", ectx)
+        ("evalConst", VString("hi"), "=\"hi\"", ectx),
+        ("evalConst Err", VErr(NA()), Const(VErr(NA())), ectx)
       )) ++ lst("binop =", List(
         (true, "=TRUE = TRUE"),
         (false, "=FALSE = TRUE"),
@@ -258,7 +259,9 @@ object EvaluatorTests {
         (1, "=ROWS(B31:B31)"),
         (10, "=ROWS(A14:A5)")
       )) ++ lstCtx("function AVG", List(
-        (5, "=AVERAGE(A1:A2)", newCtx(Map("A1" -> 3, "A2" -> 7)))
+        (5, "=AVERAGE(A1:A2)", newCtx(Map("A1" -> 3, "A2" -> 7))),
+        (2.5, "=AVERAGE(3, 1, 4, 2)", ectx),
+        (5, "=AVERAGE(5, A1:A2)", newCtx(Map("A1" -> 3, "A2" -> 7)))
       ))
     ) foreach ({
       case (a, b, c, ctx) => list.add(Array(a, b, c, ctx))
