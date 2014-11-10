@@ -80,15 +80,15 @@ class ViewManager extends jfxf.Initializable {
 
     // Create cell selection stream (indices)
     val selectedCells = new ObservableBuffer(selectionModel.getSelectedCells)
-    val selectionStream = null +: Observable.create[(Int, Int)](o => new Subscription {
+    val selectionStream = List() +: Observable.create[Iterable[(Int, Int)]](o => new Subscription {
       selectedCells.onChange((source, changes) => {
-        o.onNext((source.map(x => (x.getRow, x.getColumn)).head))
+        o.onNext((source.map(x => (x.getRow, x.getColumn))))
       })
     })
     // Create cell selection stream (SheetCell)
     val selectedCellStream = selectionStream
       .filter(x => x!=null)
-      .map(x => Mediator.getCell(x._1, x._2));
+      .map(it => it.map(x => Mediator.getCell(x._1, x._2)));
 
     // The user input on the background colour
     val backgroundColorStream = Observable.create[Color](o => new Subscription {
@@ -123,31 +123,36 @@ class ViewManager extends jfxf.Initializable {
     // Update toolbar when selection changes
     // Update the formula editor
     selectedCellStream.subscribe(x => {
-      changeEditorText(x.expression)
+      if (x.size == 1) changeEditorText(x.head.expression)
+      else changeEditorText("")
     })
     // Update color pickers when selection changes
-    selectedCellStream.map(x => fieldsFromCss(x.stylist.apply()))
-          .subscribe(fields => {
-            changeBackgroundColorPicker(Color.web(fields.getOrElse("-fx-background-color", "#FFFFFF")))
-            changeFontColorPicker      (Color.web(fields.getOrElse("-fx-text-fill",        "#000000")))
-          })
+    selectedCellStream.map(x => {
+      if (x.size == 1) fieldsFromCss(x.head.stylist.apply())
+      else fieldsFromCss("")
+    })
+      .subscribe(fields => {
+      changeBackgroundColorPicker(Color.web(fields.getOrElse("-fx-background-color", "#FFFFFF")))
+      changeFontColorPicker      (Color.web(fields.getOrElse("-fx-text-fill",        "#000000")))
+    })
 
     // Changes on formula editor are pushed to the selected cell
     formulaEditorStream.combineLatest(selectionStream)
-          .map(x => new {val position = x._2; val formula = x._1}) // For better readability
-          .distinctUntilChanged(x => x.formula)
-          .filter(x => x.position != null)
-          .subscribe(x => Mediator.changeCellExpression((x.position._1, x.position._2), x.formula))
+      .map(x => new {val positions = x._2; val formula = x._1}) // For better readability
+      .distinctUntilChanged(x => x.formula)
+      .filter(x => x.positions != null)
+      .subscribe(x => x.positions.foreach(position => Mediator.changeCellExpression((position._1, position._2), x.formula)))
 
     // Changes on the ColorPickers are pushed to the model
     backgroundColorStream.map(x => "-fx-background-color: " + colorToWeb(x))
-          .merge(fontColorStream.map(x => "-fx-text-fill: " + colorToWeb(x)))
-          .combineLatest(selectionStream)
-          .filter(x => x._2 != null)
-          .distinctUntilChanged(x => x._1)
-          .map(x => (x._2, x._1, Mediator.getCell(x._2._1, x._2._2).stylist()))
-          .map(x => (x._1, setCssField(x._3, x._2)))
-          .subscribe(x => Mediator.changeCellStylist(x._1, _=>x._2))
+      .merge(fontColorStream.map(x => "-fx-text-fill: " + colorToWeb(x)))
+      .combineLatest(selectionStream)
+      .filter(x => x._2 != null)
+      .distinctUntilChanged(x => x._1)
+      .flatMap(x => Observable.from(x._2.map(p => (x._1, p))))
+      .map(x => (x._2, x._1, Mediator.getCell(x._2._1, x._2._2).stylist()))
+      .map(x => (x._1, setCssField(x._3, x._2)))
+      .subscribe(x => Mediator.changeCellStylist(x._1, _=>x._2))
   }
 
 
@@ -177,9 +182,9 @@ class ViewManager extends jfxf.Initializable {
     val bodyRe = """([^:;{}]+:[^:;{}]+;?)""".r
     val map = new mutable.HashMap[String, String]
     bodyRe.findAllIn(css)
-          .map(pair => pair.split(":"))
-          .map(tokens => tokens(0).trim -> tokens(1).trim.replace(";",""))
-          .foreach(x => map += x) // TODO there's probably a more FP way
+      .map(pair => pair.split(":"))
+      .map(tokens => tokens(0).trim -> tokens(1).trim.replace(";",""))
+      .foreach(x => map += x) // TODO there's probably a more FP way
     return map
   }
 
