@@ -11,8 +11,6 @@ sealed trait SheetCell {
   val subscription: Subscription
 
   def verboseString: String
-
-  def expressionString: String
 }
 
 object SheetCell {
@@ -47,7 +45,7 @@ object SheetCell {
                               subscription_ : Subscription) extends SheetCell {
     val expression = expression_
     val formatter = if (formatter_ == null) (v: Any) => if (v == null) "" else v.toString else formatter_
-    val stylist = if (stylist_ == null) (_: Any) => "" else stylist_
+    val stylist = if (stylist_ == null) (v: Any) => "" else stylist_
     val evaluated = evaluated_
     val subscription = subscription_
 
@@ -57,7 +55,6 @@ object SheetCell {
       "Cell{expr=" + expression + ", fmt=" + formatter(null) + ", sty=" + stylist(null) + ", eval=" + evaluated + ", subs=" + subscription + "}"
     }
 
-    def expressionString: String = expression
   }
 
 }

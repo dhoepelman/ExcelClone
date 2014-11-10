@@ -16,6 +16,7 @@ class ObservableSheetCell(row: Int, column: Int, cell_ : SheetCell) extends Obje
       })
     }
   })
+  value = SheetCell.newEmpty()
   onChange({
     (_, oldValue, newValue) => {
       println("Observable changed from " + {

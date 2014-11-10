@@ -5,3 +5,30 @@
     -fx-background-color: linear-gradient(#61a2b1, #2A5058);
     -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 5, 0.0 , 0 , 1 );
 }
+
+.column-header {
+
+
+}
+
+.cell:selected {
+    -fx-background-color: #B3E6E6;
+}
+
+.cell {
+    -fx-background-color: whitesmoke;
+    -fx-border-width: 0.1;
+    -fx-border-color: silver;
+}
+
+.cell:empty {
+    -fx-background-color: silver;
+}
+
+.table-view {
+    -fx-table-cell-border-color: silver;
+}
+
+.table-view .table-row-cell {
+
+}

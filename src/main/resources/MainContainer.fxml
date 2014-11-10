@@ -42,19 +42,31 @@
                                 <Button fx:id="testButtonDelegate" alignment="CENTER" layoutX="7.0" mnemonicParsing="false" text="ButtonT" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                             </children>
                         </AnchorPane>
-                        <AnchorPane GridPane.columnIndex="1">
+                        <AnchorPane GridPane.columnIndex="1" GridPane.hgrow="ALWAYS">
                             <children>
-                                <VBox alignment="CENTER">
-                                    <Label>Background</Label>
-                                    <ColorPicker fx:id="backgroundColorPickerDelegate"></ColorPicker>
+                                <VBox alignment="CENTER" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                   <children>
+                                       <Label alignment="CENTER" contentDisplay="CENTER">Background</Label>
+                              <AnchorPane>
+                                 <children>
+                                             <ColorPicker fx:id="backgroundColorPickerDelegate" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                 </children>
+                              </AnchorPane>
+                                   </children>
                                 </VBox>
                             </children>
                         </AnchorPane>
-                        <AnchorPane GridPane.columnIndex="2">
+                        <AnchorPane GridPane.columnIndex="2" GridPane.hgrow="ALWAYS">
                             <children>
-                                <VBox alignment="CENTER">
-                                    <Label>Font</Label>
-                                    <ColorPicker fx:id="fontColorPickerDelegate"></ColorPicker>
+                                <VBox alignment="CENTER" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                   <children>
+                                       <Label>Font</Label>
+                              <AnchorPane>
+                                 <children>
+                                             <ColorPicker fx:id="fontColorPickerDelegate" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                 </children>
+                              </AnchorPane>
+                                   </children>
                                 </VBox>
                             </children>
                         </AnchorPane>

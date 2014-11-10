@@ -7,7 +7,7 @@ object DataModelFactory {
   type DataRow = ObservableBuffer[ObservableSheetCell]
   type DataTable = ObservableBuffer[DataRow]
 
-  private val defaultSize = (2, 2)
+  private val defaultSize = (10, 10)
 
   private def buildDataTable(rows: Int,
                              columns: Int): DataTable = {

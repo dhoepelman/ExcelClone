@@ -12,8 +12,11 @@ class SheetCellView() extends jfxsc.cell.TextFieldTableCell[DataRow, SheetCell](
       super.startEdit()
       // when cell is being edited, show expression (not value)
       val textField = new TextField(this.getChildren.get(0).asInstanceOf[jfxsc.TextField])
-      textField.text = getItem.expression
-      Mediator.changeEditorText(getItem.expression)
+      textField.text = getItem match {
+        case null => ""
+        case cell => cell.expression
+      }
+      Mediator.changeEditorText(textField.getText)
     }
 
     override def commitEdit(p1: SheetCell): Unit = {

@@ -123,7 +123,7 @@ class ViewManager extends jfxf.Initializable {
     // Update toolbar when selection changes
     // Update the formula editor
     selectedCellStream.subscribe(x => {
-      changeEditorText(x.exprString)
+      changeEditorText(x.expression)
     })
     // Update color pickers when selection changes
     selectedCellStream.map(x => fieldsFromCss(x.stylist.apply()))
@@ -137,7 +137,7 @@ class ViewManager extends jfxf.Initializable {
           .map(x => new {val position = x._2; val formula = x._1}) // For better readability
           .distinctUntilChanged(x => x.formula)
           .filter(x => x.position != null)
-          .subscribe(x => Mediator.changeCellExpr((x.position._1, x.position._2), x.formula))
+          .subscribe(x => Mediator.changeCellExpression((x.position._1, x.position._2), x.formula))
 
     // Changes on the ColorPickers are pushed to the model
     backgroundColorStream.map(x => "-fx-background-color: " + colorToWeb(x))

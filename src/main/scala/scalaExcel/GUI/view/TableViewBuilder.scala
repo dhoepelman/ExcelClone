@@ -14,8 +14,8 @@ import scalaExcel.GUI.util.{CircularEvaluation, ErroneousEvaluation}
 object TableViewBuilder {
   type TableColumns = ObservableBuffer[javafx.scene.control.TableColumn[DataRow, SheetCell]]
 
-  private val defaultHeaders = List("A", "B")
-  private val defaultWidths = List(100, 200)
+  private val defaultHeaders = List("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
+  private val defaultWidths = List(100, 200, 100, 100, 100, 100, 100, 100, 100, 100)
 
   def getColumnList(headers: List[String], widths: List[Int]): TableColumns =
     getColumnListReversed(headers.reverse, widths.reverse)
