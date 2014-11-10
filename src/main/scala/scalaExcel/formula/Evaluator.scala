@@ -73,7 +73,7 @@ object Evaluator {
     case Mul()    => reduce2(ctx, applyToDoubles(_ * _), lhs, rhs)
     case Div()    => reduce2(ctx, doubleDiv, lhs, rhs)
     case Expon()  => reduce2(ctx, doubleExpon, lhs, rhs)
-    case _ => throw new IllegalArgumentException("Invalid BinOp in AST")
+    case _ => throw new IllegalArgumentException(s"Invalid BinOp ${op.getClass.getSimpleName} in AST")
   }
 
   def evalUnOp(ctx: Ctx, op: Op, v: Expr) = op match {
@@ -81,7 +81,7 @@ object Evaluator {
     case Plus()    => eval(ctx, v)
     case Minus()   => applyToDouble(- _)(eval(ctx, v))
     case Percent() => applyToDouble(_ / 100)(eval(ctx, v))
-    case _ => throw new IllegalArgumentException("Invalid UnOp in AST")
+    case _ => throw new IllegalArgumentException(s"Invalid UnOp ${op.getClass.getSimpleName} in AST")
   }
 
   def concat(lhs: Value, rhs: Value): Value = (lhs, rhs) match {
@@ -161,7 +161,7 @@ object Evaluator {
   def evalACell(ctx: Ctx, c: ACell) = {
     ctx.get(c) match {
       case Some(v) => v
-      case None    => VErr(NA())
+      case None    => throw new IllegalArgumentException(s"Cell (${c.c},${c.r}}) not found in Ctx")
     }
   }
 
