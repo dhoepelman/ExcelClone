@@ -77,15 +77,11 @@ object Evaluator {
   }
 
   def evalUnOp(ctx: Ctx, op: Op, v: Expr) = op match {
-    case Plus()    => unOpPlus(eval(ctx, v))
+    // Unary Plus is a no-op in Excel
+    case Plus()    => eval(ctx, v)
     case Minus()   => applyToDouble(- _)(eval(ctx, v))
     case Percent() => applyToDouble(_ / 100)(eval(ctx, v))
     case _ => throw new IllegalArgumentException("Invalid UnOp in AST")
-  }
-
-  def unOpPlus(v: Value) = v match {
-    case VString(v) => VString(v)
-    case v          => applyToDouble(+ _)(v)
   }
 
   def concat(lhs: Value, rhs: Value): Value = (lhs, rhs) match {
