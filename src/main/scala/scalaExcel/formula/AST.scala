@@ -4,6 +4,9 @@ sealed abstract class Expr
 
 case class Const(v: Value) extends Expr
 
+// entirely desugared, atomic, cell reference
+case class ACell(c: String, r: Int) extends Expr
+// raw cell references
 case class Cell(c: ColRef, r: RowRef) extends Expr
 case class RowRef(referent: Int, absolute: Boolean)
 case class ColRef(referent: String, absolute: Boolean)

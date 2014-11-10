@@ -5,20 +5,22 @@ import math.pow
 
 object Evaluator {
 
-  def reduce(f: ((Value, Value) => Value), r: Value, args: List[Expr]): Value = r match {
+  type Ctx = Map[ACell, Value]
+
+  def reduce(ctx: Ctx, f: ((Value, Value) => Value), r: Value, args: List[Expr]): Value = r match {
     case e: VErr => e
     case _ => args match {
-      case x :: xs => eval(x) match {
+      case x :: xs => eval(ctx, x) match {
         case e: VErr => e
-        case i => reduce(f, f(r, i), xs)
+        case i => reduce(ctx, f, f(r, i), xs)
       }
       case _ => r
     }
   }
 
-  def reduce2(f: ((Value, Value) => Value), lhs: Expr, rhs: Expr) = eval(lhs) match {
+  def reduce2(ctx: Ctx, f: ((Value, Value) => Value), lhs: Expr, rhs: Expr) = eval(ctx, lhs) match {
     case e: VErr => e
-    case l => eval(rhs) match {
+    case l => eval(ctx, rhs) match {
       case e: VErr => e
       case r => f(l, r)
     }
@@ -46,42 +48,40 @@ object Evaluator {
 
   def boolToVDouble(b: Boolean) = VDouble(if (b) 1.0 else 0.0)
 
-  def eval(e: Expr): Value = {
+  def eval(ctx: Ctx, e: Expr): Value = {
     e match {
       case Const(c) => c
-      case BinOp(op, lhs, rhs) => evalBinOp(op, lhs, rhs)
-      case UnOp(op, v) => evalUnOp(op, v)
-      case Call(f, args) => evalCall(f, args)
+      case BinOp(op, lhs, rhs) => evalBinOp(ctx, op, lhs, rhs)
+      case UnOp(op, v) => evalUnOp(ctx, op, v)
+      case Call(f, args) => evalCall(ctx, f, args)
+      case c: ACell => evalACell(ctx, c)
+      case Cell(c, r) => evalCell(ctx, c, r)
       case _ => VErr(NA())
     }
   }
 
-  def evalBinOp(op: Op, lhs: Expr, rhs: Expr) = op match {
-    case Eq()     => reduce2(boolEq, lhs, rhs)
-    case GT()     => reduce2(boolGt, lhs, rhs)
-    case LT()     => reduce2(boolLt, lhs, rhs)
-    case GTE()    => reduce2(boolGte, lhs, rhs)
-    case LTE()    => reduce2(boolLte, lhs, rhs)
-    case NEq()    => reduce2(boolNe, lhs, rhs)
-    case Concat() => reduce2(concat, lhs, rhs)
-    case Plus()   => reduce2(applyToDoubles(_ + _), lhs, rhs)
-    case Minus()  => reduce2(applyToDoubles(_ - _), lhs, rhs)
-    case Mul()    => reduce2(applyToDoubles(_ * _), lhs, rhs)
-    case Div()    => reduce2(doubleDiv, lhs, rhs)
-    case Expon()  => reduce2(doubleExpon, lhs, rhs)
-    case _ => VErr(NA())
+  def evalBinOp(ctx: Ctx, op: Op, lhs: Expr, rhs: Expr) = op match {
+    case Eq()     => reduce2(ctx, boolEq, lhs, rhs)
+    case GT()     => reduce2(ctx, boolGt, lhs, rhs)
+    case LT()     => reduce2(ctx, boolLt, lhs, rhs)
+    case GTE()    => reduce2(ctx, boolGte, lhs, rhs)
+    case LTE()    => reduce2(ctx, boolLte, lhs, rhs)
+    case NEq()    => reduce2(ctx, boolNe, lhs, rhs)
+    case Concat() => reduce2(ctx, concat, lhs, rhs)
+    case Plus()   => reduce2(ctx, applyToDoubles(_ + _), lhs, rhs)
+    case Minus()  => reduce2(ctx, applyToDoubles(_ - _), lhs, rhs)
+    case Mul()    => reduce2(ctx, applyToDoubles(_ * _), lhs, rhs)
+    case Div()    => reduce2(ctx, doubleDiv, lhs, rhs)
+    case Expon()  => reduce2(ctx, doubleExpon, lhs, rhs)
+    case _ => throw new IllegalArgumentException(s"Invalid BinOp ${op.getClass.getSimpleName} in AST")
   }
 
-  def evalUnOp(op: Op, v: Expr) = op match {
-    case Plus()    => unOpPlus(eval(v))
-    case Minus()   => applyToDouble(- _)(eval(v))
-    case Percent() => applyToDouble(_ / 100)(eval(v))
-    case _ => VErr(NA())
-  }
-
-  def unOpPlus(v: Value) = v match {
-    case VString(v) => VString(v)
-    case v          => applyToDouble(+ _)(v)
+  def evalUnOp(ctx: Ctx, op: Op, v: Expr) = op match {
+    // Unary Plus is a no-op in Excel
+    case Plus()    => eval(ctx, v)
+    case Minus()   => applyToDouble(- _)(eval(ctx, v))
+    case Percent() => applyToDouble(_ / 100)(eval(ctx, v))
+    case _ => throw new IllegalArgumentException(s"Invalid UnOp ${op.getClass.getSimpleName} in AST")
   }
 
   def concat(lhs: Value, rhs: Value): Value = (lhs, rhs) match {
@@ -151,11 +151,22 @@ object Evaluator {
     case _ => VErr(InvalidValue())
   }
 
-  def evalCall(f: String, args: List[Expr]) = {
+  def evalCall(ctx: Ctx, f: String, args: List[Expr]) = {
     f match {
-      case "SUM" => reduce(applyToDoubles(_ + _), VDouble(0), args)
+      case "SUM" => reduce(ctx, applyToDoubles(_ + _), VDouble(0), args)
       case _ => VErr(InvalidName())
     }
+  }
+
+  def evalACell(ctx: Ctx, c: ACell) = {
+    ctx.get(c) match {
+      case Some(v) => v
+      case None    => throw new IllegalArgumentException(s"Cell (${c.c},${c.r}}) not found in Ctx")
+    }
+  }
+
+  def evalCell(ctx: Ctx, col: ColRef, row: RowRef) = (col, row) match {
+    case (ColRef(c, _), RowRef(r, _)) => eval(ctx, ACell(c, r))
   }
 
 }
