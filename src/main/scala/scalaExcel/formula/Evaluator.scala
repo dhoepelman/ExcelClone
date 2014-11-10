@@ -73,14 +73,14 @@ object Evaluator {
     case Mul()    => reduce2(ctx, applyToDoubles(_ * _), lhs, rhs)
     case Div()    => reduce2(ctx, doubleDiv, lhs, rhs)
     case Expon()  => reduce2(ctx, doubleExpon, lhs, rhs)
-    case _ => VErr(NA())
+    case _ => throw new IllegalArgumentException("Invalid BinOp in AST")
   }
 
   def evalUnOp(ctx: Ctx, op: Op, v: Expr) = op match {
     case Plus()    => unOpPlus(eval(ctx, v))
     case Minus()   => applyToDouble(- _)(eval(ctx, v))
     case Percent() => applyToDouble(_ / 100)(eval(ctx, v))
-    case _ => VErr(NA())
+    case _ => throw new IllegalArgumentException("Invalid UnOp in AST")
   }
 
   def unOpPlus(v: Value) = v match {
