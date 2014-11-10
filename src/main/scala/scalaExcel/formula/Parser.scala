@@ -10,9 +10,9 @@ class Parser extends RegexParsers {
    * Start parser, this will parse any valid cell value
    **/
   def Start : Parser[Expr] =
-    Formula   |
-    Primitive |
-    Str       |
+    phrase(Formula)   |
+    phrase(Primitive) |
+    Str               |
     Empty
 
   //****************************
@@ -25,19 +25,11 @@ class Parser extends RegexParsers {
 
   // This string literal can be used inside formula's
   val striReg = """\"(\"\"|[^\"])*\"""".r
-  val numbReg = """\d+(\.\d+)?([eE]([+-])?\d{1,3})?""".r
+  val numbReg = """(\-|\+)?\d+(\.\d+)?([eE]([+-])?\d{1,3})?""".r
   val boolReg = """(?i)(true)|(false)""".r
 
-  def StringLit     : Parser[Const]  = striReg ^^ {s => Const(VString(s.substring(1, s.length - 1).replace("\"\"", "\"")))}
-  def PosNum        : Parser[Double] = numbReg ^^ {s => s.toDouble}
-  def Num           : Parser[Const]  = AdditiveOp.? ~ PosNum ^^ {
-    case None ~ e => Const(VDouble(e))
-    case Some(op) ~ e => op match {
-      case Minus() => Const(VDouble(-e))
-      case Plus()  => Const(VDouble(e))
-      case _       => throw new IllegalStateException() // This should never happen
-    }
-  }
+  def StringLit     : Parser[Const] = striReg ^^ {s => Const(VString(s.substring(1, s.length - 1).replace("\"\"", "\"")))}
+  def Num           : Parser[Const] = numbReg ^^ {s => Const(VDouble(s.toDouble))}
   def Bool          : Parser[Const] = boolReg ^^ {s => Const(VBool(s.toBoolean))}
 
   //****************************

@@ -70,7 +70,7 @@ class ParserTests {
 
   @Test def invalidScientificNotationLiteral =
     List("1.0e0.3", "1e1234", "1e-1234")
-      .foreach (i => assertFail(i))
+      .foreach (i => test(Const(VString(i)),i))
 
   @Test def booleanLiterals =
     Map(
@@ -221,5 +221,11 @@ class ParserTests {
   //@Test def complex3 {p parsing("=IF(R[39]C[11]>65,R[25]C[42],ROUND((R[11]C[11]*IF(OR(AND(R[39]C[11]>=55, R[40]C[11]>=20),AND(R[40]C[11]>=20,R11C3=\"YES\")),R[44]C[11],R[43]C[11]))+(R[14]C[11] *IF(OR(AND(R[39]C[11]>=55,R[40]C[11]>=20),AND(R[40]C[11]>=20,R11C3=\"YES\")), R[45]C[11],R[43]C[11])),0))")}
 
   @Test def whitespaces {p parsing("=\n 1 \t + \t\t\n 4")}
+
+  @Test def string1 = test(Const(VString("abc")), "abc")
+  @Test def string2 = test(Const(VString("1 + 1")), "1 + 1")
+  @Test def string3 = test(Const(VString("12A")), "12A")
+  @Test def string4 = test(Const(VString("A%")), "A%")
+  @Test def string5 = test(Const(VString("+A")), "+A")
 
 }
