@@ -1,6 +1,8 @@
 package scalaExcel.GUI.model
 
 import scalaExcel.GUI.model.DataModelFactory.DataTable
+import scalaExcel.GUI.util.CircularEvaluation
+import rx.lang.scala.Subject
 
 class DataModel() {
   private val defaultData = List(List("Cell11", "Cell12"), List("Cell21", "Cell22"))
@@ -12,7 +14,7 @@ class DataModel() {
   private def populateDataTable(data: List[List[String]]) =
     data.view.zipWithIndex.foreach {
       case (row, i) => row.view.zipWithIndex.foreach {
-        case (expr, j) => changeCellExpr((i, j), expr)
+        case (expression, j) => changeCellExpression((i, j), expression)
       }
     }
 
@@ -31,34 +33,49 @@ class DataModel() {
     else
       populateDataTable(data)
 
-  def changeCellExpr(index: (Int, Int), expr: String) = {
-    println("Cell " + index + " changing expression to " + expr)
-    new SheetCellSubscriber(this, expr, index)
+  def changeCellExpression(index: (Int, Int), expression: String) = {
+    println("Cell " + index + " changing expression to " + expression)
+    // pass the interpretation to an evaluator instance
+    val evaluator = new SheetCellEvaluator(this, expression, index)
+    // start listening for changes on references
+    if (evaluator.derivedObservable != null)
+      evaluator.derivedObservable.connect
   }
 
-  def cellEvaluated(index: (Int, Int), expr: String, value: Any, subscriber: SheetCellSubscriber) = {
-    println("Cell " + index + " evaluated to " + value + " with subs " + subscriber.subscription)
-    val observable = getCellObservable(index)
-    if (observable.value != null) {
-      val oldSubscription = observable.value.subscription
-      if (oldSubscription != null && oldSubscription != subscriber.subscription)
+  def propagateChange(previousEmitters: Set[(Int, Int)], index: (Int, Int), value: Any, emitter: Subject[List[(Set[(Int, Int)], Any)]]) {
+    value match {
+      case x: CircularEvaluation => Unit
+      case x =>
+        // add self to emitters
+        val emitters = if (previousEmitters == null) Set(index) else previousEmitters + index
+        emitter.onNext(List((emitters, x)))
+    }
+  }
+
+  def cellEvaluated(evaluator: SheetCellEvaluator, value: Any, previousEmitters: Set[(Int, Int)]): Unit = {
+    println("Cell " + evaluator.index + " evaluated to " + value)
+    val observable = getCellObservable(evaluator.index)
+    // unregister from previous subscription if it has changed
+    val oldCell = observable.value
+    if (oldCell != null) {
+      val oldSubscription = oldCell.subscription
+      if (oldSubscription != null && oldSubscription != evaluator.subscription)
         oldSubscription.unsubscribe()
     }
-    observable.value = SheetCell.markEvaluated(index, observable.value, expr, value, subscriber.subscription)
+    // mark change
+    observable.value = SheetCell.markEvaluated(observable.value, evaluator.expression, value, evaluator.subscription)
+    // propagate change to other cells
+    propagateChange(previousEmitters, evaluator.index, value, observable.valueEmitter)
   }
 
   def changeCellStylist(index: (Int, Int), stylist: Any => String) = {
     val observable = getCellObservable(index)
-    observable.value = SheetCell.modifyStylist(index, observable.value, stylist)
+    observable.value = SheetCell.modifyStylist(observable.value, stylist)
   }
 
   def changeCellFormatter(index: (Int, Int), formatter: Any => String) = {
     val observable = getCellObservable(index)
-    observable.value = SheetCell.modifyFormatter(index, observable.value, formatter)
+    observable.value = SheetCell.modifyFormatter(observable.value, formatter)
   }
 
-  def foundCircularDependency(index: (Int, Int), expr: String) = {
-    val observable = getCellObservable(index)
-    observable.value = SheetCell.newError(index, observable.value, expr)
-  }
 }

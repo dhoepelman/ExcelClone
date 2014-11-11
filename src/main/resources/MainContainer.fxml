@@ -35,21 +35,39 @@
                         </Menu>
                     </menus>
                 </MenuBar>
-                <GridPane alignment="CENTER" gridLinesVisible="true">
+                <GridPane alignment="CENTER" gridLinesVisible="true" prefHeight="42">
                     <children>
                         <AnchorPane>
                             <children>
-                                <Button alignment="CENTER" layoutX="7.0" mnemonicParsing="false" text="Button" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                <Button fx:id="testButtonDelegate" alignment="CENTER" layoutX="7.0" mnemonicParsing="false" text="ButtonT" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                             </children>
                         </AnchorPane>
-                        <AnchorPane layoutX="10.0" layoutY="10.0" GridPane.columnIndex="1">
+                        <AnchorPane GridPane.columnIndex="1" GridPane.hgrow="ALWAYS">
                             <children>
-                                <Button alignment="CENTER" mnemonicParsing="false" text="Button" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                <VBox alignment="CENTER" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                   <children>
+                                       <Label alignment="CENTER" contentDisplay="CENTER">Background</Label>
+                              <AnchorPane>
+                                 <children>
+                                             <ColorPicker fx:id="backgroundColorPickerDelegate" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                 </children>
+                              </AnchorPane>
+                                   </children>
+                                </VBox>
                             </children>
                         </AnchorPane>
-                        <AnchorPane GridPane.columnIndex="2">
+                        <AnchorPane GridPane.columnIndex="2" GridPane.hgrow="ALWAYS">
                             <children>
-                                <Button alignment="CENTER" mnemonicParsing="false" text="Button" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" GridPane.halignment="CENTER" />
+                                <VBox alignment="CENTER" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                   <children>
+                                       <Label>Font</Label>
+                              <AnchorPane>
+                                 <children>
+                                             <ColorPicker fx:id="fontColorPickerDelegate" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                 </children>
+                              </AnchorPane>
+                                   </children>
+                                </VBox>
                             </children>
                         </AnchorPane>
                         <AnchorPane GridPane.columnIndex="3">
@@ -98,7 +116,7 @@
                        <GridPane AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
                            <children>
                                <Label text="f(x)=" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                               <TextField fx:id="formulaEditorDelegate" onAction="#handleEditorChange" promptText="formula editor" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                               <TextField fx:id="formulaEditorDelegate" promptText="formula editor" GridPane.columnIndex="1" GridPane.rowIndex="0" />
                            </children>
                            <columnConstraints>
                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="40" minWidth="20.0" prefWidth="25" />

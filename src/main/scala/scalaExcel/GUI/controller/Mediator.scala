@@ -3,6 +3,7 @@ package scalaExcel.GUI.controller
 import scalaExcel.GUI.model.{SheetCell, ObservableSheetCell, DataModel}
 import scalaExcel.GUI.view.ViewManager
 import scalaExcel.GUI.model.DataModelFactory.DataTable
+import rx.lang.scala.Subscription
 
 object Mediator {
 
@@ -18,7 +19,8 @@ object Mediator {
   def dataTable: DataTable = _dataModel.dataTable
 
   def controller = _controller
-  def controller_= (manager:ViewManager): Unit = _controller = manager
+
+  def controller_=(manager: ViewManager): Unit = _controller = manager
 
   def getCellObservable(index: (Int, Int)): ObservableSheetCell =
     _dataModel.getCellObservable(index._1, index._2)
@@ -29,21 +31,20 @@ object Mediator {
   def getCellValue(index: (Int, Int)): Any =
     _dataModel.getCellValue(index._1, index._2)
 
-  def getEditingCellIndex: (Int, Int) = {
-    val cell = _controller.getTableView.getEditingCell
+  def editingCellIndex: (Int, Int) = {
+    val cell = _controller.tableView.getEditingCell
     (cell.getRow, cell.getColumn)
   }
 
-  def composeEditingCell(expr: String): SheetCell = {
-    val index = getEditingCellIndex
-    val cell = getCell(index)
-    println("Editing cell " + index + " changed expression to " + expr)
-    changeEditorText(expr)
-    SheetCell.modifyExpr(index, cell, expr)
+  def editingCellChanged(expression: String): SheetCell = {
+    println("Editing cell changed expression to " + expression)
+    changeEditorText(expression)
+    _dataModel.changeCellExpression(editingCellIndex, expression)
+    SheetCell.newNormal(expression)
   }
 
-  def changeCellExpr(index: (Int, Int), expr: String) =
-    _dataModel.changeCellExpr(index, expr)
+  def changeCellExpression(index: (Int, Int), expression: String) =
+    _dataModel.changeCellExpression(index, expression)
 
   def changeCellStylist(index: (Int, Int), stylist: Any => String) =
     _dataModel.changeCellStylist(index, stylist)
@@ -51,8 +52,8 @@ object Mediator {
   def changeCellFormatter(index: (Int, Int), formatter: Any => String) =
     _dataModel.changeCellFormatter(index, formatter)
 
-  def changeEditorText(expr: String) {
-    _controller.changeEditorText(expr)
+  def changeEditorText(expression: String) {
+    _controller.changeEditorText(expression)
   }
 
 }

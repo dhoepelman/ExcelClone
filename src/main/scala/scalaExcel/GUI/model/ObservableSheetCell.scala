@@ -1,29 +1,27 @@
 package scalaExcel.GUI.model
 
-import rx.lang.scala.subjects.BehaviorSubject
+import rx.lang.scala.subjects.{PublishSubject, BehaviorSubject}
 import scalafx.beans.property.ObjectProperty
+import scalaExcel.GUI.util.AwaitingEvaluation
 import scalaExcel.GUI.controller.Mediator
-import scalaExcel.GUI.util.{ErroneousEvaluation, AwaitingEvaluation}
+import rx.lang.scala.Subscription
 
 class ObservableSheetCell(row: Int, column: Int, cell_ : SheetCell) extends ObjectProperty(cell_, "cell", cell_) {
-  val subject = BehaviorSubject[List[(Int, Int, SheetCell)]](List((row, column, cell_)))
-  subject.subscribe({
+  val firstValue = if (cell_ == null) null else cell_.evaluated
+  val valueEmitter = BehaviorSubject[List[(Set[(Int, Int)], Any)]](List((Set((row, column)), firstValue)))
+  valueEmitter.subscribe({
     cells => {
       cells.map({
         tuple => println("Emitted change " + tuple)
       })
     }
   })
+  value = SheetCell.newEmpty()
   onChange({
     (_, oldValue, newValue) => {
       println("Observable changed from " + {
         if (oldValue == null) "null" else oldValue.verboseString
       } + " to " + newValue.verboseString)
-      newValue.evaluated match {
-        case x: AwaitingEvaluation => Mediator.changeCellExpr((row, column), newValue.expr)
-        case x: ErroneousEvaluation => Unit //TODO maybe dialog
-        case _ => subject.onNext(List((row, column, newValue)))
-      }
     }
   })
 }

@@ -7,15 +7,15 @@ import scalafx.scene.control.cell.TextFieldTableCell
 import javafx.scene.{control => jfxsc}
 import scalaExcel.GUI.model.SheetCell
 import scalaExcel.GUI.model.DataModelFactory.{DataTable, DataRow}
-import scalaExcel.GUI.model.SheetCellStringConverter.SheetCellStringConverter
+import SheetCellStringConverter.SheetCellStringConverter
 import scalaExcel.GUI.controller.Mediator
-import scalaExcel.GUI.util.ErroneousEvaluation
+import scalaExcel.GUI.util.{CircularEvaluation, ErroneousEvaluation}
 
-object SheetBuilder {
+object TableViewBuilder {
   type TableColumns = ObservableBuffer[javafx.scene.control.TableColumn[DataRow, SheetCell]]
 
-  private val defaultHeaders = List("A", "B")
-  private val defaultWidths = List(100, 200)
+  private val defaultHeaders = List("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
+  private val defaultWidths = List(100, 200, 100, 100, 100, 100, 100, 100, 100, 100)
 
   def getColumnList(headers: List[String], widths: List[Int]): TableColumns =
     getColumnListReversed(headers.reverse, widths.reverse)
@@ -31,26 +31,18 @@ object SheetBuilder {
         }
         cellFactory = {
           column =>
-            val inner = new jfxsc.cell.TextFieldTableCell[DataRow, SheetCell](new SheetCellStringConverter) {
-              override def startEdit(): Unit = {
-                super.startEdit()
-                //TODO coordinate formulaEditor with this field
-                val textField = new TextField(this.getChildren.get(0).asInstanceOf[jfxsc.TextField])
-                textField.text = getItem.expr
-                Mediator.changeEditorText(getItem.expr)
-              }
-            }
-            new TextFieldTableCell[DataRow, SheetCell](inner) {
+            new TextFieldTableCell[DataRow, SheetCell](new SheetCellView) {
               item.onChange {
                 (_, _, newCell) =>
+                  // apply cell customization
                   style = {
                     if (newCell == null)
                       ""
-                    else if (newCell.evaluated.isInstanceOf[ErroneousEvaluation])
-                      SheetCell.makeError(null)
-                    else
-                      newCell.stylist(null)
-
+                    else newCell.evaluated match {
+                      case x: ErroneousEvaluation => SheetCell.makeError(null)
+                      case x: CircularEvaluation => SheetCell.makeError(null)
+                      case _ => newCell.stylist(null)
+                    }
                   }
               }
             }

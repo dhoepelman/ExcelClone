@@ -18,11 +18,25 @@ object MockParser {
     }
 
     // refList should come from the AST
-    val refList = if (formula == "Cell22") List((0, 0), (1, 0), (0, 1)) else List()
+    val regex = """ref(\d+)""".r
+    val stringRefs = List() ++ regex.findAllIn(formula)
+    val refList = List() ++ stringRefs
+      .map(x => List() ++ """\d""".r.findAllIn(x).take(2).map(x => x.toInt))
+      .map(x => (x.head, x.last))
 
     // return a tuple, with references and a function that evaluates the
     // expression when the values are known
     (refList, (values: List[Any]) => {
+
+      //Fake formula evaluation which only replaces refxx
+//      values match {
+//        case List() => formula
+//        case l => stringRefs.zip(values).foldLeft(formula) {
+//          case (z, (s, null)) => z.replaceAll(s, "")
+//          case (z, (s, r)) => z.replaceAll(s, r.toString)
+//        }
+//      }
+
       // values should become the Context eventually
       val ctx: Ctx = Map(
         ACell("A", 1) -> VDouble(5)
