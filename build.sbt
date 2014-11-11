@@ -11,3 +11,5 @@ libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % 
 libraryDependencies += "org.scalafx" % "scalafx_2.11" % "8.0.20-R6"
 
 libraryDependencies += "com.netflix.rxjava" % "rxjava-scala" % "0.20.6"
+
+fork in run := true
