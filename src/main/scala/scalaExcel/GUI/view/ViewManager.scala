@@ -13,6 +13,7 @@ import scalafx.collections.ObservableBuffer
 import scalafx.scene.control._
 import scalaExcel.GUI.model.DataModelFactory.DataRow
 import scalafx.scene.paint.Color
+import scalaExcel.GUI.util.CSSHelper
 
 
 class ViewManager extends jfxf.Initializable {
@@ -112,12 +113,12 @@ class ViewManager extends jfxf.Initializable {
     })
     // Update color pickers when selection changes
     selectedCellStream.map(x => {
-      if (x.size == 1) fieldsFromCss(x.head._2.stylist.apply())
-      else fieldsFromCss("")
+      if (x.size == 1) x.head._2.style
+      else ""
     })
-      .subscribe(fields => {
-      changeBackgroundColorPicker(Color.web(fields.getOrElse("-fx-background-color", "#FFFFFF")))
-      changeFontColorPicker(Color.web(fields.getOrElse("-fx-text-fill", "#000000")))
+      .subscribe(x => {
+      changeBackgroundColorPicker(CSSHelper.colorFromCssOrElse(x, "-fx-background-color", Color.White))
+      changeFontColorPicker(CSSHelper.colorFromCssOrElse(x, "-fx-text-fill", Color.Black))
     })
 
     // Changes on formula editor are pushed to the selected cell
@@ -130,17 +131,17 @@ class ViewManager extends jfxf.Initializable {
       .subscribe(x => x.positions.foreach(Mediator.changeCellExpression(_, x.formula)))
 
     // Changes on the ColorPickers are pushed to the model
-    backgroundColorStream.map("-fx-background-color: " + colorToWeb(_))
-      .merge(fontColorStream.map("-fx-text-fill: " + colorToWeb(_)))
+    backgroundColorStream.map(("-fx-background-color", _))
+      .merge(fontColorStream.map(("-fx-text-fill", _)))
       .combineLatest(selectedCellStream)
       .map(x => new {
       val cells = x._2
       val definition = x._1
     }) // For better readability
       .distinctUntilChanged(_.definition)
-      .subscribe(x => x.cells.foreach(cell => Mediator.changeCellStylist(cell._1, _ => setCssField(cell._2.stylist(), x.definition))))
+      .subscribe(x => x.cells.foreach(cell =>
+      Mediator.changeCellProperty(cell._1, x.definition._1, x.definition._2)))
   }
-
 
   def changeEditorText(text: String) = formulaEditor.text = text
 
@@ -149,38 +150,5 @@ class ViewManager extends jfxf.Initializable {
   def changeFontColorPicker(color: Color) = fontColorPicker.value = color
 
   def tableView: TableView[DataRow] = table
-
-
-  /*******************************************
-      Utility functions
-    *******************************************/
-
-
-  private def colorToWeb(c: Color): String =
-    "#%02X%02X%02X".format(
-      (c.red * 255).asInstanceOf[Int],
-      (c.green * 255).asInstanceOf[Int],
-      (c.blue * 255).asInstanceOf[Int])
-
-  private def fieldsFromCss(css: String): (Map[String, String]) = {
-    val bodyRe = """([^:;{}]+:[^:;{}]+;?)""".r
-    bodyRe.findAllIn(css)
-      .map(pair => pair.split(":"))
-      .map(tokens => tokens(0).trim -> tokens(1).trim.replace(";", ""))
-      .foldLeft(Map[String, String]())((m, x) => m + x)
-  }
-
-  private def fieldsToCss(fields: Map[String, String]): String =
-    fields.foldLeft("")((s, x) => s + x._1 + ": " + x._2 + "; ")
-
-
-  private def setCssField(css: String, field: String, value: String): String =
-    fieldsToCss(fieldsFromCss(css) + (field -> value))
-
-
-  private def setCssField(css: String, property: String): String = {
-    val tokens = property.split(":").map(x => x.trim)
-    setCssField(css, tokens(0), tokens(1))
-  }
 
 }

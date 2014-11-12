@@ -7,7 +7,6 @@ import SheetCellStringConverter.SheetCellStringConverter
 import scalafx.scene.control.TextField
 import scalaExcel.GUI.controller.Mediator
 import scalafx.scene.control.cell.TextFieldTableCell
-import scalaExcel.GUI.util.{CircularEvaluation, ErroneousEvaluation}
 
 class SheetCellViewDelegate() extends jfxsc.cell.TextFieldTableCell[DataRow, SheetCell](new SheetCellStringConverter) {
   override def startEdit(): Unit = {
@@ -31,14 +30,6 @@ class SheetCellView() extends TextFieldTableCell[DataRow, SheetCell](new SheetCe
   item.onChange {
     (_, _, newCell) =>
     // apply cell customization
-      style = {
-        if (newCell == null)
-          ""
-        else newCell.evaluated match {
-          case x: ErroneousEvaluation => SheetCell.makeError(null)
-          case x: CircularEvaluation => SheetCell.makeError(null)
-          case _ => newCell.stylist(null)
-        }
-      }
+      if (newCell != null) style = newCell.style
   }
 }

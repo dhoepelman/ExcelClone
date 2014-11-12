@@ -12,23 +12,19 @@ object TableViewBuilder {
   private val defaultHeaders = List("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
   private val defaultWidths = List(100, 200, 100, 100, 100, 100, 100, 100, 100, 100)
 
-  def getColumnList(headers: List[String], widths: List[Int]): TableColumns =
-    getColumnListReversed(headers.reverse, widths.reverse)
+  def buildColumns(headers: List[String], widths: List[Int]): TableColumns = {
+    headers.view.zip(widths).foldLeft(new TableColumns())((cols: TableColumns, data: (String, Int)) =>
+      cols +=
+        new TableColumn[DataRow, SheetCell] {
+          val columnIndex = cols.length
+          text = data._1
+          cellValueFactory = _.value.get(columnIndex)
+          cellFactory = {
+            column => new SheetCellView()
+          }
+          prefWidth = data._2
+        })
 
-  def getColumnListReversed(headers: List[String], widths: List[Int]): TableColumns = {
-    if (headers == List())
-      new TableColumns()
-    else
-      getColumnListReversed(headers.tail, widths.tail) += new TableColumn[DataRow, SheetCell] {
-        text = headers.head
-        cellValueFactory = {
-          _.value.get(headers.length - 1)
-        }
-        cellFactory = {
-          column => new SheetCellView()
-        }
-        prefWidth = widths.head
-      }
   }
 
   def build(columnHeaders: List[String], columnWidths: List[Int], rows: DataTable) = {
@@ -36,7 +32,7 @@ object TableViewBuilder {
       editable = true
       val headers = if (columnHeaders == null) defaultHeaders else columnHeaders
       val widths = if (columnWidths == null) defaultWidths else columnWidths
-      columns ++= getColumnList(headers, widths)
+      columns ++= buildColumns(headers, widths)
     }
   }
 }
