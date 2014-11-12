@@ -3,13 +3,8 @@ package scalaExcel.GUI.view
 import scalafx.scene.control._
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.control.TableColumn._
-import scalafx.scene.control.cell.TextFieldTableCell
-import javafx.scene.{control => jfxsc}
 import scalaExcel.GUI.model.SheetCell
 import scalaExcel.GUI.model.DataModelFactory.{DataTable, DataRow}
-import SheetCellStringConverter.SheetCellStringConverter
-import scalaExcel.GUI.controller.Mediator
-import scalaExcel.GUI.util.{CircularEvaluation, ErroneousEvaluation}
 
 object TableViewBuilder {
   type TableColumns = ObservableBuffer[javafx.scene.control.TableColumn[DataRow, SheetCell]]
@@ -30,22 +25,7 @@ object TableViewBuilder {
           _.value.get(headers.length - 1)
         }
         cellFactory = {
-          column =>
-            new TextFieldTableCell[DataRow, SheetCell](new SheetCellView) {
-              item.onChange {
-                (_, _, newCell) =>
-                  // apply cell customization
-                  style = {
-                    if (newCell == null)
-                      ""
-                    else newCell.evaluated match {
-                      case x: ErroneousEvaluation => SheetCell.makeError(null)
-                      case x: CircularEvaluation => SheetCell.makeError(null)
-                      case _ => newCell.stylist(null)
-                    }
-                  }
-              }
-            }
+          column => new SheetCellView()
         }
         prefWidth = widths.head
       }
