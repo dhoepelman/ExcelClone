@@ -147,10 +147,17 @@ class ViewManager extends jfxf.Initializable {
     // Testing stuff
     //
 
-    val data = List(List("ha", "cu", "na"), List("ma", "ta", "ta"))
-    printmy(Filer.gridToCSV(Filer.stringToCSV)(data))
+//    val data = List(List("ha", "cu", "na"), List("ma", "ta", "ta"))
+//    printmy(Filer.gridToCSV(Filer.stringToCSV)(data))
+//
+    Mediator.saveCSV("test.csv")
 
-    Filer.save(Filer.gridToCSV(Filer.stringToCSV))(new java.io.File("test.csv"), data)
+    //Filer.save(Filer.gridToCSV(Filer.stringToCSV))(new java.io.File("test.csv"), data)
+
+//    Mediator.toStringTable.foreach(x => {
+//      printmy("---")
+//      x.filter(_!="").foreach(printmy)
+//    })
   }
 
   def changeEditorText(text: String) = formulaEditor.text = text
