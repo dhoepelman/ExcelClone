@@ -143,10 +143,6 @@ class ViewManager extends jfxf.Initializable {
       Mediator.changeCellProperty(cell._1, x.definition._1, x.definition._2)))
 
 
-    //
-    // Testing stuff
-    //
-
 //    val data = List(List("ha", "cu", "na"), List("ma", "ta", "ta"))
 //    printmy(Filer.gridToCSV(Filer.stringToCSV)(data))
 //

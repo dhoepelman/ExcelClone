@@ -45,14 +45,14 @@
                         <AnchorPane GridPane.columnIndex="1" GridPane.hgrow="ALWAYS">
                             <children>
                                 <VBox alignment="CENTER" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" styleClass="button-box">
-                                   <children>
-                                       <Label alignment="CENTER" contentDisplay="CENTER">Background</Label>
-                              <AnchorPane>
-                                 <children>
-                                             <ColorPicker fx:id="backgroundColorPickerDelegate" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                                 </children>
-                              </AnchorPane>
-                                   </children>
+                                    <children>
+                                        <Label alignment="CENTER" contentDisplay="CENTER">Background</Label>
+                                        <AnchorPane>
+                                            <children>
+                                                <ColorPicker fx:id="backgroundColorPickerDelegate" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                            </children>
+                                        </AnchorPane>
+                                    </children>
                                 </VBox>
                             </children>
                         </AnchorPane>
