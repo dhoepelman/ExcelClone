@@ -39,6 +39,11 @@ class ViewManager extends jfxf.Initializable {
   private var fontColorPickerDelegate: javafx.scene.control.ColorPicker = _
   private var fontColorPicker: scalafx.scene.control.ColorPicker = _
 
+  @jfxf.FXML private var menuLoadDelegate: javafx.scene.control.MenuItem = _
+  @jfxf.FXML private var menuSaveDelegate: javafx.scene.control.MenuItem = _
+  private var menuLoad: scalafx.scene.control.MenuItem = _
+  private var menuSave: scalafx.scene.control.MenuItem = _
+
   @jfxf.FXML
   private var testButtonDelegate: jfxsc.Button = _
   private var testButton: Button = _
@@ -59,6 +64,8 @@ class ViewManager extends jfxf.Initializable {
     tableContainer = new AnchorPane(tableContainerDelegate)
     formulaEditor = new TextField(formulaEditorDelegate)
     testButton = new Button(testButtonDelegate)
+    menuLoad = new MenuItem(menuLoadDelegate)
+    menuSave = new MenuItem(menuSaveDelegate)
 
     // initialize and add the table
     table = TableViewBuilder.build(null, null, Mediator.dataTable)
@@ -67,6 +74,10 @@ class ViewManager extends jfxf.Initializable {
     selectionModel.setSelectionMode(SelectionMode.MULTIPLE)
     AnchorPane.setAnchors(table, 0, 0, 0, 0)
     tableContainer.content = List(table)
+
+    assert(menuLoad != null)
+    assert(menuSave != null)
+
 
     //
     // Create streams
@@ -99,6 +110,22 @@ class ViewManager extends jfxf.Initializable {
       formulaEditor.onAction = handle {
         o.onNext(formulaEditor.getText)
       }
+    })
+    //Save requests
+    val saveStream = Observable.create[String](o => new Subscription {
+      menuSave.setOnAction(new EventHandler[ActionEvent] {
+        override def handle(event: ActionEvent): Unit = {
+          o.onNext("temp.csv")
+        }
+      })
+    })
+    // Load requests
+    val loadStream = Observable.create[String](o => new Subscription {
+      menuLoad.setOnAction(new EventHandler[ActionEvent] {
+        override def handle(event: ActionEvent): Unit = {
+          o.onNext("temp.csv")
+        }
+      })
     })
 
     //
@@ -143,17 +170,10 @@ class ViewManager extends jfxf.Initializable {
       Mediator.changeCellProperty(cell._1, x.definition._1, x.definition._2)))
 
 
-//    val data = List(List("ha", "cu", "na"), List("ma", "ta", "ta"))
-//    printmy(Filer.gridToCSV(Filer.stringToCSV)(data))
-//
-    Mediator.saveCSV("test.csv")
+    // Load - Save
+    saveStream.subscribe(x => printmy("Saving not implemented"))
+    loadStream.subscribe(x => printmy("Loading not implemented"))
 
-    //Filer.save(Filer.gridToCSV(Filer.stringToCSV))(new java.io.File("test.csv"), data)
-
-//    Mediator.toStringTable.foreach(x => {
-//      printmy("---")
-//      x.filter(_!="").foreach(printmy)
-//    })
   }
 
   def changeEditorText(text: String) = formulaEditor.text = text
