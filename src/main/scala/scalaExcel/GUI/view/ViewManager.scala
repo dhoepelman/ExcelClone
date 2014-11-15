@@ -14,7 +14,7 @@ import scalafx.scene.control._
 import scalaExcel.GUI.model.DataModelFactory.DataRow
 import scalafx.scene.paint.Color
 import scalaExcel.GUI.util.CSSHelper
-
+import scalaExcel.GUI.util.Filer
 
 class ViewManager extends jfxf.Initializable {
 
@@ -141,6 +141,16 @@ class ViewManager extends jfxf.Initializable {
       .distinctUntilChanged(_.definition)
       .subscribe(x => x.cells.foreach(cell =>
       Mediator.changeCellProperty(cell._1, x.definition._1, x.definition._2)))
+
+
+    //
+    // Testing stuff
+    //
+
+    val data = List(List("ha", "cu", "na"), List("ma", "ta", "ta"))
+    printmy(Filer.gridToCSV(Filer.stringToCSV)(data))
+
+    Filer.save(Filer.gridToCSV(Filer.stringToCSV))(new java.io.File("test.csv"), data)
   }
 
   def changeEditorText(text: String) = formulaEditor.text = text

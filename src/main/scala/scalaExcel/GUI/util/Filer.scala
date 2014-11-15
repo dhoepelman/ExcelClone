@@ -16,29 +16,15 @@ object Filer {
   def cellToCSV(cell: SheetCell) : String =  cell.expression
   def stringToCSV(cell: String) : String = cell
 
-  /**
-   *
-   * @param v A function that produces the string that represents the cell
-   * @param row A row of cells
-   * @tparam T The type of the cell
-   * @return The CSV row
-   */
-  def rowToCSV[T](v : (T => String))(row : Iterable[T]) : String =
+  def rowToCSV[T](v : (T => String))(row : Traversable[T]) : String =
     row.foldLeft("")((csv, cell) => csv + v(cell) + ",")
 
-  /**
-   *
-   * @param v A function that produces the string that represents a cell
-   * @param grid A grid of cells
-   * @tparam T The type of the cell
-   * @return The CSV files
-   */
-  def gridToCSV[T](v: (T => String))( grid: Iterable[Iterable[T]]) : String =
+  def gridToCSV[T](v: (T => String))( grid: Traversable[Traversable[T]]) : String =
     grid.foldLeft("")((csv, row) => csv + rowToCSV(v)(row) + "\n")
 
 
-  def save[T](formatter: (Iterable[Iterable[T]])=>String)
-             (file: File, grid: Iterable[Iterable[T]]) = {
+  def save[T](formatter: (Traversable[Traversable[T]])=>String)
+             (file: File, grid: Traversable[Traversable[T]]) = {
     printToFile(file) { _.print(formatter(grid)) }
   }
 
