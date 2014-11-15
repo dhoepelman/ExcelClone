@@ -39,6 +39,12 @@ object Filer {
   }
 
 
+  def loadCSV(file: java.io.File) : List[List[String]] =
+    Source.fromFile(file).getLines()
+          .map(line => line.split(",").toList)
+          .toList
+
+
   private def printToFile(f: java.io.File)(op: java.io.PrintWriter => Unit) {
     val p = new java.io.PrintWriter(f)
     try { op(p) } finally { p.close() }

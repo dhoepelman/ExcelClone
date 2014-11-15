@@ -195,7 +195,8 @@ class ViewManager extends jfxf.Initializable {
               })
               .map(chooser => chooser.showOpenDialog(stage))
               .filter(_!=null)
-              .subscribe(x => printmy("Loading not implemented - " + x))
+              .map(file => Filer.loadCSV(file))
+              .subscribe(data => printmy(data))
 
   }
 
