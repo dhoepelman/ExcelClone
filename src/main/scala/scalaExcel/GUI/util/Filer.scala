@@ -2,7 +2,8 @@ package scalaExcel.GUI.util
 
 import java.io.File
 
-import scalaExcel.GUI.model.SheetCell
+import scalaExcel.GUI.model.DataModelFactory.DataTable
+import scalaExcel.GUI.model.{DataModel, SheetCell}
 
 import scala.io._
 
@@ -27,6 +28,16 @@ object Filer {
              (file: File, grid: Traversable[Traversable[T]]) = {
     printToFile(file) { _.print(formatter(grid)) }
   }
+
+
+  def toStringTable(dataTable: DataTable) : Traversable[Traversable[String]] =
+    dataTable.map(_.map(_.value.expression))
+
+  def saveCSV(file: java.io.File, dataTable: DataTable) = {
+    val data = toStringTable(dataTable)
+    Filer.save[String](Filer.gridToCSV(identity))(file, data)
+  }
+
 
   private def printToFile(f: java.io.File)(op: java.io.PrintWriter => Unit) {
     val p = new java.io.PrintWriter(f)
