@@ -4,7 +4,8 @@ import scalafx.Includes._
 import java.net.URL
 import javafx.scene.{control => jfxsc}
 import javafx.scene.{layout => jfxsl}
-import javafx.stage.Stage
+import javafx.stage.FileChooser.ExtensionFilter
+import javafx.stage.{FileChooser, Stage}
 import javafx.{event => jfxe, fxml => jfxf}
 import rx.lang.scala._
 
@@ -53,6 +54,9 @@ class ViewManager extends jfxf.Initializable {
   private def makeResizable(event: jfxe.ActionEvent) {
     //make region resizable
   }
+
+  val fileChooser = new javafx.stage.FileChooser
+  fileChooser.getExtensionFilters.add(new ExtensionFilter("Comma separated values", "*.csv"))
 
   def initialize(url: URL, rb: java.util.ResourceBundle) {
 
@@ -178,21 +182,20 @@ class ViewManager extends jfxf.Initializable {
 
     // Load - Save
     saveStream.map(x => {
-                val chooser = new javafx.stage.FileChooser
-                chooser.setTitle("Save destination")
-                chooser
+                fileChooser.setTitle("Save destination")
+                fileChooser
               })
+              .map(chooser => chooser.showSaveDialog(stage))
               .filter(_!=null)
-              .map(chooser => chooser.showOpenDialog(stage))
-              .subscribe(x => printmy("Saving not implemented " + x))
+              .subscribe(file => Filer.saveCSV(file, Mediator.dataTable))
+
     loadStream.map(x => {
-                val chooser = new javafx.stage.FileChooser
-                chooser.setTitle("Open file")
-                chooser
+                fileChooser.setTitle("Open file")
+                fileChooser
               })
-              .filter(_!=null)
               .map(chooser => chooser.showOpenDialog(stage))
-              .subscribe(x => printmy("Loading not implemented " + x))
+              .filter(_!=null)
+              .subscribe(x => printmy("Loading not implemented - " + x))
 
   }
 
