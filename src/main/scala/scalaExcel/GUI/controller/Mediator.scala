@@ -59,4 +59,16 @@ object Mediator {
     _controller.changeEditorText(expression)
   }
 
+
+  import scalaExcel.GUI.util.Filer
+
+  def toStringTable : Traversable[Traversable[String]] =
+    dataTable.map(_.map(_.value.expression))
+
+  def saveCSV(filename: String) = {
+    val data = toStringTable
+    val file = new java.io.File(filename)
+    Filer.save[String](Filer.gridToCSV(identity))(file, data)
+  }
+
 }
