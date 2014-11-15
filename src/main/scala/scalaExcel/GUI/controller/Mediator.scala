@@ -30,6 +30,9 @@ object Mediator {
   def getCellValue(index: (Int, Int)): Any =
     _dataModel.getCellValue(index._1, index._2)
 
+  def setAllCells(values: List[List[String]]): Unit =
+    _dataModel.populateDataModel(values)
+
   def editingCellIndex: (Int, Int) = {
     val cell = _controller.tableView.getEditingCell
     (cell.getRow, cell.getColumn)

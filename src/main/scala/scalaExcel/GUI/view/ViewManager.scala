@@ -196,7 +196,7 @@ class ViewManager extends jfxf.Initializable {
               .map(chooser => chooser.showOpenDialog(stage))
               .filter(_!=null)
               .map(file => Filer.loadCSV(file))
-              .subscribe(data => printmy(data))
+              .subscribe(data => Mediator.setAllCells(data))
 
   }
 
