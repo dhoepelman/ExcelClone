@@ -4,6 +4,7 @@ import scalafx.Includes._
 import java.net.URL
 import javafx.scene.{control => jfxsc}
 import javafx.scene.{layout => jfxsl}
+import javafx.stage.Stage
 import javafx.{event => jfxe, fxml => jfxf}
 import rx.lang.scala._
 
@@ -68,12 +69,17 @@ class ViewManager extends jfxf.Initializable {
     menuSave = new MenuItem(menuSaveDelegate)
 
     // initialize and add the table
+    val stage = formulaEditor.delegate.getScene.asInstanceOf[Stage]
+
     table = TableViewBuilder.build(null, null, Mediator.dataTable)
     val selectionModel = table.getSelectionModel
     selectionModel.setCellSelectionEnabled(true)
     selectionModel.setSelectionMode(SelectionMode.MULTIPLE)
     AnchorPane.setAnchors(table, 0, 0, 0, 0)
     tableContainer.content = List(table)
+
+
+
 
     assert(menuLoad != null)
     assert(menuSave != null)
@@ -171,8 +177,22 @@ class ViewManager extends jfxf.Initializable {
 
 
     // Load - Save
-    saveStream.subscribe(x => printmy("Saving not implemented"))
-    loadStream.subscribe(x => printmy("Loading not implemented"))
+    saveStream.map(x => {
+                val chooser = new javafx.stage.FileChooser
+                chooser.setTitle("Save destination")
+                chooser
+              })
+              .filter(_!=null)
+              .map(chooser => chooser.showOpenDialog(stage))
+              .subscribe(x => printmy("Saving not implemented " + x))
+    loadStream.map(x => {
+                val chooser = new javafx.stage.FileChooser
+                chooser.setTitle("Open file")
+                chooser
+              })
+              .filter(_!=null)
+              .map(chooser => chooser.showOpenDialog(stage))
+              .subscribe(x => printmy("Loading not implemented " + x))
 
   }
 
