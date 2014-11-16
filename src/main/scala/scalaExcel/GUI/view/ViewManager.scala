@@ -18,6 +18,8 @@ import scalafx.scene.paint.Color
 import scalaExcel.GUI.util.CSSHelper
 import scalaExcel.GUI.util.Filer
 
+import scala.language.reflectiveCalls
+
 class ViewManager extends jfxf.Initializable {
 
   private var table: TableView[DataRow] = _
