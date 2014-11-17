@@ -1,4 +1,3 @@
-
 package scalaExcel.formula
 
 import java.{util => ju, lang => jl}
@@ -17,7 +16,7 @@ class EvaluatorTests(name: String, e: Value, v: Any, ctx: Ctx) {
 
   val p = new Parser()
 
-  @Test def x = v match {
+  @Test def x() = v match {
     case v: Expr   => assertEquals(e, eval(ctx, v))
     case v: String => assertEquals(e, eval(ctx, p parsing v))
     case _ => throw new IllegalArgumentException("Can't test something else")
