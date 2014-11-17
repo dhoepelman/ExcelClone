@@ -11,8 +11,14 @@ class Styles(
     val background: Color,
     val color: Color,
     val format: String,
-    val align: Alignment
-  )
+    val align: Alignment) {
+
+  def setBackground(b: Color) = new Styles(b, color, format, align)
+  def setColor(c: Color) = new Styles(background, c, format, align)
+  def setFormat(f: String) = new Styles(background, color, f, align)
+  def setAlign(a: Alignment) = new Styles(background, color, format, a)
+
+}
 
 object Styles {
   val DEFAULT = new Styles(Color.Black, Color.White, "", Left())

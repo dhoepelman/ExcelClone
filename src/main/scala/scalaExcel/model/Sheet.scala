@@ -1,5 +1,6 @@
 package scalaExcel.model
 
+import scalafx.scene.paint.Color
 import scalaExcel.formula.Value
 
 // A Sheet is currently the entire immutable datamodel, containing:
@@ -8,25 +9,31 @@ import scalaExcel.formula.Value
 // - a map lists of cells that depend on that cell
 class Sheet(val cells: Map[(Int, Int), Cell] = Map(),
             val values: Map[(Int, Int), Value] = Map(),
-            val dependents: Map[(Int, Int), List[(Int, Int)]] = Map()) {
+            val dependents: Map[(Int, Int), List[(Int, Int)]] = Map(),
+            val styles: Map[(Int, Int), Styles] = Map()) {
 
   // Set the cell at (x,y) to some formula f, return the new sheet, and a list
   // of cells that need to be recalculated
-  def setCell(x: Int, y: Int, f: String) = {
-    val newCell = new Cell(x, y, f, Styles.DEFAULT)
+  def setCellFormula(x: Int, y: Int, f: String) = {
+    val newCell = new Cell(x, y, f)
     val newCells = cells + (newCell.position -> newCell)
     val newValues = calcNewValue(newCell)
     val newRefs = calcNewRefs(newCell)
-    (new Sheet(newCells, newValues, newRefs), dependentsOf(newCell))
+    (new Sheet(newCells, newValues, newRefs, styles), dependentsOf(newCell))
   }
 
   // recalculate the value of a cell, return a new sheet which includes the new
   // value, and a list of cells that also need to be updated
   def updateCell(x: Int, y: Int) = {
     cells get ((x, y)) match {
-      case Some(c) => (new Sheet(cells, calcNewValue(c), dependents), dependentsOf(c))
+      case Some(c) => (new Sheet(cells, calcNewValue(c), dependents, styles), dependentsOf(c))
       case None => (this, List[(Int, Int)]())
     }
+  }
+
+  def setCellColor(x: Int, y: Int, c: Color) = {
+    val style = styles get ((x, y)) getOrElse(Styles.DEFAULT)
+    new Sheet(cells, values, dependents, styles + ((x, y) -> style.setColor(c)))
   }
 
   // Get the cells that depend on this given cell

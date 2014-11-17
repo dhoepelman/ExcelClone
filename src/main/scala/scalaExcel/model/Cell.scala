@@ -8,8 +8,7 @@ import scalaExcel.formula.ReferenceFinder.{findRefCells, colToNum, numToCol}
 class Cell(
     val x: Int,
     val y: Int,
-    val f: String,
-    val s: Styles
+    val f: String
   ) {
 
   // AST of the cell
