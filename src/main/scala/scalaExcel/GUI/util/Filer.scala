@@ -2,8 +2,8 @@ package scalaExcel.GUI.util
 
 import java.io.File
 
-import scalaExcel.GUI.model.DataModelFactory.DataTable
-import scalaExcel.GUI.model.{DataModel, SheetCell}
+import scalaExcel.GUI.modelwrapper.DataModelFactory.DataTable
+import scalaExcel.GUI.modelwrapper.SheetCell
 
 import scala.io._
 
