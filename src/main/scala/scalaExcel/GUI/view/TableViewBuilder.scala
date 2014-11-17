@@ -3,8 +3,8 @@ package scalaExcel.GUI.view
 import scalafx.scene.control._
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.control.TableColumn._
-import scalaExcel.GUI.model.SheetCell
-import scalaExcel.GUI.model.DataModelFactory.{DataTable, DataRow}
+import scalaExcel.GUI.modelwrapper.SheetCell
+import scalaExcel.GUI.modelwrapper.DataModelFactory.{DataTable, DataRow}
 
 object TableViewBuilder {
   type TableColumns = ObservableBuffer[javafx.scene.control.TableColumn[DataRow, SheetCell]]

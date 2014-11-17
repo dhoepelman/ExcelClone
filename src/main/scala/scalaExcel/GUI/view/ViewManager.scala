@@ -11,7 +11,7 @@ import scalafx.scene.layout.AnchorPane
 import scalaExcel.GUI.controller.Mediator
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.control._
-import scalaExcel.GUI.model.DataModelFactory.DataRow
+import scalaExcel.GUI.modelwrapper.DataModelFactory.DataRow
 import scalafx.scene.paint.Color
 import scalaExcel.GUI.util.CSSHelper
 

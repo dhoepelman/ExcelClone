@@ -1,8 +1,8 @@
 package scalaExcel.GUI.controller
 
-import scalaExcel.GUI.model._
 import scalaExcel.GUI.view.ViewManager
-import scalaExcel.GUI.model.DataModelFactory.DataTable
+import scalaExcel.GUI.modelwrapper.DataModelFactory.DataTable
+import scalaExcel.GUI.modelwrapper._
 
 object Mediator {
 
@@ -45,10 +45,14 @@ object Mediator {
   def changeCellExpression(index: (Int, Int), expression: String) =
     _dataModel.changeCellExpression(index, expression)
 
-  def changeCellStylist(index: (Int, Int), stylist: Any => String) =
+  def changeCellStylist(index: (Int, Int), stylist: SheetCellStylist) =
     _dataModel.changeCellStylist(index, stylist)
 
-  def changeCellFormatter(index: (Int, Int), formatter: Any => String) =
+  def changeCellProperty(index: (Int, Int), styleProperty: String, styleValue: Any) {
+    _dataModel.changeCellProperty(index, styleProperty, styleValue)
+  }
+
+  def changeCellFormatter(index: (Int, Int), formatter: SheetCellFormatter) =
     _dataModel.changeCellFormatter(index, formatter)
 
   def changeEditorText(expression: String) {
