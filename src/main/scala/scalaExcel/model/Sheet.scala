@@ -13,7 +13,7 @@ class Sheet(val cells: Map[(Int, Int), Cell] = Map(),
   // Set the cell at (x,y) to some formula f, return the new sheet, and a list
   // of cells that need to be recalculated
   def setCell(x: Int, y: Int, f: String) = {
-    val newCell = new Cell(x, y, f)
+    val newCell = new Cell(x, y, f, Styles.DEFAULT)
     val newCells = cells + (newCell.position -> newCell)
     val newValues = calcNewValue(newCell)
     val newRefs = calcNewRefs(newCell)
