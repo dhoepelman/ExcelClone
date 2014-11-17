@@ -20,6 +20,8 @@
                     <menus>
                         <Menu mnemonicParsing="false" text="File">
                             <items>
+                                <MenuItem fx:id="menuLoadDelegate" mnemonicParsing="false" text="Open" />
+                                <MenuItem fx:id="menuSaveDelegate" mnemonicParsing="false" text="Save" />
                                 <MenuItem mnemonicParsing="false" text="Close" />
                             </items>
                         </Menu>
@@ -45,14 +47,14 @@
                         <AnchorPane GridPane.columnIndex="1" GridPane.hgrow="ALWAYS">
                             <children>
                                 <VBox alignment="CENTER" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" styleClass="button-box">
-                                   <children>
-                                       <Label alignment="CENTER" contentDisplay="CENTER">Background</Label>
-                              <AnchorPane>
-                                 <children>
-                                             <ColorPicker fx:id="backgroundColorPickerDelegate" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                                 </children>
-                              </AnchorPane>
-                                   </children>
+                                    <children>
+                                        <Label alignment="CENTER" contentDisplay="CENTER">Background</Label>
+                                        <AnchorPane>
+                                            <children>
+                                                <ColorPicker fx:id="backgroundColorPickerDelegate" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                            </children>
+                                        </AnchorPane>
+                                    </children>
                                 </VBox>
                             </children>
                         </AnchorPane>

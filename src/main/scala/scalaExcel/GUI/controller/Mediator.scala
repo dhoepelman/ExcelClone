@@ -22,13 +22,16 @@ object Mediator {
   def controller_=(manager: ViewManager): Unit = _controller = manager
 
   def getCellObservable(index: (Int, Int)): ObservableSheetCell =
-    _dataModel.getCellObservable(index._1, index._2)
+    _dataModel.getCellObservable((index._1, index._2))
 
   def getCell(index: (Int, Int)): SheetCell =
-    _dataModel.getCell(index._1, index._2)
+    _dataModel.getCell((index._1, index._2))
 
   def getCellValue(index: (Int, Int)): Any =
-    _dataModel.getCellValue(index._1, index._2)
+    _dataModel.getCellValue((index._1, index._2))
+
+  def setAllCells(values: List[List[String]]): Unit =
+    _dataModel.populateDataModel(values)
 
   def editingCellIndex: (Int, Int) = {
     val cell = _controller.tableView.getEditingCell
