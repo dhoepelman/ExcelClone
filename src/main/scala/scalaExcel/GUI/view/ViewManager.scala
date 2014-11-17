@@ -20,6 +20,7 @@ import scalaExcel.GUI.util.Filer
 
 import scala.language.reflectiveCalls
 
+
 class ViewManager extends jfxf.Initializable {
 
   private var table: TableView[DataRow] = _
@@ -125,19 +126,15 @@ class ViewManager extends jfxf.Initializable {
     })
     //Save requests
     val saveStream = Observable.create[String](o => new Subscription {
-      menuSave.setOnAction(new EventHandler[ActionEvent] {
-        override def handle(event: ActionEvent): Unit = {
-          o.onNext("temp.csv")
-        }
-      })
+      menuSave.onAction = handle {
+        o.onNext("temp.csv")
+      }
     })
     // Load requests
     val loadStream = Observable.create[String](o => new Subscription {
-      menuLoad.setOnAction(new EventHandler[ActionEvent] {
-        override def handle(event: ActionEvent): Unit = {
-          o.onNext("temp.csv")
-        }
-      })
+      menuLoad.onAction = handle {
+        o.onNext("temp.csv")
+      }
     })
 
     //
