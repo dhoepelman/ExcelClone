@@ -46,7 +46,7 @@ class Cell(val x: Int, val y: Int, val f: String) extends Observer[Int] {
 class Sheet(
     val cells: Map[(Int, Int), Cell] = Map(),
     val values: Map[(Int, Int), Int] = Map(),
-    val refs: Map[(Int, Int), List[(Int, Int)]] = Map()) {
+    val dependants: Map[(Int, Int), List[(Int, Int)]] = Map()) {
 
   // Set the cell at (x,y) to some formula f, return the new sheet, and a list
   // of cells that need to be recalculated
@@ -62,13 +62,13 @@ class Sheet(
   // value, and a list of cells that also need to be updated
   def updateCell(x: Int, y: Int) = {
     cells get ((x,y)) match {
-      case Some(c) => (new Sheet(cells, calcNewValue(c), refs), dependentsOf(c))
+      case Some(c) => (new Sheet(cells, calcNewValue(c), dependants), dependentsOf(c))
       case None => (this, List[(Int,Int)]())
     }
   }
 
   // Get the cells that depend on this given cell
-  def dependentsOf(c: Cell) = refs get c.p match {
+  def dependentsOf(c: Cell) = dependants get c.p match {
     case Some(l) => l
     case None => List()
   }
@@ -99,7 +99,7 @@ class Sheet(
     val rmvRefs = oldRefs diff r
     val addRefs = r diff oldRefs
 
-    val newRefsA = rmvRefs.foldLeft(refs)((refsMap, ref) => refsMap get ref match {
+    val newRefsA = rmvRefs.foldLeft(dependants)((refsMap, ref) => refsMap get ref match {
       case Some(l) => refsMap + (ref -> (l diff List(c.p)))
       case None => refsMap
     })
@@ -112,7 +112,7 @@ class Sheet(
 
   override def toString = (
     cells.toString(),
-    refs.toString(),
+    dependants.toString(),
     values.toString()
   ).toString()
 
