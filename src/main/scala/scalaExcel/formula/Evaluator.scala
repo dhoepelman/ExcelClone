@@ -5,7 +5,7 @@ import math.pow
 
 object Evaluator {
 
-  type Ctx = Map[ACell, Value]
+  type Ctx = ACell => Value
 
   def reduce(ctx: Ctx, f: ((Value, Value) => Value), r: Value, args: List[Expr]): Value = r match {
     case e: VErr => e
@@ -158,12 +158,7 @@ object Evaluator {
     }
   }
 
-  def evalACell(ctx: Ctx, c: ACell) = {
-    ctx.get(c) match {
-      case Some(v) => v
-      case None    => throw new IllegalArgumentException(s"Cell (${c.c},${c.r}}) not found in Ctx")
-    }
-  }
+  def evalACell(ctx: Ctx, c: ACell) = ctx(c)
 
   def evalCell(ctx: Ctx, col: ColRef, row: RowRef) = (col, row) match {
     case (ColRef(c, _), RowRef(r, _)) => eval(ctx, ACell(c, r))
