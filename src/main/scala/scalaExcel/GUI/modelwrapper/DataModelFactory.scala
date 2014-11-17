@@ -1,4 +1,4 @@
-package scalaExcel.GUI.model
+package scalaExcel.GUI.modelwrapper
 
 import scalafx.collections.ObservableBuffer
 

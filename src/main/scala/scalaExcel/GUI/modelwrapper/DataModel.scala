@@ -1,6 +1,6 @@
-package scalaExcel.GUI.model
+package scalaExcel.GUI.modelwrapper
 
-import scalaExcel.GUI.model.DataModelFactory.DataTable
+import scalaExcel.GUI.modelwrapper.DataModelFactory.DataTable
 import scalaExcel.GUI.util.CircularEvaluation
 import rx.lang.scala.Subject
 

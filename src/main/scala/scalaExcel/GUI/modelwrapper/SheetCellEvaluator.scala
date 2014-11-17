@@ -1,4 +1,4 @@
-package scalaExcel.GUI.model
+package scalaExcel.GUI.modelwrapper
 
 import rx.lang.scala.{Subject, Observable}
 import scalaExcel.GUI.util.{CircularEvaluation, MockParser}

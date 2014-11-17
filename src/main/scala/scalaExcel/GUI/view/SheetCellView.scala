@@ -1,8 +1,8 @@
 package scalaExcel.GUI.view
 
 import javafx.scene.{control=> jfxsc}
-import scalaExcel.GUI.model.DataModelFactory._
-import scalaExcel.GUI.model.SheetCell
+import scalaExcel.GUI.modelwrapper.DataModelFactory._
+import scalaExcel.GUI.modelwrapper.SheetCell
 import SheetCellStringConverter.SheetCellStringConverter
 import scalafx.scene.control.TextField
 import scalaExcel.GUI.controller.Mediator

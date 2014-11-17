@@ -1,4 +1,4 @@
-package scalaExcel.GUI.model
+package scalaExcel.GUI.modelwrapper
 
 import rx.lang.scala.subjects.{PublishSubject, BehaviorSubject}
 import scalafx.beans.property.ObjectProperty

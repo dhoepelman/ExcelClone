@@ -14,10 +14,10 @@ import scala.collection.mutable
 import scala.util._
 import scalafx.scene.layout.AnchorPane
 import scalaExcel.GUI.controller.Mediator
-import scalaExcel.GUI.model.SheetCell
+import scalaExcel.GUI.modelwrapper.SheetCell
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.control._
-import scalaExcel.GUI.model.DataModelFactory.DataRow
+import scalaExcel.GUI.modelwrapper.DataModelFactory.DataRow
 
 
 

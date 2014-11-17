@@ -5,8 +5,8 @@ import scalafx.collections.ObservableBuffer
 import scalafx.scene.control.TableColumn._
 import scalafx.scene.control.cell.TextFieldTableCell
 import javafx.scene.{control => jfxsc}
-import scalaExcel.GUI.model.SheetCell
-import scalaExcel.GUI.model.DataModelFactory.{DataTable, DataRow}
+import scalaExcel.GUI.modelwrapper.SheetCell
+import scalaExcel.GUI.modelwrapper.DataModelFactory.{DataTable, DataRow}
 import SheetCellStringConverter.SheetCellStringConverter
 import scalaExcel.GUI.controller.Mediator
 import scalaExcel.GUI.util.{CircularEvaluation, ErroneousEvaluation}
