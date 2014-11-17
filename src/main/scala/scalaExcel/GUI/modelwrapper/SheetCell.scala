@@ -1,7 +1,7 @@
 package scalaExcel.GUI.modelwrapper
 
 import rx.lang.scala.Subscription
-import scalaExcel.GUI.util.{CSSHelper, AwaitingEvaluation}
+import scalaExcel.GUI.util.CSSHelper
 
 sealed trait SheetCell {
   val expression: String
@@ -45,14 +45,11 @@ object SheetCell {
       new SheetCellImpl(expression, impl.formatter, impl.stylist, value)
   }
 
-  private class SheetCellImpl(expression_ : String,
-                              formatter_ : SheetCellFormatter,
-                              stylist_ : SheetCellStylist,
-                              evaluated_ : Any) extends SheetCell {
-    val expression = expression_
-    val formatter = formatter_
-    val stylist = stylist_
-    val evaluated = evaluated_
+  private class SheetCellImpl(val expression: String,
+                              val formatter: SheetCellFormatter,
+                              val stylist: SheetCellStylist,
+                              val evaluated: Any) extends SheetCell {
+
     val style = stylist.style(this)
 
     override def toString: String = formatter.format(this)

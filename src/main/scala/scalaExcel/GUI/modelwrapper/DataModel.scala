@@ -3,7 +3,7 @@ package scalaExcel.GUI.modelwrapper
 import scalaExcel.GUI.modelwrapper.DataModelFactory.DataTable
 import scalaExcel.model.Model
 
-class DataModel() {
+class DataModel {
   private val defaultData = List(List("Cell11", "Cell12"), List("Cell21", "Cell22"))
 
   private val _dataTable = DataModelFactory.buildDefaultDataTable

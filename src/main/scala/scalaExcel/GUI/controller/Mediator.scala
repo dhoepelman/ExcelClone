@@ -11,7 +11,7 @@ object Mediator {
 
   def initialize() = {
     println("Mediator initializing...")
-    _dataModel = new DataModel()
+    _dataModel = new DataModel
     _dataModel.populateDataModel(null)
   }
 

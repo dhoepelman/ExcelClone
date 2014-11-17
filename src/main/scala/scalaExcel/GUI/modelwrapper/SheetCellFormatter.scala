@@ -1,10 +1,8 @@
 package scalaExcel.GUI.modelwrapper
 
-class SheetCellFormatter(method_ : SheetCell => String) {
-  val method = method_
-
+class SheetCellFormatter(val method : SheetCell => String) {
   //TODO expand with predicates
-  def format(cell: SheetCell): String = method_(cell)
+  def format(cell: SheetCell): String = method(cell)
 
 }
 
