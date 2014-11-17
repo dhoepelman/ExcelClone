@@ -39,7 +39,7 @@ class Sheet(val cells: Map[(Int, Int), Cell] = Map(),
 
   private def calcNewValue(c: Cell) = {
     val dependencies = getDependencyValues(c.refs)
-    val value = c.exec(dependencies)
+    val value = c.eval(dependencies)
     values + (c.position -> value)
   }
 
