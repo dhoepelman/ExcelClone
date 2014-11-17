@@ -1,9 +1,8 @@
 package scalaExcel.GUI.controller
 
-import scalaExcel.GUI.modelwrapper.{SheetCell, ObservableSheetCell, DataModel}
+import scalaExcel.GUI.model._
 import scalaExcel.GUI.view.ViewManager
-import scalaExcel.GUI.modelwrapper.DataModelFactory.DataTable
-import rx.lang.scala.Subscription
+import scalaExcel.GUI.model.DataModelFactory.DataTable
 
 object Mediator {
 

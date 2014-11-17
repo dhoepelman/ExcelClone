@@ -68,14 +68,19 @@ class DataModel() {
     propagateChange(previousEmitters, evaluator.index, value, observable.valueEmitter)
   }
 
-  def changeCellStylist(index: (Int, Int), stylist: Any => String) = {
+  def changeCellStylist(index: (Int, Int), stylist: SheetCellStylist) = {
     val observable = getCellObservable(index)
     observable.value = SheetCell.modifyStylist(observable.value, stylist)
   }
 
-  def changeCellFormatter(index: (Int, Int), formatter: Any => String) = {
+  def changeCellFormatter(index: (Int, Int), formatter: SheetCellFormatter) = {
     val observable = getCellObservable(index)
     observable.value = SheetCell.modifyFormatter(observable.value, formatter)
+  }
+
+  def changeCellProperty(index: (Int, Int), styleProperty: String, styleValue: Any) {
+    val observable = getCellObservable(index)
+    observable.value = SheetCell.modifyStyleProperty(observable.value, styleProperty, styleValue)
   }
 
 }

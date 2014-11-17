@@ -1,34 +1,53 @@
-.button {
-    -fx-text-fill: white;
-    -fx-font-family: "Arial Narrow";
-    -fx-font-weight: bold;
-    -fx-background-color: linear-gradient(#61a2b1, #2A5058);
-    -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 5, 0.0 , 0 , 1 );
-}
-
-.column-header {
-
-
-}
-
-.cell:selected {
-    -fx-background-color: #B3E6E6;
+.scene {
+    /* define main color palette here*/
+   -fx-font: 16pt "Amble Cn";
+   -fx-base: red;
+   -fx-accent: green;
+   -fx-mark-color: blue;
 }
 
 .cell {
-    -fx-background-color: whitesmoke;
-    -fx-border-width: 0.1;
-    -fx-border-color: silver;
+    -fx-background-color: -fx-table-cell-border-color, whitesmoke;
+    -fx-background-insets: 0, 0 0 1 0;
 }
 
-.cell:empty {
+.table-row-cell:hover .cell{
+    -fx-background-color: -fx-table-cell-border-color, -fx-cell-hover-color;
+    -fx-background-insets: 0, 0 0 1 0;
+}
+
+.cell:empty{
     -fx-background-color: silver;
 }
 
-.table-view {
-    -fx-table-cell-border-color: silver;
+.cell:selected, .table-row-cell:hover .cell:selected{
+    -fx-background: -fx-accent;
+    -fx-background-color: -fx-selection-bar;
+    -fx-border-color: -fx-selection-bar;
+    -fx-border-width: 2;
+    -fx-border-style: dashed;
+    -fx-text-fill: -fx-selection-bar-text;
+    -fx-background-insets: 0 0 1 0;
 }
 
-.table-view .table-row-cell {
-
+.cell:focused:selected, .table-row-cell:hover .cell:focused:selected{
+    -fx-background-color: -fx-focus-color, -fx-cell-focus-inner-border, -fx-selection-bar;
+    -fx-background-insets: 0 1 0 0, 1 2 1 1, 2 3 2 2;
+    -fx-background: -fx-accent;
+    -fx-text-fill: -fx-selection-bar-text;
 }
+
+.cell:focused{
+    -fx-background-color: -fx-focus-color, -fx-cell-focus-inner-border, transparent;
+    -fx-background-insets: 0 1 0 0, 1 2 1 1, 2 3 2 2;
+}
+
+.button-bar .button-box{
+    -fx-background-color: #699999;
+}
+
+.button-bar .button-box > .label {
+    -fx-font-weight: bold;
+}
+
+
