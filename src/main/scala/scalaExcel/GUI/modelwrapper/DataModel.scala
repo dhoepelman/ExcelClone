@@ -1,20 +1,40 @@
 package scalaExcel.GUI.modelwrapper
 
 import scalaExcel.GUI.modelwrapper.DataModelFactory.DataTable
-import scalaExcel.GUI.util.CircularEvaluation
-import rx.lang.scala.Subject
+import scalaExcel.model.Model
 
 class DataModel() {
   private val defaultData = List(List("Cell11", "Cell12"), List("Cell21", "Cell22"))
 
   private val _dataTable = DataModelFactory.buildDefaultDataTable
 
+  private val _immutableModel = new Model()
+
+  _immutableModel.sheet.subscribe(sheet => {
+    Range(0, _dataTable.size).foreach(i => Range(0, _dataTable.get(0).size).foreach(j => {
+      println(i, j)
+      changeCell((i, j), sheet.cells.get(i, j) match {
+        case Some(cell) => cell.f
+        case _ => ""
+      }, sheet.valueAt(i, j) match {
+        case Some(value) => value
+        case _ => null
+      })
+    }))
+  })
+
   def dataTable = _dataTable
 
   private def populateDataTable(data: List[List[String]]) =
+    populateImmutableModel(data)
+
+  private def populateImmutableModel(data: List[List[String]]) =
     data.view.zipWithIndex.foreach {
       case (row, i) => row.view.zipWithIndex.foreach {
-        case (expression, j) => changeCellExpression((i, j), expression)
+        case (expression, j) => {
+          println(i, j, expression);
+          _immutableModel.changeFormula(i, j, expression)
+        }
       }
     }
 
@@ -33,41 +53,6 @@ class DataModel() {
     else
       populateDataTable(data)
 
-  def changeCellExpression(index: (Int, Int), expression: String) = {
-    println("Cell " + index + " changing expression to " + expression)
-    // pass the interpretation to an evaluator instance
-    val evaluator = new SheetCellEvaluator(this, expression, index)
-    // start listening for changes on references
-    if (evaluator.derivedObservable != null)
-      evaluator.derivedObservable.connect
-  }
-
-  def propagateChange(previousEmitters: Set[(Int, Int)], index: (Int, Int), value: Any, emitter: Subject[List[(Set[(Int, Int)], Any)]]) {
-    value match {
-      case x: CircularEvaluation => Unit
-      case x =>
-        // add self to emitters
-        val emitters = if (previousEmitters == null) Set(index) else previousEmitters + index
-        emitter.onNext(List((emitters, x)))
-    }
-  }
-
-  def cellEvaluated(evaluator: SheetCellEvaluator, value: Any, previousEmitters: Set[(Int, Int)]): Unit = {
-    println("Cell " + evaluator.index + " evaluated to " + value)
-    val observable = getCellObservable(evaluator.index)
-    // unregister from previous subscription if it has changed
-    val oldCell = observable.value
-    if (oldCell != null) {
-      val oldSubscription = oldCell.subscription
-      if (oldSubscription != null && oldSubscription != evaluator.subscription)
-        oldSubscription.unsubscribe()
-    }
-    // mark change
-    observable.value = SheetCell.markEvaluated(observable.value, evaluator.expression, value, evaluator.subscription)
-    // propagate change to other cells
-    propagateChange(previousEmitters, evaluator.index, value, observable.valueEmitter)
-  }
-
   def changeCellStylist(index: (Int, Int), stylist: SheetCellStylist) = {
     val observable = getCellObservable(index)
     observable.value = SheetCell.modifyStylist(observable.value, stylist)
@@ -81,6 +66,15 @@ class DataModel() {
   def changeCellProperty(index: (Int, Int), styleProperty: String, styleValue: Any) {
     val observable = getCellObservable(index)
     observable.value = SheetCell.modifyStyleProperty(observable.value, styleProperty, styleValue)
+  }
+
+  def changeCell(index: (Int, Int), expression: String, value: Any) {
+    val observable = getCellObservable(index)
+    observable.value = SheetCell.newEvaluated(observable.value, expression, value)
+  }
+
+  def changeCellExpression(index: (Int, Int), expression: String) {
+    _immutableModel.changeFormula(index._1, index._2, expression)
   }
 
 }

@@ -39,7 +39,7 @@ object Mediator {
     println("Editing cell changed expression to " + expression)
     changeEditorText(expression)
     _dataModel.changeCellExpression(editingCellIndex, expression)
-    SheetCell.newNormal(expression)
+    SheetCell.newEmpty()
   }
 
   def changeCellExpression(index: (Int, Int), expression: String) =

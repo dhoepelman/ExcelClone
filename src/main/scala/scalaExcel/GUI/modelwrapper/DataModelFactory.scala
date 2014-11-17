@@ -13,7 +13,7 @@ object DataModelFactory {
                              columns: Int): DataTable = {
     new DataTable() ++=
       List.range(0, rows).map(i => new DataRow() ++=
-        List.range(0, columns).map(j => new ObservableSheetCell(i, j, null)))
+        List.range(0, columns).map(j => new ObservableSheetCell))
   }
 
   def buildDefaultDataTable: DataTable = {

@@ -43,7 +43,7 @@ object CSSHelper {
       case v: Color => colorToWeb(v)
     }
     property match {
-      case "fx-background-color" =>
+      case "-fx-background-color" =>
         fieldsToCss(fieldsFromCss(oldStyle) +
           (property -> ("-fx-table-cell-border-color, " + stringVal)) +
           (insetsProperty -> insetsValue))
@@ -53,7 +53,7 @@ object CSSHelper {
   }
 
   def propertyFromCssOrElse(css: String, property: String, orElse: String): String = property match {
-    case "fx-background-color" => fieldsFromCss(css).getOrElse(property, orElse).split(",").last
+    case "-fx-background-color" => fieldsFromCss(css).getOrElse(property, orElse).split(",").last
     case _ => fieldsFromCss(css).getOrElse(property, orElse)
   }
 
