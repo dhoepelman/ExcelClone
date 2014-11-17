@@ -31,12 +31,6 @@ class Model {
   }
 }
 
-/**
- * Types of inputs to the data model
- */
-abstract class ModelMutations
-case class SetCell(x: Int, y: Int, f: String) extends ModelMutations
-
 object ModelExample extends App {
   val model = new Model()
 
