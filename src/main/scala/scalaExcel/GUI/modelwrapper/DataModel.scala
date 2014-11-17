@@ -11,8 +11,7 @@ class DataModel() {
   private val _immutableModel = new Model()
 
   _immutableModel.sheet.subscribe(sheet => {
-    Range(0, _dataTable.size).foreach(i => Range(0, _dataTable.get(0).size).foreach(j => {
-      println(i, j)
+    Range(0, _dataTable.size).foreach(i => Range(0, _dataTable.get(0).size).foreach(j =>
       changeCell((i, j), sheet.cells.get(i, j) match {
         case Some(cell) => cell.f
         case _ => ""
@@ -20,7 +19,7 @@ class DataModel() {
         case Some(value) => value
         case _ => null
       })
-    }))
+    ))
   })
 
   def dataTable = _dataTable
@@ -31,10 +30,7 @@ class DataModel() {
   private def populateImmutableModel(data: List[List[String]]) =
     data.view.zipWithIndex.foreach {
       case (row, i) => row.view.zipWithIndex.foreach {
-        case (expression, j) => {
-          println(i, j, expression);
-          _immutableModel.changeFormula(i, j, expression)
-        }
+        case (expression, j) => _immutableModel.changeFormula(i, j, expression)
       }
     }
 
