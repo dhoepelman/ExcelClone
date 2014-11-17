@@ -11,15 +11,12 @@ class DataModel() {
   private val _immutableModel = new Model()
 
   _immutableModel.sheet.subscribe(sheet => {
-    Range(0, _dataTable.size).foreach(i => Range(0, _dataTable.get(0).size).foreach(j =>
-      changeCell((i, j), sheet.cells.get(i, j) match {
-        case Some(cell) => cell.f
-        case _ => ""
-      }, sheet.valueAt(i, j) match {
+    sheet.cells.foreach(x =>
+      changeCell(x._1, x._2.f, sheet.valueAt(x._1._1, x._1._2) match {
         case Some(value) => value
         case _ => null
       })
-    ))
+    )
   })
 
   def dataTable = _dataTable
