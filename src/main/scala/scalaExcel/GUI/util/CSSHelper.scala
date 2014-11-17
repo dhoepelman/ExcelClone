@@ -6,9 +6,9 @@ object CSSHelper {
 
   private def colorToWeb(c: Color): String =
     "#%02X%02X%02X".format(
-      (c.red * 255).asInstanceOf[Int],
+      (c.red   * 255).asInstanceOf[Int],
       (c.green * 255).asInstanceOf[Int],
-      (c.blue * 255).asInstanceOf[Int])
+      (c.blue  * 255).asInstanceOf[Int])
 
   private def fieldsFromCss(css: String): (Map[String, String]) = {
     val bodyRe = """([^:;{}]+:[^:;{}]+;?)""".r

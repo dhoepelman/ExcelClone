@@ -4,6 +4,8 @@ import scalafx.Includes._
 import java.net.URL
 import javafx.scene.{control => jfxsc}
 import javafx.scene.{layout => jfxsl}
+import javafx.stage.FileChooser.ExtensionFilter
+import javafx.stage.{FileChooser, Stage}
 import javafx.{event => jfxe, fxml => jfxf}
 import rx.lang.scala._
 
@@ -14,6 +16,9 @@ import scalafx.scene.control._
 import scalaExcel.GUI.model.DataModelFactory.DataRow
 import scalafx.scene.paint.Color
 import scalaExcel.GUI.util.CSSHelper
+import scalaExcel.GUI.util.Filer
+
+import scala.language.reflectiveCalls
 
 
 class ViewManager extends jfxf.Initializable {
@@ -39,6 +44,11 @@ class ViewManager extends jfxf.Initializable {
   private var fontColorPickerDelegate: javafx.scene.control.ColorPicker = _
   private var fontColorPicker: scalafx.scene.control.ColorPicker = _
 
+  @jfxf.FXML private var menuLoadDelegate: javafx.scene.control.MenuItem = _
+  @jfxf.FXML private var menuSaveDelegate: javafx.scene.control.MenuItem = _
+  private var menuLoad: scalafx.scene.control.MenuItem = _
+  private var menuSave: scalafx.scene.control.MenuItem = _
+
   @jfxf.FXML
   private var testButtonDelegate: jfxsc.Button = _
   private var testButton: Button = _
@@ -47,6 +57,9 @@ class ViewManager extends jfxf.Initializable {
   private def makeResizable(event: jfxe.ActionEvent) {
     //make region resizable
   }
+
+  val fileChooser = new javafx.stage.FileChooser
+  fileChooser.getExtensionFilters.add(new ExtensionFilter("Comma separated values", "*.csv"))
 
   def initialize(url: URL, rb: java.util.ResourceBundle) {
 
@@ -59,14 +72,25 @@ class ViewManager extends jfxf.Initializable {
     tableContainer = new AnchorPane(tableContainerDelegate)
     formulaEditor = new TextField(formulaEditorDelegate)
     testButton = new Button(testButtonDelegate)
+    menuLoad = new MenuItem(menuLoadDelegate)
+    menuSave = new MenuItem(menuSaveDelegate)
 
     // initialize and add the table
+    val stage = formulaEditor.delegate.getScene.asInstanceOf[Stage]
+
     table = TableViewBuilder.build(null, null, Mediator.dataTable)
     val selectionModel = table.getSelectionModel
     selectionModel.setCellSelectionEnabled(true)
     selectionModel.setSelectionMode(SelectionMode.MULTIPLE)
     AnchorPane.setAnchors(table, 0, 0, 0, 0)
     tableContainer.content = List(table)
+
+
+
+
+    assert(menuLoad != null)
+    assert(menuSave != null)
+
 
     //
     // Create streams
@@ -98,6 +122,18 @@ class ViewManager extends jfxf.Initializable {
     val formulaEditorStream = Observable.create[String](o => new Subscription {
       formulaEditor.onAction = handle {
         o.onNext(formulaEditor.getText)
+      }
+    })
+    //Save requests
+    val saveStream = Observable.create[String](o => new Subscription {
+      menuSave.onAction = handle {
+        o.onNext("temp.csv")
+      }
+    })
+    // Load requests
+    val loadStream = Observable.create[String](o => new Subscription {
+      menuLoad.onAction = handle {
+        o.onNext("temp.csv")
       }
     })
 
@@ -141,6 +177,26 @@ class ViewManager extends jfxf.Initializable {
       .distinctUntilChanged(_.definition)
       .subscribe(x => x.cells.foreach(cell =>
       Mediator.changeCellProperty(cell._1, x.definition._1, x.definition._2)))
+
+
+    // Load - Save
+    saveStream.map(x => {
+                fileChooser.setTitle("Save destination")
+                fileChooser
+              })
+              .map(chooser => chooser.showSaveDialog(stage))
+              .filter(_!=null)
+              .subscribe(file => Filer.saveCSV(file, Mediator.dataTable))
+
+    loadStream.map(x => {
+                fileChooser.setTitle("Open file")
+                fileChooser
+              })
+              .map(chooser => chooser.showOpenDialog(stage))
+              .filter(_!=null)
+              .map(file => Filer.loadCSV(file))
+              .subscribe(data => Mediator.setAllCells(data))
+
   }
 
   def changeEditorText(text: String) = formulaEditor.text = text
