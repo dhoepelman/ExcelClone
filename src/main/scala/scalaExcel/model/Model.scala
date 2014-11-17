@@ -62,9 +62,9 @@ object ModelTest extends App {
 
   // Input some changes
   model.changeFormula(1, 1, "=1+2")
-  model.changeFormula(2, 1, "=A+A")
-  model.changeFormula(3, 1, "=A+B")
-  model.changeFormula(4, 1, "=A+A")
+  model.changeFormula(2, 1, "=A1+A1")
+  model.changeFormula(3, 1, "=A1+B1")
+  model.changeFormula(4, 1, "=A1+A1")
   model.changeFormula(1, 1, "=4+6")
   model.changeFormula(2, 1, "=4+0")
 }
