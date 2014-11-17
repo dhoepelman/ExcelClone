@@ -2,13 +2,11 @@ package scalaExcel.model
 
 import rx.lang.scala.{Observable, Observer, Subject}
 
-import scalaExcel.formula.Value
-
 class Model {
 
   // This is a stream of inputs from 'the world' that will effect the state of
   // the sheet model
-  val sheetMutations = Subject[SheetMutations]()
+  val sheetMutations = Subject[ModelMutations]()
 
   // function to propagate updates to dependent cells
   def updateSheet(s: Sheet, updates: List[(Int, Int)]): Sheet = {
@@ -33,7 +31,13 @@ class Model {
   }
 }
 
-object ModelTest extends App {
+/**
+ * Types of inputs to the data model
+ */
+abstract class ModelMutations
+case class SetCell(x: Int, y: Int, f: String) extends ModelMutations
+
+object ModelExample extends App {
   val model = new Model()
 
   // Anything can subscribe to this stream of

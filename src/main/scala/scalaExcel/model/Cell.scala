@@ -17,7 +17,7 @@ class Cell(val x: Int, val y: Int, val f: String) {
   val position = (x, y)
 
   /**
-   * Add all numbers and references
+   * Get the current value of this cell
    */
   def eval(deps: Map[(Int, Int), Value]): Value = Cell.evaluator.eval(Ctx(deps), AST)
 
