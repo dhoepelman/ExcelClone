@@ -19,8 +19,4 @@ object DataModelFactory {
   def buildDefaultDataTable: DataTable = {
     buildDataTable(defaultSize._1, defaultSize._2)
   }
-
-  def buildCustomDataTable(size: (Int, Int), data: List[List[String]]): DataTable = {
-    buildDataTable(defaultSize._1, defaultSize._2)
-  }
 }
