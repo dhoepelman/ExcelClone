@@ -196,7 +196,6 @@ class ViewManager extends jfxf.Initializable {
               .filter(_!=null)
               .map(file => Filer.loadCSV(file))
               .subscribe(data => Mediator.setAllCells(data))
-
   }
 
   def changeEditorText(text: String) = formulaEditor.text = text

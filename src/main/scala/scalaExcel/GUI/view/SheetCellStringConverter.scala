@@ -12,6 +12,7 @@ object SheetCellStringConverter {
     override def fromString(expression: String): SheetCell = {
       // return a mock cell instance
       Mediator.editingCellChanged(expression)
+      SheetCell.newEmpty()
     }
   }
 

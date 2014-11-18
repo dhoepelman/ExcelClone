@@ -1,10 +1,11 @@
 package scalaExcel.GUI.modelwrapper
 
 import scalafx.collections.ObservableBuffer
+import scalafx.beans.property.ObjectProperty
 
 object DataModelFactory {
 
-  type DataRow = ObservableBuffer[ObservableSheetCell]
+  type DataRow = ObservableBuffer[ObjectProperty[SheetCell]]
   type DataTable = ObservableBuffer[DataRow]
 
   private val defaultSize = (10, 10)
@@ -13,7 +14,7 @@ object DataModelFactory {
                              columns: Int): DataTable = {
     new DataTable() ++=
       List.range(0, rows).map(i => new DataRow() ++=
-        List.range(0, columns).map(j => new ObservableSheetCell))
+        List.range(0, columns).map(j => ObjectProperty.apply(SheetCell.newEmpty())))
   }
 
   def buildDefaultDataTable: DataTable = {

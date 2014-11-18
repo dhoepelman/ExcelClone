@@ -1,6 +1,6 @@
 package scalaExcel.model
 
-import rx.lang.scala.{Observable, Observer, Subject}
+import rx.lang.scala.{Observable, Subject}
 
 class Model {
 
@@ -16,7 +16,7 @@ class Model {
     })
   }
 
-  def updateSheet(x: (Sheet, List[(Int,Int)])): Sheet = x match {
+  def updateSheet(x: (Sheet, List[(Int, Int)])): Sheet = x match {
     case (s, updates) => updateSheet(s, updates)
   }
 
@@ -24,11 +24,14 @@ class Model {
   // world
   val sheet = sheetMutations.scan(new Sheet())((sheet, action) => action match {
     case SetCell(x, y, f) => updateSheet(sheet.setCell(x, y, f))
+    case Refresh() => sheet
   })
 
-  def changeFormula(x: Int, y: Int , f: String) {
+  def changeFormula(x: Int, y: Int, f: String) {
     sheetMutations.onNext(SetCell(x, y, f))
   }
+
+  def refresh() = sheetMutations.onNext(Refresh())
 }
 
 object ModelExample extends App {
