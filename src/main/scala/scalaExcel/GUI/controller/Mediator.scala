@@ -63,4 +63,8 @@ object Mediator {
     _controller.changeEditorText(expression)
   }
 
+  def columnsReordered(permutations: Map[Int, Int]){
+    println("Columns reordered "+permutations)
+  }
+
 }
