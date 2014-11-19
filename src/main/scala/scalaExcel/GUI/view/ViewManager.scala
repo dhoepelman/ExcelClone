@@ -5,20 +5,19 @@ import java.net.URL
 import javafx.scene.{control => jfxsc}
 import javafx.scene.{layout => jfxsl}
 import javafx.stage.FileChooser.ExtensionFilter
-import javafx.stage.{FileChooser, Stage}
 import javafx.{event => jfxe, fxml => jfxf}
 import rx.lang.scala._
 
 import scalafx.scene.layout.AnchorPane
-import scalaExcel.GUI.controller.Mediator
+import scalaExcel.GUI.controller.{LabeledDataTable, Mediator}
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.control._
-import scalaExcel.GUI.modelwrapper.DataModelFactory.DataRow
 import scalafx.scene.paint.Color
 import scalaExcel.GUI.util.CSSHelper
 import scalaExcel.GUI.util.Filer
 
 import scala.language.reflectiveCalls
+import scalaExcel.GUI.controller.LabeledDataTable.DataRow
 
 
 class ViewManager extends jfxf.Initializable {
@@ -61,35 +60,16 @@ class ViewManager extends jfxf.Initializable {
   val fileChooser = new javafx.stage.FileChooser
   fileChooser.getExtensionFilters.add(new ExtensionFilter("Comma separated values", "*.csv"))
 
-  def initialize(url: URL, rb: java.util.ResourceBundle) {
-
-    //
-    // Initialization of GUI object handles
-    //
-
-    backgroundColorPicker = new ColorPicker(backgroundColorPickerDelegate)
-    fontColorPicker = new ColorPicker(fontColorPickerDelegate)
-    tableContainer = new AnchorPane(tableContainerDelegate)
-    formulaEditor = new TextField(formulaEditorDelegate)
-    testButton = new Button(testButtonDelegate)
-    menuLoad = new MenuItem(menuLoadDelegate)
-    menuSave = new MenuItem(menuSaveDelegate)
-
+  def buildTableView(labeledTable: LabeledDataTable): Unit = {
+    println("Building table")
     // initialize and add the table
-    val stage = formulaEditor.delegate.getScene.asInstanceOf[Stage]
 
-    table = TableViewBuilder.build(null, null, Mediator.dataTable)
+    table = TableViewBuilder.build(labeledTable)
     val selectionModel = table.getSelectionModel
     selectionModel.setCellSelectionEnabled(true)
     selectionModel.setSelectionMode(SelectionMode.MULTIPLE)
     AnchorPane.setAnchors(table, 0, 0, 0, 0)
     tableContainer.content = List(table)
-
-
-
-
-    assert(menuLoad != null)
-    assert(menuSave != null)
 
 
     //
@@ -181,21 +161,38 @@ class ViewManager extends jfxf.Initializable {
 
     // Load - Save
     saveStream.map(x => {
-                fileChooser.setTitle("Save destination")
-                fileChooser
-              })
-              .map(chooser => chooser.showSaveDialog(stage))
-              .filter(_!=null)
-              .subscribe(file => Filer.saveCSV(file, Mediator.dataTable))
+      fileChooser.setTitle("Save destination")
+      fileChooser
+    })
+      .map(chooser => chooser.showSaveDialog(tableContainer.scene.window.getValue))
+      .filter(_!=null)
+      .subscribe(file => Filer.saveCSV(file, Mediator.labeledTable.data))
 
     loadStream.map(x => {
-                fileChooser.setTitle("Open file")
-                fileChooser
-              })
-              .map(chooser => chooser.showOpenDialog(stage))
-              .filter(_!=null)
-              .map(file => Filer.loadCSV(file))
-              .subscribe(data => Mediator.setAllCells(data))
+      fileChooser.setTitle("Open file")
+      fileChooser
+    })
+      .map(chooser => chooser.showOpenDialog(tableContainer.scene.window.getValue))
+      .filter(_!=null)
+      .map(file => Filer.loadCSV(file))
+      .subscribe(data => Mediator.setAllCells(data))
+  }
+
+  def initialize(url: URL, rb: java.util.ResourceBundle) {
+
+    //
+    // Initialization of GUI object handles
+    //
+
+    backgroundColorPicker = new ColorPicker(backgroundColorPickerDelegate)
+    fontColorPicker = new ColorPicker(fontColorPickerDelegate)
+    tableContainer = new AnchorPane(tableContainerDelegate)
+    formulaEditor = new TextField(formulaEditorDelegate)
+    testButton = new Button(testButtonDelegate)
+    menuLoad = new MenuItem(menuLoadDelegate)
+    menuSave = new MenuItem(menuSaveDelegate)
+
+    buildTableView(Mediator.labeledTable)
   }
 
   def changeEditorText(text: String) = formulaEditor.text = text

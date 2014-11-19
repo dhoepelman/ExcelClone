@@ -2,7 +2,6 @@ package scalaExcel.GUI
 
 import scalafx.Includes._
 import scalafx.application.JFXApp
-import javafx.{scene => jfxs}
 import javafx.{fxml => jfxf}
 import javafx.{scene => jfxs}
 import java.io.IOException

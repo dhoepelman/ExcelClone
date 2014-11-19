@@ -1,12 +1,12 @@
 package scalaExcel.GUI.view
 
 import javafx.scene.{control=> jfxsc}
-import scalaExcel.GUI.modelwrapper.DataModelFactory._
 import scalaExcel.GUI.modelwrapper.SheetCell
 import SheetCellStringConverter.SheetCellStringConverter
 import scalafx.scene.control.TextField
 import scalaExcel.GUI.controller.Mediator
 import scalafx.scene.control.cell.TextFieldTableCell
+import scalaExcel.GUI.controller.LabeledDataTable.DataRow
 
 class SheetCellViewDelegate() extends jfxsc.cell.TextFieldTableCell[DataRow, SheetCell](new SheetCellStringConverter) {
   override def startEdit(): Unit = {
@@ -29,7 +29,7 @@ class SheetCellViewDelegate() extends jfxsc.cell.TextFieldTableCell[DataRow, She
 class SheetCellView() extends TextFieldTableCell[DataRow, SheetCell](new SheetCellViewDelegate()) {
   item.onChange {
     (_, _, newCell) =>
-    // apply cell customization
+      // apply cell customization
       if (newCell != null) style = newCell.style
   }
 }

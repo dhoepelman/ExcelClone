@@ -3,36 +3,31 @@ package scalaExcel.GUI.view
 import scalafx.scene.control._
 import scalafx.collections.ObservableBuffer
 import scalaExcel.GUI.modelwrapper.SheetCell
-import scalaExcel.GUI.modelwrapper.DataModelFactory.{DataTable, DataRow}
 import javafx.scene.{control => jfxc}
-import scalaExcel.GUI.controller.Mediator
+import scalaExcel.GUI.controller.{LabeledDataTable, Mediator}
+import scalaExcel.GUI.controller.LabeledDataTable.DataRow
 
-class SheetCellColumn(colIndex: Int, colHeader: String, colWidth: Double) extends TableColumn[DataRow, SheetCell] {
-  text = colHeader
+class SheetCellColumn(colIndex: Int, header: String, headerwidth: Double) extends TableColumn[DataRow, SheetCell] {
+  text = header
   id = colIndex.toString
   cellValueFactory = _.value.get(colIndex)
   cellFactory = {
     column => new SheetCellView()
   }
-  prefWidth = colWidth
+  prefWidth = headerwidth
 }
 
 object TableViewBuilder {
   type TableColumns = ObservableBuffer[jfxc.TableColumn[DataRow, SheetCell]]
 
-  private val defaultHeaders = List("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
-  private val defaultWidths = List(100, 200, 100, 100, 100, 100, 100, 100, 100, 100)
-
-  private def buildColumns(headers: List[String], widths: List[Int]): TableColumns =
-    headers.view.zip(widths).foldLeft(new TableColumns())((cols: TableColumns, data: (String, Int)) =>
+  private def buildColumns(headers: List[String], widths: List[Double]): TableColumns =
+    headers.view.zip(widths).foldLeft(new TableColumns())((cols: TableColumns, data: (String, Double)) =>
       cols += new SheetCellColumn(cols.length, data._1, data._2))
 
-  def build(columnHeaders: List[String], columnWidths: List[Int], rows: DataTable) = {
-    new TableView[DataRow](rows) {
+  def build(labeledTable: LabeledDataTable) = {
+    new TableView[DataRow](labeledTable.data) {
       editable = true
-      val headers = if (columnHeaders == null) defaultHeaders else columnHeaders
-      val widths = if (columnWidths == null) defaultWidths else columnWidths
-      columns ++= buildColumns(headers, widths)
+      columns ++= buildColumns(labeledTable.headers, labeledTable.headerWidths)
       columns.onChange((cols, changes) => {
         val (permutations, newCols) = cols.view.zipWithIndex.foldLeft((Map[Int, Int](), new TableColumns()))((acc, indexedCol) =>
           if (indexedCol._1.getId == indexedCol._2.toString)
