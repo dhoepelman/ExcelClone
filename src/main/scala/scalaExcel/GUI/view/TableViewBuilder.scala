@@ -7,14 +7,14 @@ import javafx.scene.{control => jfxc}
 import scalaExcel.GUI.controller.{LabeledDataTable, Mediator}
 import scalaExcel.GUI.controller.LabeledDataTable.DataRow
 
-class SheetCellColumn(colIndex: Int, header: String, headerwidth: Double) extends TableColumn[DataRow, SheetCell] {
+class SheetCellColumn(colIndex: Int, header: String, headerWidth: Double) extends TableColumn[DataRow, SheetCell] {
   text = header
   id = colIndex.toString
   cellValueFactory = _.value.get(colIndex)
   cellFactory = {
     column => new SheetCellView()
   }
-  prefWidth = headerwidth
+  prefWidth = headerWidth
 }
 
 object TableViewBuilder {
@@ -29,15 +29,11 @@ object TableViewBuilder {
       editable = true
       columns ++= buildColumns(labeledTable.headers, labeledTable.headerWidths)
       columns.onChange((cols, changes) => {
-        val (permutations, newCols) = cols.view.zipWithIndex.foldLeft((Map[Int, Int](), new TableColumns()))((acc, indexedCol) =>
-          if (indexedCol._1.getId == indexedCol._2.toString)
-            (acc._1, acc._2 :+ indexedCol._1.asInstanceOf[jfxc.TableColumn[DataRow, SheetCell]])
-          else
-            (acc._1 + (indexedCol._1.getId.toInt -> indexedCol._2), acc._2 :+ new SheetCellColumn(indexedCol._2.toInt, indexedCol._1.getText, indexedCol._1.getPrefWidth).delegate))
+        val permutations = cols.view.zipWithIndex.foldLeft(Map[Int, Int]())((acc, indexedCol) =>
+          if (indexedCol._1.getId == indexedCol._2.toString) acc
+          else acc + (indexedCol._1.getId.toInt -> indexedCol._2))
         if (permutations.size > 0) {
           Mediator.columnsReordered(permutations)
-          //TODO activate if model changes on reorder
-          //          columns.setAll(newCols.zip(cols).map(pair => if (pair._1 == null) pair._2 else pair._1))
         }
       })
     }
