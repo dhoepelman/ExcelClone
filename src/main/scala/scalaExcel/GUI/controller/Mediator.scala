@@ -45,7 +45,7 @@ object Mediator {
   }
 
   def changeCellExpression(index: (Int, Int), expression: String) =
-    _dataManager.changeCellExpression(editingCellIndex, expression)
+    _dataManager.changeCellExpression(index, expression)
 
   def changeCellStylist(index: (Int, Int), stylist: SheetCellStylist) =
     _dataManager.changeCellStylist(index, stylist)

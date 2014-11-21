@@ -26,11 +26,15 @@ class DataWindow(val maxBounds: (Int, Int, Int, Int),
   def columnWidths: List[Double] =
     applyRestrictions(_columnWidths)
 
-  def slide(offsets: (Int, Int, Int, Int)) = {
+  def slideBy(offsets: (Int, Int, Int, Int)) = {
     val bounds = (visibleBounds._1 + offsets._1,
       visibleBounds._2 + offsets._2,
       visibleBounds._3 + offsets._3,
       visibleBounds._4 + offsets._4)
+    new DataWindow(maxBounds, bounds, _columnHeaders, _columnWidths, _columnPermutations)
+  }
+
+  def slideTo(bounds: (Int, Int, Int, Int)) = {
     new DataWindow(maxBounds, bounds, _columnHeaders, _columnWidths, _columnPermutations)
   }
 
@@ -41,13 +45,14 @@ class DataWindow(val maxBounds: (Int, Int, Int, Int),
   }
 
   def columnCount = visibleBounds._2 - visibleBounds._1
-  def rowCount  = visibleBounds._4 - visibleBounds._3
+
+  def rowCount = visibleBounds._4 - visibleBounds._3
 
 }
 
 object DataWindowTester {
   def main(args: Array[String]) {
-    val window = new DataWindow((0, 4, 0, 4), (1, 3, 1, 3), List("A", "B", "C", "D", "E", "F"), List(100, 200, 100, 100, 100, 100), Map(1 ->3, 3->2,2 -> 1))
-    println(window.reorderColumns(Map(3->4, 4->3, 0->5, 5->0)).columnHeaders)
+    val window = new DataWindow((0, 4, 0, 4), (1, 3, 1, 3), List("A", "B", "C", "D", "E", "F"), List(100, 200, 100, 100, 100, 100), Map(1 -> 3, 3 -> 2, 2 -> 1))
+    println(window.reorderColumns(Map(3 -> 4, 4 -> 3, 0 -> 5, 5 -> 0)).columnHeaders)
   }
 }

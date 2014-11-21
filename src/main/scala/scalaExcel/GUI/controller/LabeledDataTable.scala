@@ -10,18 +10,29 @@ class LabeledDataTable(_dataWindow: DataWindow, _cellContents: Iterable[((Int, I
   val headers = _dataWindow.columnHeaders
   val headerWidths = _dataWindow.columnWidths
   val data = {
+    //transform Cells into SheetCells
     val cells = _cellContents.foldLeft(Map[(Int, Int), SheetCell]())((cells, content) => {
       val index = _dataWindow.absoluteToWindow(content._1)
       cells + (index -> SheetCell.newEvaluated(null, content._2, content._3))
     })
+    //build data table with the SheetCells
     DataBuilder.buildDataTable(_dataWindow.rowCount, _dataWindow.columnCount, cells)
   }
 
-  def changeContents(contents: Iterable[((Int, Int), String, Any)]) =
+  def updateContents(contents: Iterable[((Int, Int), String, Any)]) =
     new LabeledDataTable(_dataWindow, contents)
 
-  def changeWindow(window: DataWindow) =
-    new LabeledDataTable(window, _cellContents)
+  def slideWindowBy(offsets: (Int, Int, Int, Int)) = {
+    new LabeledDataTable(_dataWindow.slideBy(offsets), _cellContents)
+   }
+
+  def slideWindowTo(bounds: (Int, Int, Int, Int)) = {
+    new LabeledDataTable(_dataWindow.slideTo(bounds), _cellContents)
+  }
+
+  def reorderColumns(permutations: Map[Int, Int]) = {
+   new LabeledDataTable(_dataWindow.reorderColumns(permutations), _cellContents)
+  }
 
   def translateIndex(index: (Int, Int)) =
     _dataWindow.windowToAbsolute(index)
