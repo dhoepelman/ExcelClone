@@ -39,6 +39,9 @@ class DataManager {
   def reorderColumns(permutations: Map[Int, Int]) =
   _dataChanges.onNext(new ReorderColumns(permutations))
 
+  def refreshData() =
+    _dataChanges.onNext(new RefreshData())
+
   //TODO modify these
   private var _dataTable: LabeledDataTable = null
   tableGenerator.subscribe(table => {Mediator.dataChanged(table); _dataTable = table})

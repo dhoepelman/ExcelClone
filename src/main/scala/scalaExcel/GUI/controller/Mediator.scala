@@ -39,7 +39,7 @@ object Mediator {
   }
 
   def editingCellChanged(expression: String) = {
-    println("Editing cell changed expression to " + expression)
+    println("Editing cell "+editingCellIndex+"changed expression to " + expression)
     changeEditorText(expression)
     changeCellExpression(editingCellIndex, expression)
   }
@@ -67,4 +67,6 @@ object Mediator {
       _controller.buildTableView(table)
   }
 
+  def rebuildTable() =
+    _dataManager.refreshData()
 }
