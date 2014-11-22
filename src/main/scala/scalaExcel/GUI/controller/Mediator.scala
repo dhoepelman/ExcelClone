@@ -25,7 +25,8 @@ object Mediator {
   def controller_=(manager: ViewManager): Unit = _controller = manager
 
   def getCell(index: (Int, Int)): SheetCell =
-    _dataManager.getCell(index)
+  // account for numbered column
+    _dataManager.getCell((index._1, index._2 - 1))
 
   def getCellValue(index: (Int, Int)): Any =
     getCell(index).evaluated
@@ -39,22 +40,26 @@ object Mediator {
   }
 
   def editingCellChanged(expression: String) = {
-    println("Editing cell "+editingCellIndex+"changed expression to " + expression)
+    println("Editing cell " + editingCellIndex + "changed expression to " + expression)
     changeEditorText(expression)
     changeCellExpression(editingCellIndex, expression)
   }
 
   def changeCellExpression(index: (Int, Int), expression: String) =
-    _dataManager.changeCellExpression(index, expression)
+  // account for numbered column
+    _dataManager.changeCellExpression((index._1, index._2 - 1), expression)
 
   def changeCellStylist(index: (Int, Int), stylist: SheetCellStylist) =
-    _dataManager.changeCellStylist(index, stylist)
+  // account for numbered column
+    _dataManager.changeCellStylist((index._1, index._2 - 1), stylist)
 
   def changeCellProperty(index: (Int, Int), styleProperty: String, styleValue: Any) =
-    _dataManager.changeCellProperty(index, styleProperty, styleValue)
+  // account for numbered column
+    _dataManager.changeCellProperty((index._1, index._2 - 1), styleProperty, styleValue)
 
   def changeCellFormatter(index: (Int, Int), formatter: SheetCellFormatter) =
-    _dataManager.changeCellFormatter(index, formatter)
+  // account for numbered column
+    _dataManager.changeCellFormatter((index._1, index._2 - 1), formatter)
 
   def changeEditorText(expression: String) =
     _controller.changeEditorText(expression)

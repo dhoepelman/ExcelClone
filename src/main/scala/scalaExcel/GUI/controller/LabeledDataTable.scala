@@ -24,37 +24,44 @@ class LabeledDataTable(_dataWindow: DataWindow, _cellContents: Iterable[((Int, I
 
   def slideWindowBy(offsets: (Int, Int, Int, Int)) = {
     new LabeledDataTable(_dataWindow.slideBy(offsets), _cellContents)
-   }
+  }
 
   def slideWindowTo(bounds: (Int, Int, Int, Int)) = {
     new LabeledDataTable(_dataWindow.slideTo(bounds), _cellContents)
   }
 
   def reorderColumns(permutations: Map[Int, Int]) = {
-   new LabeledDataTable(_dataWindow.reorderColumns(permutations), _cellContents)
+    new LabeledDataTable(_dataWindow.reorderColumns(permutations), _cellContents)
   }
 
   def translateIndex(index: (Int, Int)) =
     _dataWindow.windowToAbsolute(index)
 
-  def getCellObservable(index: (Int, Int)) = data.get(index._1).get(index._2)
+  private def getCellObservable(index: (Int, Int)) = data.get(index._1).get(index._2)
 
-  def getCell(index: (Int, Int)): SheetCell = getCellObservable(index).value
+  def getCell(index: (Int, Int)): SheetCell =
+    if (index._1 < 0 || index._2 < 0)
+      SheetCell.newEmpty()
+    else
+      getCellObservable(index).value
 
-  def changeCellStylist(index: (Int, Int), stylist: SheetCellStylist) = {
-    val observable = getCellObservable(index)
-    observable.value = SheetCell.modifyStylist(observable.value, stylist)
-  }
+  def changeCellStylist(index: (Int, Int), stylist: SheetCellStylist) =
+    if (!(index._1 < 0 || index._2 < 0)) {
+      val observable = getCellObservable(index)
+      observable.value = SheetCell.modifyStylist(observable.value, stylist)
+    }
 
-  def changeCellFormatter(index: (Int, Int), formatter: SheetCellFormatter) = {
-    val observable = getCellObservable(index)
-    observable.value = SheetCell.modifyFormatter(observable.value, formatter)
-  }
+  def changeCellFormatter(index: (Int, Int), formatter: SheetCellFormatter) =
+    if (!(index._1 < 0 || index._2 < 0)) {
+      val observable = getCellObservable(index)
+      observable.value = SheetCell.modifyFormatter(observable.value, formatter)
+    }
 
-  def changeCellProperty(index: (Int, Int), styleProperty: String, styleValue: Any) = {
-    val observable = getCellObservable(index)
-    observable.value = SheetCell.modifyStyleProperty(observable.value, styleProperty, styleValue)
-  }
+  def changeCellProperty(index: (Int, Int), styleProperty: String, styleValue: Any) =
+    if (!(index._1 < 0 || index._2 < 0)) {
+      val observable = getCellObservable(index)
+      observable.value = SheetCell.modifyStyleProperty(observable.value, styleProperty, styleValue)
+    }
 }
 
 object LabeledDataTable {
