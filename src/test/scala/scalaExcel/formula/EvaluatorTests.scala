@@ -8,7 +8,7 @@ import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
 
 import math.pow
-import scalaExcel.formula.Evaluator.{eval, Ctx}
+import scalaExcel.formula.Evaluator.{eval, Ctx, desugarCell}
 import scalaExcel.formula.Values.{toVal => tv}
 
 @RunWith(value = classOf[Parameterized])
@@ -28,6 +28,8 @@ object EvaluatorTests {
 
   type TestTuple = (String, Value, AnyRef, Ctx)
 
+  val p = new Parser
+
   val ectx = Map[ACell, Value]();
   def lst(name: String, l: List[Tuple2[Any, String]]) =
     lstCtx(name, l map (x => (x._1, x._2, ectx)))
@@ -38,6 +40,13 @@ object EvaluatorTests {
   def lstErr(name: String, l: List[Tuple2[ErrType, String]]): List[TestTuple] =
     l map (x => (name, VErr(x._1), x._2, ectx))
 
+  def newCtx(values: Map[String, Any]) = values map (x => {
+    (p parsing("=" + x._1) match {
+      case c: Cell => desugarCell(c)
+      case _ => throw new IllegalArgumentException("oops")
+    }, tv(x._2))
+  })
+
   @Parameters(name= "{0}: <{1}> : <{2}>")
   def data: ju.Collection[Array[jl.Object]] = {
     val list = new ju.ArrayList[Array[jl.Object]]()
@@ -47,7 +56,8 @@ object EvaluatorTests {
         ("evalConst", VBool(true), Const(tv(true)), ectx),
         ("evalConst", VBool(false), Const(tv(false)), ectx),
         ("evalConst", VString("hi"), Const(tv("hi")), ectx),
-        ("evalConst", VString("hi"), "=\"hi\"", ectx)
+        ("evalConst", VString("hi"), "=\"hi\"", ectx),
+        ("evalConst Err", VErr(NA()), Const(VErr(NA())), ectx)
       )) ++ lst("binop =", List(
         (true, "=TRUE = TRUE"),
         (false, "=FALSE = TRUE"),
@@ -227,12 +237,33 @@ object EvaluatorTests {
         (InvalidName(), "=FOOBAR11()")
       )) ++ lst("call SUM", List(
         (1, "=SUM(1)"),
+        (4, "=SUM(1+1, 2)"),
         (10, "=SUM(1,2,3,4)")
       )) ++ lstErr("call SUM invalids", List(
         (InvalidValue(), "=SUM(\"A\")")
       )) ++ lstCtx("cell reference", List(
         (4, "=A1", Map(ACell("A", 1) -> VDouble(4))),
         (8, "=A1*2", Map(ACell("A", 1) -> VDouble(4)))
+      )) ++ lstCtx("a range of cells", List(
+        (4, "=A1:A1", newCtx(Map("A1" -> 4))),
+        (6, "=2+A1:A1", newCtx(Map("A1" -> 4))),
+        (-4, "=-A1:A1", newCtx(Map("A1" -> 4))),
+        (3, "=SUM(A1:A2)", newCtx(Map("A1" -> 1, "A2" -> 2))),
+        (6, "=SUM(A1:A2,1+2)", newCtx(Map("A1" -> 1, "A2" -> 2))),
+        (6, "=SUM(A1:C1)", newCtx(Map("A1" -> 1, "B1" -> 2, "C1" -> 3))),
+        (10, "=SUM(A1:B2)", newCtx(Map("A1" -> 1, "B1" -> 2, "A2" -> 3, "B2" -> 4)))
+      )) ++ lstErr("just a range", List(
+        (InvalidValue(), "=A1:A3"),
+        (InvalidValue(), "=2 + A1:A3"),
+        (InvalidValue(), "=A1:A3%")
+      )) ++ lst("function ROWS", List(
+        (4, "=ROWS(A2:A5)"),
+        (1, "=ROWS(B31:B31)"),
+        (10, "=ROWS(A14:A5)")
+      )) ++ lstCtx("function AVG", List(
+        (5, "=AVERAGE(A1:A2)", newCtx(Map("A1" -> 3, "A2" -> 7))),
+        (2.5, "=AVERAGE(3, 1, 4, 2)", ectx),
+        (5, "=AVERAGE(5, A1:A2)", newCtx(Map("A1" -> 3, "A2" -> 7)))
       ))
     ) foreach ({
       case (a, b, c, ctx) => list.add(Array(a, b, c, ctx))
