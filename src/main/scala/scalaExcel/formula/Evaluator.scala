@@ -60,6 +60,14 @@ object Evaluator {
 
   def doubleToString(d: Double) = if (d.ceil == d) d.toInt.toString else d.toString
 
+  def doubleToVBool(d: Double) = VBool(d != 0)
+
+  def valueToVBool(v: Value) = v match {
+    case b: VBool => b
+    case VDouble(d) => doubleToVBool(d)
+    case x => x
+  }
+
   // Mainly desugar references
 
   def desugarArgs(l: List[Expr]): List[Expr] = l match {
@@ -207,6 +215,17 @@ object Evaluator {
       case "SUM"     => reduce(ctx, applyToDoubles(_ + _), VDouble(0), desugarArgs(args))
       case "AVERAGE" => evalCallAverage(ctx, desugarArgs(args))
       case "ROWS"    => evalCallRows(args)
+      case "COLUMNS" => evalCallColumns(args)
+      case "COUNT"   => evalCallCount(ctx, desugarArgs(args))
+      case "IF"      => evalCallIf(ctx, args)
+      case "OR"      => evalCallOr(ctx, desugarArgs(args))
+      case "AND"     => evalCallAnd(ctx, desugarArgs(args))
+      case "NOT"     => evalCallNot(ctx, args)
+      case "POWER"   => evalCallPower(ctx, args)
+      case "UPPER"   => evalCallUpper(ctx, args)
+      case "LOWER"   => evalCallLower(ctx, args)
+      case "LEN"     => evalCallLen(ctx, args)
+      case "TRIM"    => evalCallTrim(ctx, args)
       case _ => VErr(InvalidName())
     }
 
@@ -219,5 +238,79 @@ object Evaluator {
     }
     case _ => throw new Exception("Wrong number of arguments")
   }
+
+  def evalCallColumns(args: List[Expr]) = args match {
+    case List(Range(Cell(ColRef(c1, _), _), Cell(ColRef(c2, _), _))) => {
+      VDouble(abs(colToNum(c2) - colToNum(c1)) + 1)
+    }
+    case _ => throw new Exception("Wrong number of arguments")
+  }
+
+  def evalCallCount(ctx: Ctx, args: List[Expr]) =
+    VDouble(args
+      .map(arg => evalIn(ctx, arg) match {
+        case VDouble(_) => 1
+        case _ => 0
+      })
+      .fold(0)(_+_))
+
+  def evalCallIf(ctx: Ctx, args: List[Expr]) = (args match {
+    // Normalize length of arguments to 3
+    case List(condition) => List(condition, Const(VBool(true)), Const(VBool(false)))
+    case List(condition, trueValue) => List(condition, trueValue, Const(VBool(false)))
+    case x => x
+  }) match {
+    // evaluate the condition and then either the true or left value
+    case List(condition, trueValue, falseValue) => valueToVBool(evalIn(ctx, condition)) match {
+      case VBool(b) => evalIn(ctx, if (b) trueValue else falseValue)
+      case _ => VErr(InvalidValue())
+    }
+    case _ => throw new Exception("Wrong number of arguments")
+  }
+
+  def evalCallOr(ctx: Ctx, args: List[Expr]) = {
+    args.foldLeft[Value](VBool(false))((res, arg) => res match {
+      case VBool(true) => res
+      case _ => valueToVBool(evalIn(ctx, arg))
+    })
+  }
+
+  def evalCallAnd(ctx: Ctx, args: List[Expr]) = {
+    args.foldLeft[Value](VBool(true))((res, arg) => res match {
+      case VBool(false) => res
+      case _ => valueToVBool(evalIn(ctx, arg))
+    })
+  }
+
+  def evalCallNot(ctx: Ctx, args: List[Expr]) = args match {
+    case List(arg) => valueToVBool(evalIn(ctx, arg)) match {
+      case VBool(v) => VBool(!v)
+      case _ => VErr(InvalidValue())
+    }
+    case _ => throw new Exception("Wrong number of arguments")
+  }
+
+  def evalCallPower(ctx: Ctx, args: List[Expr]) = args match {
+    case List(num, exp) => evalIn(ctx, BinOp(Expon(), num, exp))
+    case _ => throw new Exception("Wrong number of arguments")
+  }
+
+  def evalWithString(f: String => Value)(ctx: Ctx, args: List[Expr]) = {
+    args match {
+      case List(value) => evalIn(ctx, value) match {
+        case VString(str) => f(str)
+        case x => x
+      }
+      case _ => throw new Exception("Wrong number of arguments")
+    }
+  }
+
+  def evalCallUpper = evalWithString(str => VString(str.toUpperCase)) _
+
+  def evalCallLower = evalWithString(str => VString(str.toLowerCase)) _
+
+  def evalCallLen = evalWithString(str => VDouble(str.length)) _
+
+  def evalCallTrim = evalWithString(str => VString(str.trim)) _
 
 }
