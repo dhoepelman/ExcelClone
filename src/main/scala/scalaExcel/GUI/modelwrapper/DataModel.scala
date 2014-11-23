@@ -29,7 +29,7 @@ class DataModel {
   }
 
   def clearDataTable = {
-    _dataTable.map(row => row.map(cell => cell.value = SheetCell.newEmpty()))
+    _dataTable.map(row => row.map(cell => cell.value = SheetCell.newEmpty((-1, -1))))
   }
 
   private def populateDataTable(data: List[List[String]]) =
@@ -79,7 +79,7 @@ class DataModel {
   def changeCell(index: (Int, Int), expression: String, value: Any) = {
     val observable = getCellObservable(index)
     println("Cell " + index + " changed from " + observable.value + " to expr=" + expression + " val=" + value)
-    observable.value = SheetCell.newEvaluated(observable.value, expression, value)
+    observable.value = SheetCell.newEvaluated((-1, -1), expression, value)
   }
 
   def changeCellExpression(index: (Int, Int), expression: String) = {

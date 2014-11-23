@@ -10,12 +10,14 @@ object SheetCellStringConverter {
     override def toString(cell: SheetCell): String = if (cell == null) "" else cell.toString
 
     override def fromString(expression: String): SheetCell = {
-      // return a mock cell instance
-      val cell = column.getTableView.getEditingCell
+      val table = column.getTableView
+      val index = column.getTableView.getEditingCell
+      val cell = table.getItems.get(index.getRow).get(index.getColumn - 1).value
       // account for numbered column
-      Mediator.changeCellExpression((cell.getRow, cell.getColumn - 1), expression)
+      Mediator.changeCellExpression(cell.absoluteIndex, expression)
       Mediator.changeEditorText(expression)
-      SheetCell.newEmpty()
+      // return a mock cell instance
+      SheetCell.newEmpty((-1, -1))
     }
   }
 

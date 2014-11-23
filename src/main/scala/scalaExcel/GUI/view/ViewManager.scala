@@ -64,7 +64,7 @@ class ViewManager extends jfxf.Initializable {
 
   def getObservableAt(index: (Int, Int)) =
   // account for numbered column
-    if (index._2 < 1) ObjectProperty.apply(SheetCell.newEmpty())
+    if (index._2 < 1) ObjectProperty.apply(SheetCell.newEmpty(-1, -1))
     else table.items.getValue.get(index._1).get(index._2 - 1)
 
   def buildTableView(labeledTable: LabeledDataTable): Unit = {

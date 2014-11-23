@@ -14,7 +14,7 @@ object DataModelFactory {
                              columns: Int): DataTable = {
     new DataTable() ++=
       List.range(0, rows).map(i => new DataRow() ++=
-        List.range(0, columns).map(j => ObjectProperty.apply(SheetCell.newEmpty())))
+        List.range(0, columns).map(j => ObjectProperty.apply(SheetCell.newEmpty(-1, -1))))
   }
 
   def buildDefaultDataTable: DataTable = {

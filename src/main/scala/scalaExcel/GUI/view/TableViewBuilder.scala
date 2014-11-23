@@ -27,7 +27,7 @@ class SheetCellColumn(colIndex: Int, header: String, headerWidth: Double, sorted
 class NumberedColumn extends TableColumn[DataRow, SheetCell] {
   text = "#"
   id = "-1"
-  cellValueFactory = _ => ObjectProperty.apply(SheetCell.newEmpty())
+  cellValueFactory = _ => ObjectProperty.apply(SheetCell.newEmpty(-1, -1))
   cellFactory = _ => new TableCell[DataRow, SheetCell] {
     item.onChange {
       (_, _, _) =>
@@ -63,11 +63,9 @@ object TableViewBuilder {
       columns.onChange((cols, changes) => {
         val permutations = cols.view.zipWithIndex.foldLeft(Map[Int, Int]())((acc, indexedCol) => {
           //compare id to index in cols and account for numbered column
-          println("On position " + indexedCol._2 + " found " + indexedCol._1.getId)
           if (indexedCol._1.getId.toInt == indexedCol._2 - 1) acc
           else acc + (indexedCol._1.getId.toInt -> (indexedCol._2 - 1))
         })
-        println("Permutations: " + permutations)
         if (!permutations.keySet.contains(-1))
         // notify Mediator of change
           Mediator.columnsReordered(permutations)

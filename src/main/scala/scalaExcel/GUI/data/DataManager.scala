@@ -17,28 +17,31 @@ class DataManager {
       cell => (cell._1, cell._2.f, newSheet.valueAt(cell._1._1, cell._1._2).get)))
     .subscribe(contents => _dataChanges.onNext(new UpdateContents(contents)))
 
-  _dataChanges.scan(new LabeledDataTable(DataBuilder.defaultDataWindow, List(), -1, true))((table, action) => action match {
-    case ModifyFormulaAt(index, formula) =>
-      val realIndex = table.translateIndex(index)
-      println("changing formula of " + realIndex + " with " + formula)
-      _immutableModel.changeFormula(realIndex._1, realIndex._2, formula)
-      table.flushData()
-    case UpdateContents(contents) => table.updateContents(contents)
-    case SlideWindowBy(offsets) => table.slideWindowBy(offsets)
-    case ReorderColumns(permutations) => table.reorderColumns(permutations)
-    case SortRows(sortColumn, sortAscending) => table.reorderRows(sortColumn, sortAscending)
-    case RefreshData() => table
-  }).subscribe(Mediator.dataChanged _)
+  _dataChanges.scan(new LabeledDataTable(LabeledDataTable.defaultDataWindow, List(), -1, true))((table, action) =>
+    action match {
+//      case ModifyFormulaAt(index, formula) =>
+//        println("changing for " + index)
+//        val realIndex = table.translateIndex(index)
+//        println("changing formula of " + realIndex + " with " + formula)
+//        _immutableModel.changeFormula(realIndex._1, realIndex._2, formula)
+//        table.flushData()
+      case UpdateContents(contents) => table.updateContents(contents)
+      case SlideWindowBy(offsets) => table.slideWindowBy(offsets)
+      case ReorderColumns(permutations) => table.reorderColumns(permutations)
+      case SortRows(sortColumn, sortAscending) => table.sortRows(sortColumn, sortAscending)
+      case RefreshData() => table
+    }).subscribe(Mediator.dataChanged _)
 
   def tableScrolled(offsets: (Int, Int, Int, Int)) = {
     _dataChanges.onNext(new SlideWindowBy(offsets))
   }
 
   def populateDataModel(data: List[List[String]]) =
-    DataBuilder.dataWithIndex(data).foreach(cell => _immutableModel.changeFormula(cell._1, cell._2, cell._3))
+    LabeledDataTable.dataWithIndex(data).foreach(cell => _immutableModel.changeFormula(cell._1, cell._2, cell._3))
 
-  def changeCellExpression(index: (Int, Int), expression: String) = {
-    _dataChanges.onNext(new ModifyFormulaAt(index, expression))
+  def changeCellExpression(absoluteIndex: (Int, Int), expression: String) = {
+//    _dataChanges.onNext(new ModifyFormulaAt(index, expression))
+    _immutableModel.changeFormula(absoluteIndex._1, absoluteIndex._2, expression)
   }
 
   def reorderColumns(permutations: Map[Int, Int]) =

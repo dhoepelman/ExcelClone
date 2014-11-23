@@ -8,13 +8,13 @@ class DataWindow(val maxBounds: (Int, Int, Int, Int),
                  _rowPermutations: Map[Int, Int]) {
 
   def windowToAbsoluteColumn(colIndex: Int) =
-    _columnPermutations.getOrElse(colIndex + visibleBounds._3, colIndex + visibleBounds._3)
+    _columnPermutations.map(_.swap).getOrElse(colIndex + visibleBounds._3, colIndex + visibleBounds._3)
 
   def absoluteToWindowColumn(colIndex: Int) =
     _columnPermutations.getOrElse(colIndex, colIndex) - visibleBounds._3
 
   def windowToAbsoluteRow(rowIndex: Int) =
-    _rowPermutations.getOrElse(rowIndex + visibleBounds._1, rowIndex + visibleBounds._1)
+    _rowPermutations.map(_.swap).getOrElse(rowIndex + visibleBounds._1, rowIndex + visibleBounds._1)
 
   def absoluteToWindowRow(rowIndex: Int) =
     _rowPermutations.getOrElse(rowIndex, rowIndex) - visibleBounds._1
@@ -24,6 +24,14 @@ class DataWindow(val maxBounds: (Int, Int, Int, Int),
 
   def absoluteToWindow(index: (Int, Int)): (Int, Int) =
     (absoluteToWindowRow(index._1), absoluteToWindowColumn(index._2))
+
+  def isInBounds(index: (Int, Int)) = {
+    if (index._1 >= visibleBounds._1 && index._1 < visibleBounds._2 &&
+      index._2 >= visibleBounds._3 && index._2 < visibleBounds._4)
+      true
+    else
+      false
+  }
 
   private def applyRestrictions[T: Manifest](list: List[T]) = {
     val reversed = _columnPermutations.map(_.swap)
