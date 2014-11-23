@@ -260,10 +260,77 @@ object EvaluatorTests {
         (4, "=ROWS(A2:A5)"),
         (1, "=ROWS(B31:B31)"),
         (10, "=ROWS(A14:A5)")
+      )) ++ lst("function COLUMNS", List(
+        (3, "=COLUMNS(A1:C1)"),
+        (27, "=COLUMNS(A31:AA31)"),
+        (4, "=COLUMNS(E14:B5)")
+      )) ++ lst("function COUNT", List(
+        (3, "=COUNT(TRUE, 1/0, 1, \"abc\", 10, 0)")
       )) ++ lstCtx("function AVG", List(
         (5, "=AVERAGE(A1:A2)", newCtx(Map("A1" -> 3, "A2" -> 7))),
         (2.5, "=AVERAGE(3, 1, 4, 2)", ectx),
         (5, "=AVERAGE(5, A1:A2)", newCtx(Map("A1" -> 3, "A2" -> 7)))
+      )) ++ lst("function IF", List(
+        (true, "=IF(TRUE)"),
+        (false, "=IF(FALSE)"),
+        (3, "=IF(TRUE, 3)"),
+        (false, "=IF(FALSE, 3)"),
+        (2, "=IF(TRUE,2,3)"),
+        (3, "=IF(FALSE,2,3)"),
+        (2, "=IF(1,2,3)"),
+        (3, "=IF(0,2,3)")
+      )) ++ lstErr("function IF", List(
+        (InvalidValue(), "=IF(\"A\")")
+      )) ++ lst("function OR", List(
+        (true,  "=OR(TRUE, TRUE)"),
+        (true,  "=OR(FALSE, TRUE)"),
+        (true,  "=OR(TRUE, FALSE)"),
+        (false, "=OR(FALSE, FALSE)"),
+        (true,  "=OR(1, 1)"),
+        (true,  "=OR(0, 1)"),
+        (true,  "=OR(1, 0)"),
+        (false, "=OR(0, 0)"),
+        (true,  "=OR(0,0,0,1,0)"),
+        (false, "=OR(0,0,0,0,0)"),
+        (true,  "=OR(1,1,1,1,1)")
+      )) ++ lst("function AND", List(
+        (true,  "=AND(TRUE, TRUE)"),
+        (false, "=AND(FALSE, TRUE)"),
+        (false, "=AND(TRUE, FALSE)"),
+        (false, "=AND(FALSE, FALSE)"),
+        (true,  "=AND(1, 1)"),
+        (false, "=AND(0, 1)"),
+        (false, "=AND(1, 0)"),
+        (false, "=AND(0, 0)"),
+        (false, "=AND(0,0,0,1,0)"),
+        (false, "=AND(0,0,0,0,0)"),
+        (true,  "=AND(1,1,1,1,1)")
+      )) ++ lst("function NOT", List(
+        (true,  "=NOT(FALSE)"),
+        (false, "=NOT(TRUE)"),
+        (true,  "=NOT(0)"),
+        (false, "=NOT(1)")
+      )) ++ lst("function POWER", List(
+        (16, "=POWER(2,4)")
+      )) ++ lst("function UPPER", List(
+        ("ABC", "=UPPER(\"abc\")"),
+        ("ABC", "=UPPER(\"aBc\")"),
+        ("ABC", "=UPPER(\"ABC\")"),
+        (1, "=UPPER(1)")
+      )) ++ lst("function LOWER", List(
+        ("abc", "=LOWER(\"abc\")"),
+        ("abc", "=LOWER(\"aBc\")"),
+        ("abc", "=LOWER(\"ABC\")"),
+        (1, "=LOWER(1)")
+      )) ++ lst("function LEN", List(
+        (1, "=LEN(\"a\")"),
+        (0, "=LEN(\"\")"),
+        (7, "=LEN(\"abc def\")")
+      )) ++ lst("function TRIM", List(
+        ("", "=TRIM(\"\")"),
+        ("abc", "=TRIM(\"abc\")"),
+        ("abc", "=TRIM(\" abc \")"),
+        ("abc", "=TRIM(\"   abc   \")")
       ))
     ) foreach ({
       case (a, b, c, ctx) => list.add(Array(a, b, c, ctx))
