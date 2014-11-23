@@ -1,6 +1,7 @@
 package scalaExcel.model
 
-import rx.lang.scala.{Observable, Subject}
+import rx.lang.scala.{Observable, Observer, Subject}
+import scalaExcel.model.OperationHelpers._
 
 class Model {
 
@@ -16,7 +17,7 @@ class Model {
     })
   }
 
-  def updateSheet(x: (Sheet, List[(Int, Int)])): Sheet = x match {
+  def updateSheet(x: (Sheet, List[(Int,Int)])): Sheet = x match {
     case (s, updates) => updateSheet(s, updates)
   }
 
@@ -27,11 +28,12 @@ class Model {
     case Refresh() => sheet
   })
 
-  def changeFormula(x: Int, y: Int, f: String) {
+  def changeFormula(x: Int, y: Int , f: String) {
     sheetMutations.onNext(SetCell(x, y, f))
   }
 
   def refresh() = sheetMutations.onNext(Refresh())
+
 }
 
 object ModelExample extends App {
@@ -48,17 +50,7 @@ object ModelExample extends App {
     .distinctUntilChanged
     .subscribe(x => println(s"value at (3,1) changed to $x"))
 
-  // Or we can define Observable[Sheet] method extensions
-  implicit class ExtendedObservableSheet(val sheet: Observable[Sheet]) extends AnyVal {
-    def filterCellValueAt(x: Int, y: Int) =
-      sheet
-        .map(_.valueAt(x, y))
-        .filter(!_.isEmpty)
-        .map(_.get)
-        .distinctUntilChanged
-  }
-
-  // And use the this:
+  // Or use the implicit helper class and use the this:
   model.sheet.filterCellValueAt(4, 1).subscribe(x => println(s"(4,1) value changed to $x"))
 
   // Input some changes
