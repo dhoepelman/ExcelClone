@@ -249,7 +249,9 @@ object EvaluatorTests {
         (6, "=2+A1:A1", newCtx(Map("A1" -> 4))),
         (-4, "=-A1:A1", newCtx(Map("A1" -> 4))),
         (3, "=SUM(A1:A2)", newCtx(Map("A1" -> 1, "A2" -> 2))),
-        (6, "=SUM(A1:A2,1+2)", newCtx(Map("A1" -> 1, "A2" -> 2)))
+        (6, "=SUM(A1:A2,1+2)", newCtx(Map("A1" -> 1, "A2" -> 2))),
+        (6, "=SUM(A1:C1)", newCtx(Map("A1" -> 1, "B1" -> 2, "C1" -> 3))),
+        (10, "=SUM(A1:B2)", newCtx(Map("A1" -> 1, "B1" -> 2, "A2" -> 3, "B2" -> 4)))
       )) ++ lstErr("just a range", List(
         (InvalidValue(), "=A1:A3"),
         (InvalidValue(), "=2 + A1:A3"),

@@ -2,6 +2,7 @@
 package scalaExcel.formula
 
 import math.{pow, abs}
+import scalaExcel.formula.ReferenceFinder.{colToNum, numToCol}
 
 object Evaluator {
 
@@ -74,17 +75,25 @@ object Evaluator {
     case Range(c1, c2) => desugarRange(c1, c2)
     case _ => e
   }
+
   def desugarCell(c: Cell) = c match {
     case Cell(ColRef(c, _), RowRef(r, _)) => ACell(c, r)
   }
 
   def desugarRange(c1: Cell, c2: Cell): Expr =
-    if (c1 != c2)
-      ARange(List(ACell("A", 1), ACell("A", 2)))
-    else
-      c1 match {
-        case Cell(ColRef(c1, _), RowRef(r1, _)) => ACell(c1, r1)
-      }
+    (c1, c2) match {
+      case (
+        Cell(ColRef(c1, _), RowRef(r1, _)),
+        Cell(ColRef(c2, _), RowRef(r2, _))
+      ) =>
+        if (c1 == c2 && r1 == r2)
+          ACell(c1, r1)
+        else {
+          val rs = List.range(r1, r2 + 1)
+          var cs = List.range(colToNum(c1), colToNum(c2) + 1)
+          ARange(for (r <- rs; c <- cs) yield ACell(numToCol(c), r))
+        }
+  }
 
   // top level eval, returns error for ranges
   def eval(ctx: Ctx, e: Expr) =
