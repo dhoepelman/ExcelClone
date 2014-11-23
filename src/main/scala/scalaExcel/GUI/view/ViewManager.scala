@@ -19,6 +19,7 @@ import scalaExcel.GUI.util.Filer
 import scala.language.reflectiveCalls
 import scalaExcel.GUI.controller.LabeledDataTable.DataRow
 import scalaExcel.GUI.modelwrapper.SheetCell
+import scalafx.beans.property.ObjectProperty
 
 
 class ViewManager extends jfxf.Initializable {
@@ -62,7 +63,9 @@ class ViewManager extends jfxf.Initializable {
   fileChooser.getExtensionFilters.add(new ExtensionFilter("Comma separated values", "*.csv"))
 
   def getObservableAt(index: (Int, Int)) =
-    table.items.getValue.get(index._1).get(index._2 - 1)
+  // account for numbered column
+    if (index._2 < 1) ObjectProperty.apply(SheetCell.newEmpty())
+    else table.items.getValue.get(index._1).get(index._2 - 1)
 
   def buildTableView(labeledTable: LabeledDataTable): Unit = {
     println("Building table")

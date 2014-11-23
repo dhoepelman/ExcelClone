@@ -5,7 +5,10 @@ import scalafx.beans.property.ObjectProperty
 import scalaExcel.GUI.modelwrapper.SheetCell
 import scalaExcel.GUI.data.{DataBuilder, DataWindow}
 
-class LabeledDataTable(_dataWindow: DataWindow, _cellContents: Iterable[((Int, Int), String, Any)]) {
+class LabeledDataTable(_dataWindow: DataWindow,
+                       _cellContents: Iterable[((Int, Int), String, Any)],
+                       _sortColumn: Int,
+                       val sortAscending: Boolean) {
 
   val headers = _dataWindow.columnHeaders
   val headerWidths = _dataWindow.columnWidths
@@ -20,25 +23,39 @@ class LabeledDataTable(_dataWindow: DataWindow, _cellContents: Iterable[((Int, I
   } else null
 
   def updateContents(contents: Iterable[((Int, Int), String, Any)]) =
-    new LabeledDataTable(_dataWindow, contents)
+    new LabeledDataTable(_dataWindow, contents, _sortColumn, sortAscending)
 
   def slideWindowBy(offsets: (Int, Int, Int, Int)) = {
-    new LabeledDataTable(_dataWindow.slideBy(offsets), _cellContents)
+    new LabeledDataTable(_dataWindow.slideBy(offsets), _cellContents, _sortColumn, sortAscending)
   }
 
   def slideWindowTo(bounds: (Int, Int, Int, Int)) = {
-    new LabeledDataTable(_dataWindow.slideTo(bounds), _cellContents)
+    new LabeledDataTable(_dataWindow.slideTo(bounds), _cellContents, _sortColumn, sortAscending)
   }
 
   def reorderColumns(permutations: Map[Int, Int]) = {
-    new LabeledDataTable(_dataWindow.reorderColumns(permutations), _cellContents)
+    new LabeledDataTable(_dataWindow.reorderColumns(permutations), _cellContents, _sortColumn, sortAscending)
+  }
+
+  def reorderRows(sortColumn: Int, sortAscending: Boolean) = {
+    new LabeledDataTable(_dataWindow.reorderRows(computeSortOrder(sortColumn, sortAscending)),
+      _cellContents,
+      _dataWindow.windowToAbsoluteColumn(sortColumn),
+      sortAscending)
   }
 
   def translateIndex(index: (Int, Int)) =
     _dataWindow.windowToAbsolute(index)
 
   def flushData() =
-    new LabeledDataTable(_dataWindow, null)
+    new LabeledDataTable(_dataWindow, null, _sortColumn, sortAscending)
+
+  def sortColumn = _dataWindow.absoluteToWindowColumn(_sortColumn)
+
+  def computeSortOrder(sortColumn: Int, sortAscending: Boolean) = {
+    // TODO compute sort order
+    Map[Int, Int]()
+  }
 
 }
 

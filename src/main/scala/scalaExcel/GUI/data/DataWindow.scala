@@ -4,17 +4,31 @@ class DataWindow(val maxBounds: (Int, Int, Int, Int),
                  val visibleBounds: (Int, Int, Int, Int),
                  _columnHeaders: List[String],
                  _columnWidths: List[Double],
-                 _columnPermutations: Map[Int, Int]) {
+                 _columnPermutations: Map[Int, Int],
+                 _rowPermutations: Map[Int, Int]) {
+
+  def windowToAbsoluteColumn(colIndex: Int) =
+    _columnPermutations.getOrElse(colIndex + visibleBounds._3, colIndex + visibleBounds._3)
+
+  def absoluteToWindowColumn(colIndex: Int) =
+    _columnPermutations.getOrElse(colIndex, colIndex) - visibleBounds._3
+
+  def windowToAbsoluteRow(rowIndex: Int) =
+    _rowPermutations.getOrElse(rowIndex + visibleBounds._1, rowIndex + visibleBounds._1)
+
+  def absoluteToWindowRow(rowIndex: Int) =
+    _rowPermutations.getOrElse(rowIndex, rowIndex) - visibleBounds._1
 
   def windowToAbsolute(index: (Int, Int)): (Int, Int) =
-    (index._1 + visibleBounds._1, _columnPermutations.getOrElse(index._2, index._2) + visibleBounds._3)
+    (windowToAbsoluteRow(index._1), windowToAbsoluteColumn(index._2))
 
   def absoluteToWindow(index: (Int, Int)): (Int, Int) =
-    (index._1 - visibleBounds._1, _columnPermutations.getOrElse(index._2, index._2) - visibleBounds._3)
+    (absoluteToWindowRow(index._1), absoluteToWindowColumn(index._2))
 
   private def applyRestrictions[T: Manifest](list: List[T]) = {
+    val reversed = _columnPermutations.map(_.swap)
     list.zipWithIndex.map(indexedCol =>
-      _columnPermutations.get(indexedCol._2) match {
+      reversed.get(indexedCol._2) match {
         case Some(index) => list(index)
         case _ => indexedCol._1
       }).drop(visibleBounds._3).take(columnCount)
@@ -31,28 +45,60 @@ class DataWindow(val maxBounds: (Int, Int, Int, Int),
       visibleBounds._2 + offsets._2,
       visibleBounds._3 + offsets._3,
       visibleBounds._4 + offsets._4)
-    new DataWindow(maxBounds, bounds, _columnHeaders, _columnWidths, _columnPermutations)
+    new DataWindow(maxBounds,
+      bounds,
+      _columnHeaders,
+      _columnWidths,
+      _columnPermutations,
+      _rowPermutations)
   }
 
   def slideTo(bounds: (Int, Int, Int, Int)) = {
-    new DataWindow(maxBounds, bounds, _columnHeaders, _columnWidths, _columnPermutations)
+    new DataWindow(maxBounds,
+      bounds,
+      _columnHeaders,
+      _columnWidths,
+      _columnPermutations,
+      _rowPermutations)
+  }
+
+  private def combinePermutations(oldOrder: Map[Int, Int], newOrder: Map[Int, Int]) = {
+    val modifiedPermutations = oldOrder.map(pair => (pair._1, newOrder.getOrElse(pair._2, pair._2)))
+    val newPermutations = newOrder.filter(pair => !oldOrder.keySet.contains(pair._1))
+    modifiedPermutations ++ newPermutations
   }
 
   def reorderColumns(permutations: Map[Int, Int]) = {
-    val modifiedPermutations = _columnPermutations.map(pair => (pair._1, permutations.getOrElse(pair._2, pair._2)))
-    val newPermutations = permutations.filter(pair => !_columnPermutations.keySet.contains(pair._1))
-    new DataWindow(maxBounds, visibleBounds, _columnHeaders, _columnWidths, modifiedPermutations ++ newPermutations)
+    new DataWindow(maxBounds,
+      visibleBounds,
+      _columnHeaders,
+      _columnWidths,
+      combinePermutations(_columnPermutations, permutations),
+      _rowPermutations)
+  }
+
+  def reorderRows(permutations: Map[Int, Int]) = {
+    new DataWindow(maxBounds,
+      visibleBounds,
+      _columnHeaders,
+      _columnWidths,
+      _columnPermutations,
+      permutations)
   }
 
   def columnCount = visibleBounds._2 - visibleBounds._1
 
   def rowCount = visibleBounds._4 - visibleBounds._3
-
 }
 
 object DataWindowTester {
   def main(args: Array[String]) {
-    val window = new DataWindow((0, 4, 0, 4), (1, 3, 1, 3), List("A", "B", "C", "D", "E", "F"), List(100, 200, 100, 100, 100, 100), Map(1 -> 3, 3 -> 2, 2 -> 1))
-    println(window.reorderColumns(Map(3 -> 4, 4 -> 3, 0 -> 5, 5 -> 0)).columnHeaders)
+    val window = new DataWindow((0, 4, 0, 4),
+      (0, 4, 0, 4),
+      List("A", "B", "C", "D", "E", "F"),
+      List(100, 200, 100, 100, 100, 100),
+      Map(1 -> 0, 2 -> 1, 0 -> 2),
+      Map())
+    println(window.reorderColumns(Map()).columnHeaders)
   }
 }

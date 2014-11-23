@@ -40,6 +40,9 @@ object Mediator {
   def columnsReordered(permutations: Map[Int, Int]) =
     _dataManager.reorderColumns(permutations)
 
+  def rowsSorted(sortColumn: Int, sortAscending: Boolean) =
+    _dataManager.sortRows(sortColumn, sortAscending)
+
   def dataChanged(table: LabeledDataTable) = {
     if (_controller != null && table.data != null)
       _controller.buildTableView(table)

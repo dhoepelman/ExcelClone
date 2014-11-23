@@ -20,3 +20,5 @@ case class AddNewColumn(position: Int) extends DataChanges
 case class AddNewRow() extends DataChanges
 
 case class ReorderColumns(permutations: Map[Int, Int]) extends DataChanges
+
+case class SortRows(sortColumn: Int, sortAscending: Boolean) extends DataChanges

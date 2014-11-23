@@ -17,15 +17,16 @@ class DataManager {
       cell => (cell._1, cell._2.f, newSheet.valueAt(cell._1._1, cell._1._2).get)))
     .subscribe(contents => _dataChanges.onNext(new UpdateContents(contents)))
 
-  _dataChanges.scan(new LabeledDataTable(DataBuilder.defaultDataWindow, List()))((table, action) => action match {
+  _dataChanges.scan(new LabeledDataTable(DataBuilder.defaultDataWindow, List(), -1, true))((table, action) => action match {
     case ModifyFormulaAt(index, formula) =>
       val realIndex = table.translateIndex(index)
-      println("changing formula of "+realIndex+" with "+formula)
+      println("changing formula of " + realIndex + " with " + formula)
       _immutableModel.changeFormula(realIndex._1, realIndex._2, formula)
       table.flushData()
     case UpdateContents(contents) => table.updateContents(contents)
     case SlideWindowBy(offsets) => table.slideWindowBy(offsets)
     case ReorderColumns(permutations) => table.reorderColumns(permutations)
+    case SortRows(sortColumn, sortAscending) => table.reorderRows(sortColumn, sortAscending)
     case RefreshData() => table
   }).subscribe(Mediator.dataChanged _)
 
@@ -42,6 +43,9 @@ class DataManager {
 
   def reorderColumns(permutations: Map[Int, Int]) =
     _dataChanges.onNext(new ReorderColumns(permutations))
+
+  def sortRows(sortColumn: Int, sortAscending: Boolean) =
+    _dataChanges.onNext(new SortRows(sortColumn, sortAscending))
 
   def refreshData() =
     _dataChanges.onNext(new RefreshData())
