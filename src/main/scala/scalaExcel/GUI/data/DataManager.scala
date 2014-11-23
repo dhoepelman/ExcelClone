@@ -19,12 +19,6 @@ class DataManager {
 
   _dataChanges.scan(new LabeledDataTable(LabeledDataTable.defaultDataWindow, List(), -1, true))((table, action) =>
     action match {
-//      case ModifyFormulaAt(index, formula) =>
-//        println("changing for " + index)
-//        val realIndex = table.translateIndex(index)
-//        println("changing formula of " + realIndex + " with " + formula)
-//        _immutableModel.changeFormula(realIndex._1, realIndex._2, formula)
-//        table.flushData()
       case UpdateContents(contents) => table.updateContents(contents)
       case SlideWindowBy(offsets) => table.slideWindowBy(offsets)
       case ReorderColumns(permutations) => table.reorderColumns(permutations)
@@ -40,7 +34,6 @@ class DataManager {
     LabeledDataTable.dataWithIndex(data).foreach(cell => _immutableModel.changeFormula(cell._1, cell._2, cell._3))
 
   def changeCellExpression(absoluteIndex: (Int, Int), expression: String) = {
-//    _dataChanges.onNext(new ModifyFormulaAt(index, expression))
     _immutableModel.changeFormula(absoluteIndex._1, absoluteIndex._2, expression)
   }
 
