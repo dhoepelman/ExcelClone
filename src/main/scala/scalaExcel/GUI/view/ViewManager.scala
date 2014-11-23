@@ -145,13 +145,15 @@ class ViewManager extends jfxf.Initializable {
     })
 
     // Changes on formula editor are pushed to the selected cell
-    formulaEditorStream.combineLatest(selectionStream)
+    formulaEditorStream.combineLatest(selectedCellStream)
       .map(x => new {
-      val positions = x._2
+      val cells = x._2
       val formula = x._1
     }) // For better readability
       .distinctUntilChanged(_.formula)
-      .subscribe(x => x.positions.foreach(pos => Mediator.changeCellExpression((pos._1, pos._2 - 1), x.formula)))
+      .subscribe(x => x.cells.foreach(cell =>
+      if (cell._2.absoluteIndex._1 >= 0 && cell._2.absoluteIndex._2 >= 0)
+        Mediator.changeCellExpression(cell._2.absoluteIndex, x.formula)))
 
     // Changes on the ColorPickers are pushed to the model
     backgroundColorStream.map(("-fx-background-color", _))
