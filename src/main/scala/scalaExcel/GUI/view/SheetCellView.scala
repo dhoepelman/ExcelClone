@@ -8,7 +8,7 @@ import scalaExcel.GUI.controller.Mediator
 import scalafx.scene.control.cell.TextFieldTableCell
 import scalaExcel.GUI.controller.LabeledDataTable.DataRow
 
-class SheetCellViewDelegate() extends jfxsc.cell.TextFieldTableCell[DataRow, SheetCell](new SheetCellStringConverter) {
+class SheetCellViewDelegate(column: SheetCellColumn) extends jfxsc.cell.TextFieldTableCell[DataRow, SheetCell](new SheetCellStringConverter(column)) {
   override def startEdit(): Unit = {
     super.startEdit()
     // when cell is being edited, show expression (not value)
@@ -26,7 +26,7 @@ class SheetCellViewDelegate() extends jfxsc.cell.TextFieldTableCell[DataRow, She
   }
 }
 
-class SheetCellView() extends TextFieldTableCell[DataRow, SheetCell](new SheetCellViewDelegate()) {
+class SheetCellView(column: SheetCellColumn) extends TextFieldTableCell[DataRow, SheetCell](new SheetCellViewDelegate(column)) {
   item.onChange {
     (_, _, newCell) =>
       // apply cell customization

@@ -7,6 +7,8 @@ abstract class DataChanges
 
 case class RefreshData() extends DataChanges
 
+case class ModifyFormulaAt(index: (Int, Int), formula: String) extends DataChanges
+
 case class UpdateContents(cellContents: Iterable[((Int, Int), String, Any)]) extends DataChanges
 
 case class SlideWindowBy(offsets: (Int, Int, Int, Int)) extends DataChanges

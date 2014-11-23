@@ -12,7 +12,7 @@ class SheetCellColumn(colIndex: Int, header: String, headerWidth: Double) extend
   text = header
   id = colIndex.toString
   cellValueFactory = _.value.get(colIndex)
-  cellFactory = _ => new SheetCellView()
+  cellFactory = _ => new SheetCellView(this)
   prefWidth = headerWidth
 }
 

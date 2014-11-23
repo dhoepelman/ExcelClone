@@ -2,14 +2,14 @@ package scalaExcel.GUI.controller
 
 import scalafx.collections.ObservableBuffer
 import scalafx.beans.property.ObjectProperty
-import scalaExcel.GUI.modelwrapper.{SheetCellFormatter, SheetCellStylist, SheetCell}
+import scalaExcel.GUI.modelwrapper.SheetCell
 import scalaExcel.GUI.data.{DataBuilder, DataWindow}
 
 class LabeledDataTable(_dataWindow: DataWindow, _cellContents: Iterable[((Int, Int), String, Any)]) {
 
   val headers = _dataWindow.columnHeaders
   val headerWidths = _dataWindow.columnWidths
-  val data = {
+  val data = if (_cellContents != null) {
     //transform Cells into SheetCells
     val cells = _cellContents.foldLeft(Map[(Int, Int), SheetCell]())((cells, content) => {
       val index = _dataWindow.absoluteToWindow(content._1)
@@ -17,7 +17,7 @@ class LabeledDataTable(_dataWindow: DataWindow, _cellContents: Iterable[((Int, I
     })
     //build data table with the SheetCells
     DataBuilder.buildDataTable(_dataWindow.rowCount, _dataWindow.columnCount, cells)
-  }
+  } else null
 
   def updateContents(contents: Iterable[((Int, Int), String, Any)]) =
     new LabeledDataTable(_dataWindow, contents)
@@ -37,31 +37,9 @@ class LabeledDataTable(_dataWindow: DataWindow, _cellContents: Iterable[((Int, I
   def translateIndex(index: (Int, Int)) =
     _dataWindow.windowToAbsolute(index)
 
-  private def getCellObservable(index: (Int, Int)) = data.get(index._1).get(index._2)
+  def flushData() =
+    new LabeledDataTable(_dataWindow, null)
 
-  def getCell(index: (Int, Int)): SheetCell =
-    if (index._1 < 0 || index._2 < 0)
-      SheetCell.newEmpty()
-    else
-      getCellObservable(index).value
-
-  def changeCellStylist(index: (Int, Int), stylist: SheetCellStylist) =
-    if (!(index._1 < 0 || index._2 < 0)) {
-      val observable = getCellObservable(index)
-      observable.value = SheetCell.modifyStylist(observable.value, stylist)
-    }
-
-  def changeCellFormatter(index: (Int, Int), formatter: SheetCellFormatter) =
-    if (!(index._1 < 0 || index._2 < 0)) {
-      val observable = getCellObservable(index)
-      observable.value = SheetCell.modifyFormatter(observable.value, formatter)
-    }
-
-  def changeCellProperty(index: (Int, Int), styleProperty: String, styleValue: Any) =
-    if (!(index._1 < 0 || index._2 < 0)) {
-      val observable = getCellObservable(index)
-      observable.value = SheetCell.modifyStyleProperty(observable.value, styleProperty, styleValue)
-    }
 }
 
 object LabeledDataTable {

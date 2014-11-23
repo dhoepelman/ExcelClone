@@ -18,6 +18,7 @@ import scalaExcel.GUI.util.Filer
 
 import scala.language.reflectiveCalls
 import scalaExcel.GUI.controller.LabeledDataTable.DataRow
+import scalaExcel.GUI.modelwrapper.SheetCell
 
 
 class ViewManager extends jfxf.Initializable {
@@ -60,6 +61,9 @@ class ViewManager extends jfxf.Initializable {
   val fileChooser = new javafx.stage.FileChooser
   fileChooser.getExtensionFilters.add(new ExtensionFilter("Comma separated values", "*.csv"))
 
+  def getObservableAt(index: (Int, Int)) =
+    table.items.getValue.get(index._1).get(index._2 - 1)
+
   def buildTableView(labeledTable: LabeledDataTable): Unit = {
     println("Building table")
     // initialize and add the table
@@ -83,8 +87,8 @@ class ViewManager extends jfxf.Initializable {
         o.onNext(source.map(x => (x.getRow, x.getColumn)))
       })
     })
-    // Create cell selection stream (SheetCell)
-    val selectedCellStream = selectionStream.map(_.map(x => (x, Mediator.getCell(x))))
+    // Create cell selection stream (SheetCell), accounting for numbered column
+    val selectedCellStream = selectionStream.map(_.map(x => (x, getObservableAt(x).value)))
 
     // The user input on the background colour
     val backgroundColorStream = Observable.create[Color](o => new Subscription {
@@ -144,7 +148,7 @@ class ViewManager extends jfxf.Initializable {
       val formula = x._1
     }) // For better readability
       .distinctUntilChanged(_.formula)
-      .subscribe(x => x.positions.foreach(Mediator.changeCellExpression(_, x.formula)))
+      .subscribe(x => x.positions.foreach(pos => Mediator.changeCellExpression((pos._1, pos._2 - 1), x.formula)))
 
     // Changes on the ColorPickers are pushed to the model
     backgroundColorStream.map(("-fx-background-color", _))
@@ -156,7 +160,9 @@ class ViewManager extends jfxf.Initializable {
     }) // For better readability
       .distinctUntilChanged(_.definition)
       .subscribe(x => x.cells.foreach(cell =>
-      Mediator.changeCellProperty(cell._1, x.definition._1, x.definition._2)))
+    //TODO real change
+    //      Mediator.changeCellProperty((cell._1._1, cell._1._2 - 1), x.definition._1, x.definition._2)))
+      getObservableAt(cell._1).value = SheetCell.modifyStyleProperty(cell._2, x.definition._1, x.definition._2)))
 
 
     // Load - Save
@@ -165,15 +171,15 @@ class ViewManager extends jfxf.Initializable {
       fileChooser
     })
       .map(chooser => chooser.showSaveDialog(tableContainer.scene.window.getValue))
-      .filter(_!=null)
-      .subscribe(file => Filer.saveCSV(file, Mediator.labeledTable.data))
+      .filter(_ != null)
+      .subscribe(file => Filer.saveCSV(file, table.items.getValue))
 
     loadStream.map(x => {
       fileChooser.setTitle("Open file")
       fileChooser
     })
       .map(chooser => chooser.showOpenDialog(tableContainer.scene.window.getValue))
-      .filter(_!=null)
+      .filter(_ != null)
       .map(file => Filer.loadCSV(file))
       .subscribe(data => Mediator.setAllCells(data))
   }
@@ -192,7 +198,6 @@ class ViewManager extends jfxf.Initializable {
     menuLoad = new MenuItem(menuLoadDelegate)
     menuSave = new MenuItem(menuSaveDelegate)
 
-    buildTableView(Mediator.labeledTable)
   }
 
   def changeEditorText(text: String) = formulaEditor.text = text
