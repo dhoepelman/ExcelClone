@@ -1,6 +1,6 @@
 package scalaExcel.formula
 
-sealed abstract class Expr
+sealed trait Expr
 
 case class Const(v: Value) extends Expr
 
@@ -10,14 +10,14 @@ case class ACell(c: String, r: Int) extends AbsRef
 case class ARange(l: List[ACell]) extends AbsRef
 
 // raw cell references
-sealed trait ParseRef
+sealed trait ParseRef extends Expr
 case class Cell(c: ColRef, r: RowRef) extends Expr with ParseRef
 case class RowRef(referent: Int, absolute: Boolean)
 case class ColRef(referent: String, absolute: Boolean)
 case class Range(start: Cell, end: Cell) extends Expr with ParseRef
 case class RowRange(start: RowRef, end: RowRef) extends Expr with ParseRef
 case class ColRange(start: ColRef, end: ColRef) extends Expr with ParseRef
-case class SheetReference(sheet: String, e: Expr) extends Expr with ParseRef
+case class SheetReference(sheet: String, e: ParseRef) extends Expr with ParseRef
 
 case class Call(f: String, args: List[Expr]) extends Expr
 
@@ -42,5 +42,3 @@ case class Mul()     extends Op2
 case class Div()     extends Op2
 case class Expon()   extends Op2
 case class Percent() extends Op1
-
-case class Err(t: ErrType) extends Expr

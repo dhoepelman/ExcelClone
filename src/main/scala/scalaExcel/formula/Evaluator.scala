@@ -58,7 +58,7 @@ object Evaluator {
 
   def boolToString(b: Boolean) = b.toString.toUpperCase
 
-  def doubleToString(d: Double) = if (d.ceil == d) d.toInt.toString else d.toString
+  def doubleToString(d: Double) = if (d.isValidInt) d.toInt.toString else d.toString
 
   def doubleToVBool(d: Double) = VBool(d != 0)
 
