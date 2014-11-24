@@ -149,20 +149,20 @@ class ViewManager extends jfxf.Initializable {
     })
     // Update color pickers when selection changes
     selectedCellStream.map(x => {
-      if (x.size == 1) x.head._2.style
-      else ""
-    })
+        if (x.size == 1) x.head._2.style
+        else ""
+      })
       .subscribe(x => {
-      changeBackgroundColorPicker(CSSHelper.colorFromCssOrElse(x, "-fx-background-color", Color.White))
-      changeFontColorPicker(CSSHelper.colorFromCssOrElse(x, "-fx-text-fill", Color.Black))
+        changeBackgroundColorPicker(CSSHelper.colorFromCssOrElse(x, "-fx-background-color", Color.White))
+        changeFontColorPicker(CSSHelper.colorFromCssOrElse(x, "-fx-text-fill", Color.Black))
     })
 
     // Changes on formula editor are pushed to the selected cell
     formulaEditorStream.combineLatest(selectionStream)
       .map(x => new {
-      val positions = x._2
-      val formula = x._1
-    }) // For better readability
+        val positions = x._2
+        val formula = x._1
+      }) // For better readability
       .distinctUntilChanged(_.formula)
       .subscribe(x => x.positions.foreach(Mediator.changeCellExpression(_, x.formula)))
 
@@ -171,12 +171,12 @@ class ViewManager extends jfxf.Initializable {
       .merge(fontColorStream.map(("-fx-text-fill", _)))
       .combineLatest(selectedCellStream)
       .map(x => new {
-      val cells = x._2
-      val definition = x._1
-    }) // For better readability
+        val cells = x._2
+        val definition = x._1
+      }) // For better readability
       .distinctUntilChanged(_.definition)
       .subscribe(x => x.cells.foreach(cell =>
-      Mediator.changeCellProperty(cell._1, x.definition._1, x.definition._2)))
+        Mediator.changeCellProperty(cell._1, x.definition._1, x.definition._2)))
 
 
     // Load - Save
