@@ -86,12 +86,6 @@ class ViewManager extends jfxf.Initializable {
     tableContainer.content = List(table)
 
 
-
-
-    assert(menuLoad != null)
-    assert(menuSave != null)
-
-
     //
     // Create streams
     //
