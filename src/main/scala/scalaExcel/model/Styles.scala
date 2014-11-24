@@ -18,6 +18,11 @@ class Styles(
   def setFormat(f: String) = new Styles(background, color, f, align)
   def setAlign(a: Alignment) = new Styles(background, color, format, a)
 
+  override def toString() =
+    Map(
+      "background" -> background,
+      "text-fill" -> color
+    ).toString;
 }
 
 object Styles {
