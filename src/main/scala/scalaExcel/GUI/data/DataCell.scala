@@ -7,19 +7,23 @@ sealed trait DataCell {
   val evaluated: Any
   val styles: Styles
   val styleString: String
-
   def verboseString: String
 }
 
 object DataCell {
-  def newEmpty(): DataCell =
+
+  def newEmpty(): DataCell = {
     new DataCellImpl("", null, Styles.DEFAULT)
+  }
 
-  def newDummy(expression: String): DataCell =
+  def newDummy(expression: String): DataCell = {
     new DataCellImpl(expression, null, Styles.DEFAULT)
+  }
 
-  def newEvaluated(expression: String, value: Any, styles: Styles): DataCell =
+  def newEvaluated(expression: String, value: Any, styles: Styles): DataCell = {
     new DataCellImpl(expression, value, styles)
+  }
+
 }
 
 
@@ -29,9 +33,12 @@ private class DataCellImpl(val expression: String,
 
   val styleString = "" //TODO smth like stylist.style(this)
 
-  override def toString: String = if (evaluated == null) "" else evaluated.toString //TODO smth like formatter.format(this)
+  override def toString =
+    if (evaluated == null) ""
+    else evaluated.toString //TODO smth like formatter.format(this)
 
   def verboseString: String = {
     "Cell{expr=" + expression + ", fmt=" + toString + ", sty=" + styleString + ", eval=" + evaluated + "}"
   }
+
 }

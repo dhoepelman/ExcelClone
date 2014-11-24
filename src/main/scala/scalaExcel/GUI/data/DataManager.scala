@@ -49,9 +49,17 @@ object DataManager {
         window
     }).subscribe(_ => Unit)
 
-  _immutableModel.sheet.map(
-    newSheet => newSheet.cells.map(
-      cell => (cell._1, cell._2.f, newSheet.valueAt(cell._1._1, cell._1._2).get, newSheet.styles.getOrElse(cell._1, Styles.DEFAULT))))
+  _immutableModel.sheet
+    .map(newSheet => newSheet.cells
+      .map({
+        case (index, cell) => (
+            index,
+            cell.f,
+            newSheet.valueAt(index._1, index._2).get,
+            newSheet.styles.getOrElse(index, Styles.DEFAULT)
+          )
+      })
+    )
     .subscribe(contents => _tableMutationStream.onNext(new UpdateContents(contents)))
 
   _tableMutationStream.scan(new LabeledDataTable(rebuild = true))((table, action) =>
