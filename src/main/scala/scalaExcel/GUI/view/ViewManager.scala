@@ -228,7 +228,7 @@ class ViewManager extends jfxf.Initializable {
   implicit class EntendRx[T](ob: Observable[T]) {
     def labelAlways[L](la: Observable[L]) =
       ob.combineLatest(la)
-        .distinctUntilChanged(_._2)
+        .distinctUntilChanged(_._1)
         .map(c => new {val value = c._1; val label = c._2})
   }
 
