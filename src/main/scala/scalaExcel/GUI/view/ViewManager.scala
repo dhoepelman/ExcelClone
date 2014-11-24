@@ -13,7 +13,7 @@ import scalafx.scene.layout.AnchorPane
 import scalaExcel.GUI.controller.Mediator
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.control._
-import scalaExcel.GUI.model.DataModelFactory.DataRow
+import scalaExcel.GUI.modelwrapper.DataModelFactory.DataRow
 import scalafx.scene.paint.Color
 import scalaExcel.GUI.util.CSSHelper
 import scalaExcel.GUI.util.Filer
@@ -196,7 +196,6 @@ class ViewManager extends jfxf.Initializable {
               .filter(_!=null)
               .map(file => Filer.loadCSV(file))
               .subscribe(data => Mediator.setAllCells(data))
-
   }
 
   def changeEditorText(text: String) = formulaEditor.text = text
