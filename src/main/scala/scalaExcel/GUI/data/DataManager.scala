@@ -2,7 +2,7 @@ package scalaExcel.GUI.data
 
 import scalaExcel.model.Model
 import rx.lang.scala.Subject
-import scalaExcel.GUI.view.ViewManager
+import scalaExcel.GUI.view.ViewManagerObject
 
 
 object DataManager {
@@ -58,7 +58,7 @@ object DataManager {
       case UpdateContents(contents) => table.updateContents(contents)
       case UpdateWindow(window) => table.updateWindow(window)
       case RefreshTable() => table
-    }).subscribe(ViewManager.dataChanged _)
+    }).subscribe(ViewManagerObject.dataChanged _)
 
   def tableScrolled(offsets: (Int, Int, Int, Int)) = {
     _windowMutationStream.onNext(new SlideWindowBy(offsets))

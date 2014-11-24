@@ -7,7 +7,7 @@ import javafx.{scene => jfxs}
 import java.io.IOException
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.scene.Scene
-import scalaExcel.GUI.view.{ViewManager, FXController}
+import scalaExcel.GUI.view.{ViewManagerObject, ViewManager}
 import scalaExcel.GUI.data.DataManager
 
 object RunGUI extends JFXApp {
@@ -21,7 +21,7 @@ object RunGUI extends JFXApp {
   val loader = new jfxf.FXMLLoader(resource)
   val root = loader.load[jfxs.Parent]
 
-  ViewManager.initialize(loader.getController[FXController])
+  ViewManagerObject.initialize(loader.getController[ViewManager])
   DataManager.initialize()
 
   stage = new PrimaryStage() {

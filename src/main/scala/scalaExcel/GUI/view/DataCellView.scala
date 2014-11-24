@@ -16,7 +16,7 @@ class DataCellStringConverter(column: DataCellColumn) extends StringConverter[Da
     val index = column.getTableView.getEditingCell
     // account for numbered column
     DataManager.changeCellExpression((index.getRow, index.getColumn - 1), expression)
-    ViewManager.changeEditorText(expression)
+    ViewManagerObject.changeEditorText(expression)
     // return a mock cell instance
     DataCell.newEmpty()
   }
@@ -31,7 +31,7 @@ class DataCellViewDelegate(column: DataCellColumn) extends jfxsc.cell.TextFieldT
       case null => ""
       case cell => cell.expression
     }
-    ViewManager.changeEditorText(textField.getText)
+    ViewManagerObject.changeEditorText(textField.getText)
   }
 
   override def commitEdit(p1: DataCell): Unit = {
