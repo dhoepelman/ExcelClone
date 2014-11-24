@@ -46,6 +46,10 @@ object DataManager {
         val realColumn = window.windowToAbsoluteColumn(sortColumn)
         // TODO smth like _immutableModel.sortRows(realColumn)
         window
+      case ChangeCellStyle(index, style) =>
+        val realIndex = window.windowToAbsolute(index)
+        _immutableModel.changeStyle(realIndex._1, realIndex._2, style)
+        window
     }).subscribe(_ => Unit)
 
   _immutableModel.sheet.map(
@@ -81,8 +85,7 @@ object DataManager {
   def refreshData() =
     _tableMutationStream.onNext(new RefreshTable())
 
-  def changeCellStylist(index: (Int, Int), stylist: Any) =
-    Unit //TODO when styling is ready
+  def changeCellStylist(index: (Int, Int), stylist: Any) = ???
 
   def changeCellProperty(index: (Int, Int), styleProperty: String, styleValue: Any) =
     Unit //TODO when styling is ready
