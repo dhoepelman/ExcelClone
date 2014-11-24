@@ -99,6 +99,7 @@ class ViewManager extends jfxf.Initializable {
     })
     // Create cell selection stream (SheetCell)
     val selectedCellStream = selectionStream.map(_.map(x => (x, Mediator.getCell(x))))
+    val selectionStylesStream = selectionStream.map(_.map(x => (x, Mediator.getCellStyle(x))))
 
     // The user input on the background colour
     val backgroundColorStream = Observable.create[Color](o => new Subscription {
@@ -130,6 +131,7 @@ class ViewManager extends jfxf.Initializable {
         o.onNext("temp.csv")
       }
     })
+
 
     //
     // Behavior
@@ -171,7 +173,7 @@ class ViewManager extends jfxf.Initializable {
       .distinctUntilChanged(_.definition)
       .subscribe(x => x.cells.foreach(cell =>
         Mediator.changeCellProperty(cell._1, x.definition._1, x.definition._2)))
-
+    
 
     // Load - Save
     saveStream.map(x => {
@@ -192,6 +194,13 @@ class ViewManager extends jfxf.Initializable {
               .subscribe(data => Mediator.setAllCells(data))
   }
 
+
+  implicit class EntendRx[T](ob: Observable[T]) {
+    def label[L](la: Observable[L]) =
+      ob.combineLatest(la)
+        .distinctUntilChanged(_._2)
+  }
+
   def changeEditorText(text: String) = formulaEditor.text = text
 
   def changeBackgroundColorPicker(color: Color) = backgroundColorPicker.value = color
@@ -199,5 +208,4 @@ class ViewManager extends jfxf.Initializable {
   def changeFontColorPicker(color: Color) = fontColorPicker.value = color
 
   def tableView: TableView[DataRow] = table
-
 }
