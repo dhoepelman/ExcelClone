@@ -38,16 +38,8 @@ class Sheet(val cells: Map[(Int, Int), Cell] = Map(),
   def valueAt(x: Int, y: Int) = values get ((x, y))
 
   private def calcNewValue(c: Cell) = {
-    val dependencies = getDependencyValues(c.refs)
-    val value = c.eval(dependencies)
+    val value = c.eval(values)
     values + (c.position -> value)
-  }
-
-  private def getDependencyValues(deps: List[(Int, Int)]) = {
-    deps.foldLeft(Map[(Int, Int), Value]())((map, ref) => values get ref match {
-      case Some(x) => map + (ref -> x)
-      case None => throw new Exception(s"Couldn't find the value of $ref")
-    })
   }
 
   private def calcNewRefs(c: Cell) = {
