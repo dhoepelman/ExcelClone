@@ -13,7 +13,12 @@ import scalaExcel.formula.Evaluator._
 class PPrintTests(f : String) {
   val p = new Parser()
   // Test if the formula equals its parsed and pretty-printed self
-  @Test def test() = assertEquals(f, PPrinter.pprint(p parsing f))
+  @Test def test() = {
+    val ast = p parsing f
+    val pped = PPrinter.pprint(ast)
+    //println(s"$f => $ast => $pped")
+    assertEquals(f, pped)
+  }
 }
 
 object PPrintTests {
@@ -33,7 +38,11 @@ object PPrintTests {
       "=E:E",
       "=5:5",
       "=Sheet1!A5",
-      "#REF!"
+      "#REF!",
+      "=(3 + 3) * 5",
+      "=1 * 3 * 5",
+      "=(5 * 5)",
+      "=2 ^ (3 * 4)"
     ).foreach(n => data.add(Array(n)))
     data
   }
