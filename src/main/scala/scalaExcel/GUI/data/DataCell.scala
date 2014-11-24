@@ -15,6 +15,9 @@ object DataCell {
   def newEmpty(): DataCell =
     new DataCellImpl("", null, Styles.DEFAULT)
 
+  def newDummy(expression: String): DataCell =
+    new DataCellImpl(expression, null, Styles.DEFAULT)
+
   def newEvaluated(expression: String, value: Any, styles: Styles): DataCell =
     new DataCellImpl(expression, value, styles)
 }
