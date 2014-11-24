@@ -7,7 +7,7 @@ import scala.collection.immutable.{Range => SeqRange}
 
 import scalaExcel.formula.ReferenceFinder.findRefCells
 import scalaExcel.formula.Values.{toVal => tv}
-import scalaExcel.util.ColumnTranslator
+import scalaExcel.util.ColumnTranslator.{colToNum, numToCol}
 
 class ReferenceFinderTests {
 
@@ -34,18 +34,18 @@ class ReferenceFinderTests {
     ), "=A1:C3")
 
   // test column name utils
-  @Test def colToNum1() = assertEquals(1,   ColumnTranslator.colToNum("A"))
-  @Test def colToNum2() = assertEquals(27,  ColumnTranslator.colToNum("AA"))
-  @Test def colToNum3() = assertEquals(32,  ColumnTranslator.colToNum("AF"))
-  @Test def colToNum4() = assertEquals(703, ColumnTranslator.colToNum("AAA"))
+  @Test def colToNum1() = assertEquals(1,   colToNum("A"))
+  @Test def colToNum2() = assertEquals(27,  colToNum("AA"))
+  @Test def colToNum3() = assertEquals(32,  colToNum("AF"))
+  @Test def colToNum4() = assertEquals(703, colToNum("AAA"))
 
-  @Test def numToCol1() = assertEquals("A",   ColumnTranslator.numToCol(1))
-  @Test def numToCol2() = assertEquals("AA",  ColumnTranslator.numToCol(27))
-  @Test def numToCol3() = assertEquals("AF",  ColumnTranslator.numToCol(32))
-  @Test def numToCol4() = assertEquals("AAA", ColumnTranslator.numToCol(703))
+  @Test def numToCol1() = assertEquals("A",   numToCol(1))
+  @Test def numToCol2() = assertEquals("AA",  numToCol(27))
+  @Test def numToCol3() = assertEquals("AF",  numToCol(32))
+  @Test def numToCol4() = assertEquals("AAA", numToCol(703))
 
   @Test def testColToNumToCol() = SeqRange(1, 1000) foreach (x => {
-    assertEquals(x, ColumnTranslator.colToNum(ColumnTranslator.numToCol(x)))
+    assertEquals(x, colToNum(numToCol(x)))
   })
 
 }

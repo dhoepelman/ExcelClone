@@ -2,7 +2,7 @@
 package scalaExcel.formula
 
 import math.{pow, abs}
-import scalaExcel.util.ColumnTranslator
+import scalaExcel.util.ColumnTranslator.{numToCol, colToNum}
 
 object Evaluator {
 
@@ -97,9 +97,9 @@ object Evaluator {
         if (c1 == c2 && r1 == r2)
           ACell(c1, r1)
         else {
-          val rs = List.range(r1 - 1, r2)
-          val cs = List.range(ColumnTranslator.colToNum(c1) - 1, ColumnTranslator.colToNum(c2))
-          ARange(for (r <- rs; c <- cs) yield ACell(ColumnTranslator.numToCol(c), r))
+          val rs = List.range(r1, r2 + 1)
+          val cs = List.range(colToNum(c1), colToNum(c2) + 1)
+          ARange(for (r <- rs; c <- cs) yield ACell(numToCol(c), r))
         }
   }
 
@@ -241,7 +241,7 @@ object Evaluator {
 
   def evalCallColumns(args: List[Expr]) = args match {
     case List(Range(Cell(ColRef(c1, _), _), Cell(ColRef(c2, _), _))) => {
-      VDouble(abs(ColumnTranslator.colToNum(c2) - ColumnTranslator.colToNum(c1)) + 1)
+      VDouble(abs(colToNum(c2) - colToNum(c1)) + 1)
     }
     case _ => throw new Exception("Wrong number of arguments")
   }
