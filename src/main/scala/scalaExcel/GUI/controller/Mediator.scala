@@ -68,6 +68,9 @@ object Mediator {
     println("Columns reordered "+permutations)
   }
 
-  def changeCellStyle(index: (Int,Int), style: Styles) = {} // I am dummy
+  def changeCellStyle(index: (Int,Int), style: Styles) = {} // TODO I am dummy
+  def getCellStyle(index: (Int,Int)) : Styles = {return Styles.DEFAULT} // TODO I am dummy
+
+
 
 }

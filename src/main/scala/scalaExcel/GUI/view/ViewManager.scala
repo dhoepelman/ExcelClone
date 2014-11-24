@@ -1,5 +1,6 @@
 package scalaExcel.GUI.view
 
+import scalaExcel.model.Styles
 import scalafx.Includes._
 import java.net.URL
 import javafx.scene.{control => jfxsc}
@@ -173,7 +174,23 @@ class ViewManager extends jfxf.Initializable {
       .distinctUntilChanged(_.definition)
       .subscribe(x => x.cells.foreach(cell =>
         Mediator.changeCellProperty(cell._1, x.definition._1, x.definition._2)))
-    
+
+    val styleChangerBackgroundStream =
+      backgroundColorStream
+        .map(colour => setBackground(colour))
+    val styleChangerTextFillStream =
+      fontColorStream
+        .map(colour => setTextFill(colour))
+
+    styleChangerBackgroundStream
+      .merge(styleChangerTextFillStream)
+      .labelAlways(selectionStylesStream)
+      .map(c => c.label.map(cellStyle => (cellStyle._1, c.value(cellStyle._2))))
+      .subscribe(_.foreach(newStyle => Mediator.changeCellStyle(newStyle._1, newStyle._2)))
+
+
+
+
 
     // Load - Save
     saveStream.map(x => {
@@ -196,9 +213,10 @@ class ViewManager extends jfxf.Initializable {
 
 
   implicit class EntendRx[T](ob: Observable[T]) {
-    def label[L](la: Observable[L]) =
+    def labelAlways[L](la: Observable[L]) =
       ob.combineLatest(la)
         .distinctUntilChanged(_._2)
+        .map(c => new {val value = c._1; val label = c._2})
   }
 
   def changeEditorText(text: String) = formulaEditor.text = text
@@ -208,4 +226,8 @@ class ViewManager extends jfxf.Initializable {
   def changeFontColorPicker(color: Color) = fontColorPicker.value = color
 
   def tableView: TableView[DataRow] = table
+
+
+  def setBackground(colour: Color)(style: Styles): Styles = style.setBackground(colour)
+  def setTextFill(colour: Color)(style: Styles): Styles = style.setColor(colour)
 }
