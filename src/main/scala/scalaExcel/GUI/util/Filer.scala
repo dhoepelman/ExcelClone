@@ -2,10 +2,9 @@ package scalaExcel.GUI.util
 
 import java.io.File
 
-import scalaExcel.GUI.modelwrapper.DataModelFactory.DataTable
-import scalaExcel.GUI.modelwrapper.SheetCell
-
 import scala.io._
+import scalaExcel.GUI.controller.LabeledDataTable.DataTable
+import scalaExcel.GUI.controller.DataCell
 
 /**
  * Created by Chris on 10-11-2014.
@@ -14,7 +13,7 @@ import scala.io._
  */
 object Filer {
 
-  def cellToCSV(cell: SheetCell) : String =  cell.expression
+  def cellToCSV(cell: DataCell) : String =  cell.expression
   def stringToCSV(cell: String) : String = cell
 
   def rowToCSV[T](v : (T => String))(row : Traversable[T]) : String =

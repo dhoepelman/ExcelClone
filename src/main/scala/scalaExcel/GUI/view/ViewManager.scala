@@ -6,20 +6,20 @@ import java.net.URL
 import javafx.scene.{control => jfxsc}
 import javafx.scene.{layout => jfxsl}
 import javafx.stage.FileChooser.ExtensionFilter
-import javafx.stage.{FileChooser, Stage}
 import javafx.{event => jfxe, fxml => jfxf}
 import rx.lang.scala._
 
 import scalafx.scene.layout.AnchorPane
-import scalaExcel.GUI.controller.Mediator
+import scalaExcel.GUI.controller.{DataCell, LabeledDataTable, Mediator}
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.control._
-import scalaExcel.GUI.modelwrapper.DataModelFactory.DataRow
 import scalafx.scene.paint.Color
 import scalaExcel.GUI.util.CSSHelper
 import scalaExcel.GUI.util.Filer
 
 import scala.language.reflectiveCalls
+import scalaExcel.GUI.controller.LabeledDataTable.DataRow
+import scalafx.beans.property.ObjectProperty
 
 
 class ViewManager extends jfxf.Initializable {
@@ -62,24 +62,16 @@ class ViewManager extends jfxf.Initializable {
   val fileChooser = new javafx.stage.FileChooser
   fileChooser.getExtensionFilters.add(new ExtensionFilter("Comma separated values", "*.csv"))
 
-  def initialize(url: URL, rb: java.util.ResourceBundle) {
+  def getObservableAt(index: (Int, Int)) =
+  // account for numbered column
+    if (index._2 < 1) ObjectProperty.apply(DataCell.newEmpty())
+    else table.items.getValue.get(index._1).get(index._2 - 1)
 
-    //
-    // Initialization of GUI object handles
-    //
-
-    backgroundColorPicker = new ColorPicker(backgroundColorPickerDelegate)
-    fontColorPicker = new ColorPicker(fontColorPickerDelegate)
-    tableContainer = new AnchorPane(tableContainerDelegate)
-    formulaEditor = new TextField(formulaEditorDelegate)
-    testButton = new Button(testButtonDelegate)
-    menuLoad = new MenuItem(menuLoadDelegate)
-    menuSave = new MenuItem(menuSaveDelegate)
-
+  def buildTableView(labeledTable: LabeledDataTable): Unit = {
+    println("Building table")
     // initialize and add the table
-    val stage = formulaEditor.delegate.getScene.asInstanceOf[Stage]
 
-    table = TableViewBuilder.build(null, null, Mediator.dataTable)
+    table = TableViewBuilder.build(labeledTable)
     val selectionModel = table.getSelectionModel
     selectionModel.setCellSelectionEnabled(true)
     selectionModel.setSelectionMode(SelectionMode.MULTIPLE)
@@ -98,8 +90,8 @@ class ViewManager extends jfxf.Initializable {
         o.onNext(source.map(x => (x.getRow, x.getColumn)))
       })
     })
-    // Create cell selection stream (SheetCell)
-    val selectedCellStream = selectionStream.map(_.map(x => (x, Mediator.getCell(x))))
+    // Create cell selection stream (DataCell), accounting for numbered column
+    val selectedCellStream = selectionStream.map(_.map(x => (x, getObservableAt(x).value)))
     val selectionStylesStream = selectionStream.map(_.map(x => (x, Mediator.getCellStyle(x))))
 
     // The user input on the background colour
@@ -155,13 +147,16 @@ class ViewManager extends jfxf.Initializable {
     })
 
     // Changes on formula editor are pushed to the selected cell
-    formulaEditorStream.combineLatest(selectionStream)
+    formulaEditorStream.combineLatest(selectedCellStream)
       .map(x => new {
-        val positions = x._2
+      val cells = x._2
         val formula = x._1
       }) // For better readability
       .distinctUntilChanged(_.formula)
-      .subscribe(x => x.positions.foreach(Mediator.changeCellExpression(_, x.formula)))
+      .subscribe(x => x.cells.foreach(cell =>
+      if (cell._1._2 > 0)
+        Mediator.changeCellExpression((cell._1._1, cell._1._2 - 1), x.formula)
+))
 
     // Changes on the ColorPickers are pushed to the model
     backgroundColorStream.map(("-fx-background-color", _))
@@ -172,8 +167,10 @@ class ViewManager extends jfxf.Initializable {
         val definition = x._1
       }) // For better readability
       .distinctUntilChanged(_.definition)
-      .subscribe(x => x.cells.foreach(cell =>
-        Mediator.changeCellProperty(cell._1, x.definition._1, x.definition._2)))
+      .subscribe(x => x.cells.foreach(cell => Unit
+    //TODO real change
+    //      Mediator.changeCellProperty((cell._1._1, cell._1._2 - 1), x.definition._1, x.definition._2)))
+    ))
 
     val styleChangerBackgroundStream =
       backgroundColorStream
@@ -194,21 +191,37 @@ class ViewManager extends jfxf.Initializable {
 
     // Load - Save
     saveStream.map(x => {
-                fileChooser.setTitle("Save destination")
-                fileChooser
-              })
-              .map(chooser => chooser.showSaveDialog(stage))
-              .filter(_!=null)
-              .subscribe(file => Filer.saveCSV(file, Mediator.dataTable))
+      fileChooser.setTitle("Save destination")
+      fileChooser
+    })
+      .map(chooser => chooser.showSaveDialog(tableContainer.scene.window.getValue))
+      .filter(_ != null)
+      .subscribe(file => Filer.saveCSV(file, table.items.getValue))
 
     loadStream.map(x => {
-                fileChooser.setTitle("Open file")
-                fileChooser
-              })
-              .map(chooser => chooser.showOpenDialog(stage))
-              .filter(_!=null)
-              .map(file => Filer.loadCSV(file))
-              .subscribe(data => Mediator.setAllCells(data))
+      fileChooser.setTitle("Open file")
+      fileChooser
+    })
+      .map(chooser => chooser.showOpenDialog(tableContainer.scene.window.getValue))
+      .filter(_ != null)
+      .map(file => Filer.loadCSV(file))
+      .subscribe(data => Mediator.setAllCells(data))
+  }
+
+  def initialize(url: URL, rb: java.util.ResourceBundle) {
+
+    //
+    // Initialization of GUI object handles
+    //
+
+    backgroundColorPicker = new ColorPicker(backgroundColorPickerDelegate)
+    fontColorPicker = new ColorPicker(fontColorPickerDelegate)
+    tableContainer = new AnchorPane(tableContainerDelegate)
+    formulaEditor = new TextField(formulaEditorDelegate)
+    testButton = new Button(testButtonDelegate)
+    menuLoad = new MenuItem(menuLoadDelegate)
+    menuSave = new MenuItem(menuSaveDelegate)
+
   }
 
 

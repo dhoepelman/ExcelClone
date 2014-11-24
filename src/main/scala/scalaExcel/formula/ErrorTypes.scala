@@ -31,4 +31,8 @@ case class InvalidRef() extends ErrType
  * #VALUE! The wrong type of operand or function argument is used
  **/
 case class InvalidValue() extends ErrType
+/**
+ * #CIRCULAR! Custom error type for circular references
+ */
+case class CircularRef() extends ErrType
 
