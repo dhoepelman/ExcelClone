@@ -24,7 +24,7 @@ class Cell(
 
   private def Ctx(values: Map[(Int, Int), Value])(c: ACell) = values get ((colToNum(c.c), c.r)) match {
     case Some(v) => v
-    case None => throw new IllegalArgumentException(s"Dependency (${c.c},${c.r}}) not found in map")
+    case None => VDouble(0)//throw new IllegalArgumentException(s"Dependency (${c.c},${c.r}}) not found in map")
   }
 
 }

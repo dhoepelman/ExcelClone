@@ -1,6 +1,6 @@
 package scalaExcel.model
 
-import scalaExcel.formula.{VDouble, Value}
+import scalaExcel.formula.{VErr, CircularRef, VDouble, Value}
 import scalaExcel.model.OperationHelpers._
 
 import org.junit.Assert._
@@ -49,4 +49,46 @@ class ModelTests {
     assertEquals(VDouble(10), y)
   }
 
+  @Test def circularDependency1() = {
+    val model = new Model()
+    var y: Value = null
+    model.sheet
+      .filterCellValueAt(3, 1)
+      .subscribe(x => y = x)
+
+    model.changeFormula(1, 1, "=C1")
+    model.changeFormula(2, 1, "=5")
+    model.changeFormula(3, 1, "=A1+B1")
+
+    assertEquals(VErr(CircularRef()), y)
+  }
+
+  @Test def circularDependency2() = {
+    val model = new Model()
+    var y: Value = null
+    model.sheet
+      .filterCellValueAt(3, 1)
+      .subscribe(x => y = x)
+
+    model.changeFormula(1, 1, "=B1")
+    model.changeFormula(2, 1, "=C1+1")
+    model.changeFormula(3, 1, "=A1+1")
+
+    assertEquals(VErr(CircularRef()), y)
+  }
+
+  @Test def circularDependency3() = {
+    val model = new Model()
+    var y: Value = null
+    model.sheet
+      .filterCellValueAt(1, 1)
+      .subscribe(x => y = x)
+
+    model.changeFormula(1, 1, "=5")
+    model.changeFormula(2, 1, "=A1+5")
+    model.changeFormula(3, 1, "=B1")
+    model.changeFormula(1, 1, "=B1")
+
+    assertEquals(VErr(CircularRef()), y)
+  }
 }
