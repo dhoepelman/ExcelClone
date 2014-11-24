@@ -101,20 +101,23 @@ class SorterTests {
     val model = new Model()
     var sheet: Sheet = null
     model.sheet.last.subscribe(s => sheet = s)
-
     model.changeFormula(0, 0, "=2")
     model.changeFormula(0, 1, "=A1+4")
-    model.changeFormula(0, 2, "=9")
+    model.changeFormula(0, 2, "=7+A1")
     model.changeFormula(0, 3, "=8")
+    model.changeFormula(0, 4, "=A20")
 
     model.sheetMutations.onCompleted
 
     val newSheet = sheet.sort(0)
 
-    assertEquals(Some(VDouble(2)), newSheet.valueAt(0, 0))
-    assertEquals(Some(VDouble(6)), newSheet.valueAt(0, 1))
-    assertEquals(Some(VDouble(8)), newSheet.valueAt(0, 2))
-    assertEquals(Some(VDouble(9)), newSheet.valueAt(0, 3))
+    assertEquals(Some(VDouble(0)), newSheet.valueAt(0, 0))
+    assertEquals(Some(VDouble(2)), newSheet.valueAt(0, 1))
+    assertEquals(Some(VDouble(6)), newSheet.valueAt(0, 2))
+    assertEquals(Some(VDouble(8)), newSheet.valueAt(0, 3))
+    assertEquals(Some(VDouble(9)), newSheet.valueAt(0, 4))
+    assertEquals(List((0, 2), (0, 4)), newSheet.dependents.get((0, 1)).get)
+    assertEquals(List((0, 0)), newSheet.dependents.get((0, 19)).get)
   }
 
 }
