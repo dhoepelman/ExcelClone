@@ -3,6 +3,7 @@ package scalaExcel.GUI.controller
 import scalaExcel.GUI.view.ViewManager
 import scalaExcel.GUI.modelwrapper.DataModelFactory.DataTable
 import scalaExcel.GUI.modelwrapper._
+import scalaExcel.model.Styles
 
 object Mediator {
 
@@ -66,5 +67,7 @@ object Mediator {
   def columnsReordered(permutations: Map[Int, Int]){
     println("Columns reordered "+permutations)
   }
+
+  def changeCellStyle(index: (Int,Int), style: Styles) = {} // I am dummy
 
 }
