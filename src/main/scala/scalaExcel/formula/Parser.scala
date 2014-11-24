@@ -44,7 +44,7 @@ class Parser extends RegexParsers {
     Reference       |
     Primitive
 
-  def ExpressionGroup   : Parser[Expr]  = "(" ~> Expression <~ ")"
+  def ExpressionGroup   : Parser[Expr]  = "(" ~> Expression <~ ")"  ^^ {e => Group(e)}
 
   def Primitive : Parser[Expr]  =
     Num              |

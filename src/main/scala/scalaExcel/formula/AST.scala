@@ -24,6 +24,9 @@ case class Call(f: String, args: List[Expr]) extends Expr
 case class BinOp(op: Op2, e1: Expr, e2: Expr) extends Expr
 case class UnOp(op: Op1, e: Expr) extends Expr
 
+/** Expression group, enclosed in parentheses. Ignored in calculation but used for pretty-printing */
+case class Group(e : Expr) extends Expr
+
 sealed trait Op
 sealed trait Op1 extends Op
 sealed trait Op2 extends Op
