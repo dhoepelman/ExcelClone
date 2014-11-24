@@ -85,7 +85,8 @@ object DataManager {
   def refreshData() =
     _tableMutationStream.onNext(new RefreshTable())
 
-  def changeCellStylist(index: (Int, Int), stylist: Any) = ???
+  def changeCellStylist(index: (Int, Int), stylist: Styles) =
+    _windowActionStream.onNext(new ChangeCellStyle(index, stylist))
 
   def changeCellProperty(index: (Int, Int), styleProperty: String, styleValue: Any) =
     Unit //TODO when styling is ready
