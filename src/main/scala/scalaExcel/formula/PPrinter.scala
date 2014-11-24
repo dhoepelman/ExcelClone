@@ -26,6 +26,7 @@ object PPrinter {
       case _ => print(op) + print(e)
     }
     case Call(f, args) => f + "(" + args.tail.foldLeft(print(args.head))((acc,arg) => acc + "," + print(arg)) + ")"
+    case Group(e) => "(" + print(e) + ")"
     case Cell(c, r) => print(c) + print(r)
     case Range(start, end) => print(start) + ":" + print(end)
     case RowRange(start, end) => print(start) + ":" + print(end)

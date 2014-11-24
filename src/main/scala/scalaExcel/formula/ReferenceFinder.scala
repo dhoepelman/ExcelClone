@@ -6,7 +6,7 @@ object ReferenceFinder {
   case class Leaf(e: ACell) extends Node
   case class Leafs(l: List[Leaf]) extends Node
   case class Branch(l: List[Expr]) extends Node
-  case class Empty() extends Node
+  case object Empty extends Node
 
   def findRefCells(e: Expr, l: List[ACell] = List()): List[ACell] = getChildren(e) match {
     case Empty     => l
@@ -23,6 +23,7 @@ object ReferenceFinder {
     case UnOp(_, e)           => Branch(List(e))
     case Call(_, args)        => Branch(args)
     case SheetReference(_, e) => Branch(List(e))
+    case Group(e)             => Branch(List(e))
     case e: ACell             => Leaf(e)
     case c: Cell              => desugarCell(c)
     case r: Range             => desugarRange(r)
