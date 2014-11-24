@@ -58,6 +58,20 @@ object Sorter {
         case ((x, y), v) => ((x, rowMutations.get(y).get), v)
       })
 
+    // update dependents
+    val dependents = sheet.dependents
+      .map({
+        case ((x, y), deps) => (
+          (x, rowMutations.get(y).get),
+          deps.map(a => (a._1, rowMutations.get(a._2))))
+      })
+
+    // move styles
+    val styles = sheet.styles
+      .map({
+        case ((x, y), s) => ((x, rowMutations.get(y).get), s)
+      })
+
     new Sheet(cells, values, sheet.dependents, sheet.styles)
   }
 
