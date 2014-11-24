@@ -10,24 +10,15 @@ class ModelTests {
 
   @Test def initializeModel() = {
     val model = new Model()
-    var sheet: Sheet = null
-    model.sheet.take(1).subscribe(x => {
-      sheet = x
-    })
-    model.refresh()
-    assertEquals(Map(), sheet.values)
+    assertEquals(Map(), model.sheet.take(1).toBlocking.last.values)
   }
 
   @Test def changeFormula() = {
     val model = new Model()
-    var y: Value = null
-    model.sheet
+    val cell = model.sheet
       .filterCellValueAt(1, 1)
-      .subscribe(x => y = x)
-
     model.changeFormula(1, 1, "=1+1")
-
-    assertEquals(VDouble(2), y)
+    assertEquals(VDouble(2), cell.take(1).toBlocking.last)
   }
 
   @Test def formulaWithReferences() = {

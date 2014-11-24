@@ -1,14 +1,14 @@
 package scalaExcel.model
 
 import scalafx.scene.paint.Color
-import rx.lang.scala.{Observable, Observer, Subject}
+import rx.lang.scala.subjects.BehaviorSubject
 import scalaExcel.model.OperationHelpers._
 
 class Model {
 
   // This is a stream of inputs from 'the world' that will effect the state of
   // the sheet model
-  val sheetMutations = Subject[ModelMutations]()
+  val sheetMutations = BehaviorSubject.apply[ModelMutations](Refresh())
 
   // function to propagate updates to dependent cells
   def updateSheet(s: Sheet, updates: List[(Int, Int)]): Sheet = {
