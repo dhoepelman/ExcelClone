@@ -2,33 +2,43 @@ package scalaExcel.GUI.view
 
 import scalafx.scene.control._
 import scalafx.collections.ObservableBuffer
-import scalaExcel.GUI.modelwrapper.SheetCell
 import javafx.scene.{control => jfxc}
-import scalaExcel.GUI.controller.{LabeledDataTable, Mediator}
+import scalaExcel.GUI.controller.{DataCell, LabeledDataTable, Mediator}
 import scalaExcel.GUI.controller.LabeledDataTable.DataRow
 import scalafx.beans.property.ObjectProperty
 import javafx.event.EventHandler
-import scalafx.scene.control.TableColumn.SortType
+import scalafx.scene.control.TableColumn.{CellEditEvent, SortType}
 import javafx.scene.input.{MouseButton, MouseEvent}
 
-class SheetCellColumn(colIndex: Int, header: String, headerWidth: Double, sorted: Boolean, ascending: Boolean) extends TableColumn[DataRow, SheetCell] {
+class DataCellColumn(colIndex: Int, header: String, headerWidth: Double, sorted: Boolean, ascending: Boolean) extends TableColumn[DataRow, DataCell] {
   text = header
   id = colIndex.toString
   cellValueFactory = _.value.get(colIndex)
-  cellFactory = _ => new SheetCellView(this)
+  cellFactory = _ => new DataCellView(this)
   prefWidth = headerWidth
   if (sorted)
     if (ascending)
       sortType = SortType.ASCENDING
     else
       sortType = SortType.DESCENDING
+
+//  onEditCommit = new EventHandler[CellEditEvent[DataRow, DataCell]] {
+//    override def handle(e: CellEditEvent[DataRow, DataCell]) = {
+//      val text = e.getNewValue.expression
+//      // account for numbered column
+//      val column = e.getTablePosition.getColumn - 1
+//      val row = e.getTablePosition.getRow
+//      Mediator.changeCellExpression((row, column), text)
+//      Mediator.changeEditorText(text)
+//    }
+//  }
 }
 
-class NumberedColumn extends TableColumn[DataRow, SheetCell] {
+class NumberedColumn extends TableColumn[DataRow, DataCell] {
   text = "#"
   id = "-1"
-  cellValueFactory = _ => ObjectProperty.apply(SheetCell.newEmpty(-1, -1))
-  cellFactory = _ => new TableCell[DataRow, SheetCell] {
+  cellValueFactory = _ => ObjectProperty.apply(DataCell.newEmpty())
+  cellFactory = _ => new TableCell[DataRow, DataCell] {
     item.onChange {
       (_, _, _) =>
         text = (tableRow.value.getIndex + 1).toString
@@ -41,11 +51,11 @@ class NumberedColumn extends TableColumn[DataRow, SheetCell] {
 }
 
 object TableViewBuilder {
-  type TableColumns = ObservableBuffer[jfxc.TableColumn[DataRow, SheetCell]]
+  type TableColumns = ObservableBuffer[jfxc.TableColumn[DataRow, DataCell]]
 
   private def buildColumns(headers: List[String], widths: List[Double], sortColumn: Int, sortAscending: Boolean): TableColumns =
     headers.view.zip(widths).foldLeft(new TableColumns())((cols: TableColumns, data: (String, Double)) =>
-      cols += new SheetCellColumn(cols.length, data._1, data._2, cols.length == sortColumn, sortAscending))
+      cols += new DataCellColumn(cols.length, data._1, data._2, cols.length == sortColumn, sortAscending))
 
   def build(labeledTable: LabeledDataTable) = {
     new TableView[DataRow](labeledTable.data) {

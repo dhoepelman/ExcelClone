@@ -9,7 +9,7 @@ import javafx.{event => jfxe, fxml => jfxf}
 import rx.lang.scala._
 
 import scalafx.scene.layout.AnchorPane
-import scalaExcel.GUI.controller.{LabeledDataTable, Mediator}
+import scalaExcel.GUI.controller.{DataCell, LabeledDataTable, Mediator}
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.control._
 import scalafx.scene.paint.Color
@@ -18,7 +18,6 @@ import scalaExcel.GUI.util.Filer
 
 import scala.language.reflectiveCalls
 import scalaExcel.GUI.controller.LabeledDataTable.DataRow
-import scalaExcel.GUI.modelwrapper.SheetCell
 import scalafx.beans.property.ObjectProperty
 
 
@@ -64,7 +63,7 @@ class ViewManager extends jfxf.Initializable {
 
   def getObservableAt(index: (Int, Int)) =
   // account for numbered column
-    if (index._2 < 1) ObjectProperty.apply(SheetCell.newEmpty(-1, -1))
+    if (index._2 < 1) ObjectProperty.apply(DataCell.newEmpty())
     else table.items.getValue.get(index._1).get(index._2 - 1)
 
   def buildTableView(labeledTable: LabeledDataTable): Unit = {
@@ -90,7 +89,7 @@ class ViewManager extends jfxf.Initializable {
         o.onNext(source.map(x => (x.getRow, x.getColumn)))
       })
     })
-    // Create cell selection stream (SheetCell), accounting for numbered column
+    // Create cell selection stream (DataCell), accounting for numbered column
     val selectedCellStream = selectionStream.map(_.map(x => (x, getObservableAt(x).value)))
 
     // The user input on the background colour
@@ -152,8 +151,9 @@ class ViewManager extends jfxf.Initializable {
     }) // For better readability
       .distinctUntilChanged(_.formula)
       .subscribe(x => x.cells.foreach(cell =>
-      if (cell._2.absoluteIndex._1 >= 0 && cell._2.absoluteIndex._2 >= 0)
-        Mediator.changeCellExpression(cell._2.absoluteIndex, x.formula)))
+      if (cell._1._2 > 0)
+        Mediator.changeCellExpression((cell._1._1, cell._1._2 - 1), x.formula)
+))
 
     // Changes on the ColorPickers are pushed to the model
     backgroundColorStream.map(("-fx-background-color", _))
@@ -164,10 +164,10 @@ class ViewManager extends jfxf.Initializable {
       val definition = x._1
     }) // For better readability
       .distinctUntilChanged(_.definition)
-      .subscribe(x => x.cells.foreach(cell =>
+      .subscribe(x => x.cells.foreach(cell => Unit
     //TODO real change
     //      Mediator.changeCellProperty((cell._1._1, cell._1._2 - 1), x.definition._1, x.definition._2)))
-      getObservableAt(cell._1).value = SheetCell.modifyStyleProperty(cell._2, x.definition._1, x.definition._2)))
+    ))
 
 
     // Load - Save

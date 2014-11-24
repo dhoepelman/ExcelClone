@@ -1,7 +1,6 @@
 package scalaExcel.GUI.controller
 
 import scalaExcel.GUI.view.ViewManager
-import scalaExcel.GUI.modelwrapper._
 import scalaExcel.GUI.data.DataManager
 
 object Mediator {
@@ -25,13 +24,13 @@ object Mediator {
   def changeCellExpression(index: (Int, Int), expression: String) =
     _dataManager.changeCellExpression(index, expression)
 
-  def changeCellStylist(index: (Int, Int), stylist: SheetCellStylist) =
+  def changeCellStylist(index: (Int, Int), stylist: Any) =
     _dataManager.changeCellStylist(index, stylist)
 
   def changeCellProperty(index: (Int, Int), styleProperty: String, styleValue: Any) =
     _dataManager.changeCellProperty(index, styleProperty, styleValue)
 
-  def changeCellFormatter(index: (Int, Int), formatter: SheetCellFormatter) =
+  def changeCellFormatter(index: (Int, Int), formatter: Any) =
     _dataManager.changeCellFormatter(index, formatter)
 
   def changeEditorText(expression: String) =
