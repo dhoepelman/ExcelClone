@@ -35,17 +35,17 @@ class Model {
   val sheet = sheetMutations.scan(new Sheet())((sheet, action) => action match {
     case SetFormula(x, y, f) => {
       val (s, updates) = sheet.setCell(x, y, f)
-      updateSheet(s, updates, Set((x,y)))
+      updateSheet(s, updates, Set((x, y)))
     }
-	case SetColor(x, y, c) => sheet.setCellColor(x, y, c)
+    case SetColor(x, y, c) => sheet.setCellColor(x, y, c)
     case Refresh() => sheet
   })
 
-  def changeFormula(x: Int, y: Int , f: String) {
+  def refresh() = sheetMutations.onNext(Refresh())
+
+  def changeFormula(x: Int, y: Int, f: String) {
     sheetMutations.onNext(SetFormula(x, y, f))
   }
-  
-  def refresh() = sheetMutations.onNext(Refresh())
 
   def changeColor(x: Int, y: Int, c: Color) {
     sheetMutations.onNext(SetColor(x, y, c))
