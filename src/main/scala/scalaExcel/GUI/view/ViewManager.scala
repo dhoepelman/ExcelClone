@@ -174,10 +174,10 @@ class ViewManager extends jfxf.Initializable {
 
     val styleChangerBackgroundStream =
       backgroundColorStream
-        .map(colour => setBackground(colour))
+        .map(colour => setBackground(colour)_)
     val styleChangerTextFillStream =
       fontColorStream
-        .map(colour => setTextFill(colour))
+        .map(colour => setTextFill(colour)_)
 
     styleChangerBackgroundStream
       .merge(styleChangerTextFillStream)
