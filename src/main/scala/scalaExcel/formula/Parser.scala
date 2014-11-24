@@ -10,6 +10,7 @@ class Parser extends RegexParsers {
    * Start parser, this will parse any valid cell value
    **/
   def Start : Parser[Expr] =
+    ForceStr          |
     phrase(Formula)   |
     phrase(Primitive) |
     Str               |
@@ -19,9 +20,10 @@ class Parser extends RegexParsers {
   //* Literals                 *
   //****************************
 
+  def ForceStr      : Parser[Const]   = "'" ~> """.*""".r ^^ {s => Const(VString(s))}
   // This String is outside of formula, everything that is not anything else is a string
-  def Str           : Parser[Const]   = """[^=].*""".r ^^ {s => Const(VString(s))}
-  def Empty         : Parser[Expr]    = ""             ^^^ Const(VString(""))
+  def Str           : Parser[Const]   = """[^=].*""".r    ^^ {s => Const(VString(s))}
+  def Empty         : Parser[Expr]    = ""               ^^^ Const(VString(""))
 
   // This string literal can be used inside formula's
   val striReg = """\"(\"\"|[^\"])*\"""".r
@@ -106,32 +108,33 @@ class Parser extends RegexParsers {
     }
   }
 
-  def ErrorExpression : Parser[Err]= """(?i)(#DIV/0!)|(#N/A)|(#NAME?)|(#NUM!)|(#NULL!)|(#REF!)|(#VALUE!)""".r^^ {
-    case "#DIV/0!" => Err(DivBy0())
-    case "#N/A"    => Err(NA())
-    case "#NAME?"  => Err(InvalidName())
-    case "#NUM!"   => Err(NotNumeric())
-    case "#NULL!"  => Err(Null())
-    case "#REF!"   => Err(InvalidRef())
-    case "#VALUE!" => Err(InvalidValue())
+  def ErrorExpression : Parser[Const]= """(?i)(#DIV/0!)|(#N/A)|(#NAME?)|(#NUM!)|(#NULL!)|(#REF!)|(#VALUE!)|(#CIRCULAR!)""".r^^ {
+    case "#DIV/0!" => Const(VErr(DivBy0()))
+    case "#N/A"    => Const(VErr(NA()))
+    case "#NAME?"  => Const(VErr(InvalidName()))
+    case "#NUM!"   => Const(VErr(NotNumeric()))
+    case "#NULL!"  => Const(VErr(Null()))
+    case "#REF!"   => Const(VErr(InvalidRef()))
+    case "#VALUE!" => Const(VErr(InvalidValue()))
+    case "#CIRCULAR!" => Const(VErr(CircularRef()))
   }
 
   //****************************
   //* References               *
   //****************************
 
-  def Reference : Parser[Expr] = SheetName.? ~ GridReference ^^ {
+  def Reference : Parser[ParseRef] = SheetName.? ~ GridReference ^^ {
     case None ~ e => e
     case Some(s) ~ e => SheetReference(s, e)
   }
 
-  def GridReference =
+  def GridReference : Parser[ParseRef] =
     CellRange_   |
     RowRange_    |
     ColumnRange_ |
     CellRef_
 
-  def SheetName    : Parser[String] = """(?i)[_a-z][\w]*!""".r
+  def SheetName    : Parser[String] = """(?i)[_a-z][\w]*""".r <~ "!"
   //def DefinedName   : Parser[String]     = """[_a-z][\w]*""".r
 
   def CellRef_     : Parser[Cell] = ColRef_ ~ RowRef_ ^^ {
@@ -161,5 +164,7 @@ class Parser extends RegexParsers {
     case Success (t, _) => t
     case NoSuccess(msg, _) => throw new IllegalArgumentException(s"Unable to parse $s: $msg")
   }
+
+
 
 }
