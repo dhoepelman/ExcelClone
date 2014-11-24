@@ -34,7 +34,10 @@ class LabeledDataTable(_dataWindow: DataWindow = LabeledDataTable.defaultDataWin
     // transform cell contents contained in window into DataCells
     val _cells = contentsToCells(contents => _dataWindow.isInBounds(contents._1))
     //build data table with the DataCells
-    LabeledDataTable.buildDataTable(_dataWindow.rowCount, _dataWindow.columnCount, _cells, _dataWindow)
+    LabeledDataTable.buildDataTable(_dataWindow.rowCount,
+      _dataWindow.columnCount,
+      _cells,
+      _dataWindow)
   }
 
   def updateContents(contents: Iterable[((Int, Int), String, Any, Styles)]) =
@@ -72,7 +75,10 @@ object LabeledDataTable {
   type DataRow = ObservableBuffer[ObjectProperty[DataCell]]
   type DataTable = ObservableBuffer[DataRow]
 
-  def buildDataTable(rows: Int, columns: Int, data: Map[(Int, Int), DataCell], dataWindow: DataWindow): DataTable = {
+  def buildDataTable(rows: Int,
+                     columns: Int,
+                     data: Map[(Int, Int), DataCell],
+                     dataWindow: DataWindow): DataTable = {
     new DataTable() ++=
       List.range(0, rows + 1).map(i => new DataRow() ++=
         List.range(0, columns + 1).map(j =>
@@ -82,11 +88,12 @@ object LabeledDataTable {
   def getHeaders(bounds: (Int, Int, Int, Int)) =
     List.range(bounds._3, bounds._4) map ColumnTranslator.numToCol
 
-  val defaultDataWindow = new DataWindow((0, DefaultProperties.GRID_SIZE._1, 0, DefaultProperties.GRID_SIZE._2),
+  val defaultDataWindow = new DataWindow(
+    (0, DefaultProperties.GRID_SIZE._1, 0, DefaultProperties.GRID_SIZE._2),
     (0, DefaultProperties.GRID_SIZE._1, 0, DefaultProperties.GRID_SIZE._2))
 
-  val defaultHeaderWidths = List(100.0, 200.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0)
-  //List.fill(defaultDataWindow.columnCount)(DefaultProperties.COLUMN_WIDTH)
+  val defaultHeaderWidths =
+    List.fill(defaultDataWindow.columnCount)(DefaultProperties.COLUMN_WIDTH)
 
   def dataWithIndex(data: List[List[String]]): List[(Int, Int, String)] =
     data.zipWithIndex.map({
