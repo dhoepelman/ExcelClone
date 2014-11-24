@@ -1,5 +1,6 @@
 package scalaExcel.model
 
+import scalafx.scene.paint.Color
 import rx.lang.scala.{Observable, Observer, Subject}
 import scalaExcel.model.OperationHelpers._
 
@@ -24,15 +25,20 @@ class Model {
   // this combines the initial Sheet with all input mutations from the outside
   // world
   val sheet = sheetMutations.scan(new Sheet())((sheet, action) => action match {
-    case SetCell(x, y, f) => updateSheet(sheet.setCell(x, y, f))
+    case SetFormula(x, y, f) => updateSheet(sheet.setCellFormula(x, y, f))
+    case SetColor(x, y, c) => sheet.setCellColor(x, y, c)
     case Refresh() => sheet
   })
 
-  def changeFormula(x: Int, y: Int , f: String) {
-    sheetMutations.onNext(SetCell(x, y, f))
+  def refresh() = sheetMutations.onNext(Refresh())
+
+  def changeFormula(x: Int, y: Int, f: String) {
+    sheetMutations.onNext(SetFormula(x, y, f))
   }
 
-  def refresh() = sheetMutations.onNext(Refresh())
+  def changeColor(x: Int, y: Int, c: Color) {
+    sheetMutations.onNext(SetColor(x, y, c))
+  }
 
 }
 
@@ -53,6 +59,11 @@ object ModelExample extends App {
   // Or use the implicit helper class and use the this:
   model.sheet.filterCellValueAt(4, 1).subscribe(x => println(s"(4,1) value changed to $x"))
 
+  model.sheet
+    .map(s => s.styles)
+    .distinctUntilChanged
+    .subscribe(x => println(s"styles $x"))
+
   // Input some changes
   model.changeFormula(1, 1, "=1+2")
   model.changeFormula(2, 1, "=A1+A1")
@@ -60,4 +71,6 @@ object ModelExample extends App {
   model.changeFormula(4, 1, "=A1+A1")
   model.changeFormula(1, 1, "=4+6")
   model.changeFormula(2, 1, "=4+0")
+
+  model.changeColor(1, 1, Color.Yellow)
 }
