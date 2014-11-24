@@ -91,7 +91,7 @@ class ViewManager extends jfxf.Initializable {
     })
     // Create cell selection stream (DataCell), accounting for numbered column
     val selectedCellStream = selectionStream.map(_.map(x => (x, getObservableAt(x).value)))
-    val selectionStylesStream = selectionStream.map(_.map(x => (x, Mediator.getCellStyle(x))))
+    val selectionStylesStream = selectedCellStream.map(_.map(x => (x._1, x._2.styles)))
 
     // The user input on the background colour
     val backgroundColorStream = Observable.create[Color](o => new Subscription {
@@ -158,34 +158,15 @@ class ViewManager extends jfxf.Initializable {
 ))
 
     // Changes on the ColorPickers are pushed to the model
-    backgroundColorStream.map(("-fx-background-color", _))
-      .merge(fontColorStream.map(("-fx-text-fill", _)))
-      .combineLatest(selectedCellStream)
-      .map(x => new {
-        val cells = x._2
-        val definition = x._1
-      }) // For better readability
-      .distinctUntilChanged(_.definition)
-      .subscribe(x => x.cells.foreach(cell => Unit
-    //TODO real change
-    //      Mediator.changeCellProperty((cell._1._1, cell._1._2 - 1), x.definition._1, x.definition._2)))
-    ))
-
-    val styleChangerBackgroundStream =
-      backgroundColorStream
-        .map(colour => setBackground(colour)_)
-    val styleChangerTextFillStream =
-      fontColorStream
-        .map(colour => setTextFill(colour)_)
-
+    val styleChangerBackgroundStream = backgroundColorStream
+      .map(colour => setBackground(colour)_)
+    val styleChangerTextFillStream = fontColorStream
+      .map(colour => setTextFill(colour)_)
     styleChangerBackgroundStream
       .merge(styleChangerTextFillStream)
       .labelAlways(selectionStylesStream)
       .map(c => c.label.map(cellStyle => (cellStyle._1, c.value(cellStyle._2))))
-      .subscribe(_.foreach(newStyle => Mediator.changeCellStyle(newStyle._1, newStyle._2)))
-
-
-
+      .subscribe(_.foreach(newStyle => DataManager.changeCellStylist(newStyle._1, newStyle._2)))
 
 
     // Load - Save
