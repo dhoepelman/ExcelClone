@@ -10,25 +10,37 @@ class DataManager {
   private val _immutableModel = new Model()
 
   private val _windowActionStream = Subject[WindowActions]()
-
+  private val _windowMutationStream = Subject[WindowMutations]()
   private val _tableMutationStream = Subject[TableMutations]()
+
+  private val windowStream = _windowMutationStream.scan(LabeledDataTable.defaultDataWindow)((window, action) =>
+    action match {
+      case SlideWindowBy(offsets) => window.slideBy(offsets)
+      case SlideWindowTo(bounds) => window.slideTo(bounds)
+      case RefreshWindow() => window
+    })
+  windowStream.subscribe(window => _tableMutationStream.onNext(new UpdateWindow(window)))
+  windowStream.subscribe(window => _windowActionStream.onNext(new NewWindow(window)))
 
   _windowActionStream.scan(LabeledDataTable.defaultDataWindow)((window, action) =>
     action match {
-      case SlideWindowBy(offsets) => window.slideBy(offsets)
+      case NewWindow(newWindow) => newWindow
       case ChangeCellExpression(index, expression) =>
-        _immutableModel.changeFormula(index._1, index._2, expression)
+        val realIndex = window.windowToAbsolute(index)
+        _immutableModel.changeFormula(realIndex._1, realIndex._2, expression)
         window
-      case ReorderColumns(permutations) => window //table.reorderColumns(permutations)
-      case SortRows(sortColumn, sortAscending) => window //table.sortRows(sortColumn, sortAscending)
-      case RefreshWindow() => window
-    }).subscribe(window => _tableMutationStream.onNext(new UpdateWindow(window)))
+      case ReorderColumns(permutations) =>
+        // TODO smth like  _immutableModel.reorderColumns(permutations)
+        window
+      case SortRows(sortColumn, sortAscending) =>
+        // TODO smth like _immutableModel.reorderRows(permutations)
+        window
+    }).subscribe(_ => Unit)
 
   _immutableModel.sheet.map(
     newSheet => newSheet.cells.map(
       cell => (cell._1, cell._2.f, newSheet.valueAt(cell._1._1, cell._1._2).get)))
     .subscribe(contents => _tableMutationStream.onNext(new UpdateContents(contents)))
-  //  _modelStream.subscribe(data => _tableChanges.onNext(new UpdateData(data)))
 
   _tableMutationStream.scan(new LabeledDataTable())((table, action) =>
     action match {
@@ -38,7 +50,7 @@ class DataManager {
     }).subscribe(Mediator.dataChanged _)
 
   def tableScrolled(offsets: (Int, Int, Int, Int)) = {
-    _windowActionStream.onNext(new SlideWindowBy(offsets))
+    _windowMutationStream.onNext(new SlideWindowBy(offsets))
   }
 
   def populateDataModel(data: List[List[String]]) =
