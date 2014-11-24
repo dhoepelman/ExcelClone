@@ -5,7 +5,7 @@ import org.junit._
 
 import scalaExcel.formula._
 import scalaExcel.formula.Values.{toVal => tv}
-import scalaExcel.model.Sorter.compare
+import scalaExcel.model.Sorter.{compare, SheetSorter}
 
 class SorterTests {
 
@@ -41,7 +41,7 @@ class SorterTests {
     model.changeFormula(0, 3, "=3")
     model.sheetMutations.onCompleted
 
-    val newSheet = Sorter.sort(sheet, 0)
+    val newSheet = sheet.sort(0)
     assertEquals(Some(VDouble(1)), newSheet.valueAt(0, 0))
     assertEquals(Some(VDouble(2)), newSheet.valueAt(0, 1))
     assertEquals(Some(VDouble(3)), newSheet.valueAt(0, 2))
@@ -59,7 +59,7 @@ class SorterTests {
     model.changeFormula(0, 4, "=3")
     model.sheetMutations.onCompleted
 
-    val newSheet = Sorter.sort(sheet, 0)
+    val newSheet = sheet.sort(0)
     assertEquals(Some(VDouble(1)), newSheet.valueAt(0, 0))
     assertEquals(Some(VDouble(2)), newSheet.valueAt(0, 1))
     assertEquals(Some(VDouble(3)), newSheet.valueAt(0, 2))
@@ -84,7 +84,7 @@ class SorterTests {
 
     model.sheetMutations.onCompleted
 
-    val newSheet = Sorter.sort(sheet, 0)
+    val newSheet = sheet.sort(0)
 
     assertEquals(Some(VDouble(1)), newSheet.valueAt(0, 0))
     assertEquals(Some(VDouble(2)), newSheet.valueAt(0, 1))
@@ -109,14 +109,12 @@ class SorterTests {
 
     model.sheetMutations.onCompleted
 
-    val newSheet = Sorter.sort(sheet, 0)
+    val newSheet = sheet.sort(0)
 
     assertEquals(Some(VDouble(2)), newSheet.valueAt(0, 0))
     assertEquals(Some(VDouble(6)), newSheet.valueAt(0, 1))
     assertEquals(Some(VDouble(8)), newSheet.valueAt(0, 2))
     assertEquals(Some(VDouble(9)), newSheet.valueAt(0, 3))
   }
-
-
 
 }

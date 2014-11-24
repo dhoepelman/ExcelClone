@@ -28,51 +28,57 @@ object Sorter {
     case _ => true
   }
 
-  def sort(sheet: Sheet, x: Int, ascending: Boolean = true): Sheet = {
+  implicit class SheetSorter(val sheet: Sheet) extends AnyVal {
 
-    // Get a map for row mutations. Map(0 -> 3), means row 0 becomes row 3
-    val rowMutations = List.range(0, sheet.rows)
-      .map(y => {
-        val index = (x, y)
-        (index, sheet.values.get(index))
-      })
-      .sortWith({
-        case ((_, a), (_, b)) => compareOption(a, b)
-      })
-      .zip(List.range(0, sheet.rows))
-      .map({
-        case (((_, y1), _), y2) => (y1, y2)
-      })
-      .toMap
+    def sort(x: Int, ascending: Boolean = true): Sheet = {
 
-    // reposition all the cells
-    // TODO: Update the references in the formulas, for example: A1 => A10
-    val cells = sheet.cells
-      .map({
-        case ((x, y), cell) => ((x, rowMutations.get(y).get), cell)
-      })
+      // Get a map for row mutations. Map(0 -> 3), means row 0 becomes row 3
+      val rowMutations = List.range(0, sheet.rows)
+        .map(y => {
+          val index = (x, y)
+          (index, sheet.values.get(index))
+        })
+        .sortWith({
+          case ((_, a), (_, b)) => compareOption(a, b)
+        })
+        .zip(List.range(0, sheet.rows))
+        .map({
+          case (((_, y1), _), y2) => (y1, y2)
+        })
+        .toMap
 
-    // Move the values to the new positions
-    val values = sheet.values
-      .map({
-        case ((x, y), v) => ((x, rowMutations.get(y).get), v)
-      })
+      // reposition all the cells
+      // TODO: Update the references in the formulas, for example: A1 => A10
+      val cells = sheet.cells
+        .map({
+          case ((x, y), cell) => ((x, rowMutations.get(y).get), cell)
+        })
 
-    // update dependents
-    val dependents = sheet.dependents
-      .map({
-        case ((x, y), deps) => (
-          (x, rowMutations.get(y).get),
-          deps.map(a => (a._1, rowMutations.get(a._2))))
-      })
+      // Move the values to the new positions
+      val values = sheet.values
+        .map({
+          case ((x, y), v) => ((x, rowMutations.get(y).get), v)
+        })
 
-    // move styles
-    val styles = sheet.styles
-      .map({
-        case ((x, y), s) => ((x, rowMutations.get(y).get), s)
-      })
+      // update dependents
+      val dependents = sheet.dependents
+        .map({
+          case ((x, y), deps) => (
+            (x, rowMutations.get(y).get),
+            deps.map(a => (a._1, rowMutations.get(a._2))))
+        })
 
-    new Sheet(cells, values, sheet.dependents, sheet.styles)
+      // move styles
+      val styles = sheet.styles
+        .map({
+          case ((x, y), s) => ((x, rowMutations.get(y).get), s)
+        })
+
+      new Sheet(cells, values, sheet.dependents, sheet.styles)
+    }
+
+
   }
+
 
 }
