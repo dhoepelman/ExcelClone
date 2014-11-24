@@ -44,6 +44,6 @@ class DataCellView(column: DataCellColumn) extends TextFieldTableCell[DataRow, D
   item.onChange {
     (_, _, newCell) =>
     // apply cell customization
-      if (newCell != null) style = newCell.style
+      if (newCell != null) style = newCell.styleString
   }
 }

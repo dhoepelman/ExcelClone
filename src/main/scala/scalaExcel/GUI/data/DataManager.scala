@@ -1,6 +1,6 @@
 package scalaExcel.GUI.data
 
-import scalaExcel.model.Model
+import scalaExcel.model.{Styles, Model}
 import rx.lang.scala.Subject
 import scalaExcel.GUI.view.ViewManagerObject
 
@@ -50,7 +50,7 @@ object DataManager {
 
   _immutableModel.sheet.map(
     newSheet => newSheet.cells.map(
-      cell => (cell._1, cell._2.f, newSheet.valueAt(cell._1._1, cell._1._2).get)))
+      cell => (cell._1, cell._2.f, newSheet.valueAt(cell._1._1, cell._1._2).get, newSheet.styles.getOrElse(cell._1, Styles.DEFAULT))))
     .subscribe(contents => _tableMutationStream.onNext(new UpdateContents(contents)))
 
   _tableMutationStream.scan(new LabeledDataTable())((table, action) =>

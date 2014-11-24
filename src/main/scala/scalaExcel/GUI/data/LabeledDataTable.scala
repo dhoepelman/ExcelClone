@@ -2,9 +2,10 @@ package scalaExcel.GUI.data
 
 import scalafx.collections.ObservableBuffer
 import scalafx.beans.property.ObjectProperty
+import scalaExcel.model.Styles
 
 class LabeledDataTable(_dataWindow: DataWindow = LabeledDataTable.defaultDataWindow,
-                       _cellContents: Iterable[((Int, Int), String, Any)] = List(),
+                       _cellContents: Iterable[((Int, Int), String, Any, Styles)] = List(),
                        _sortColumn: Int = -1,
                        val sortAscending: Boolean = true) {
 
@@ -13,13 +14,13 @@ class LabeledDataTable(_dataWindow: DataWindow = LabeledDataTable.defaultDataWin
 
   private val translatedContents =
     _cellContents
-      .map(content => (_dataWindow.absoluteToWindow(content._1), content._1, content._2, content._3))
+      .map(content => (_dataWindow.absoluteToWindow(content._1), content._1, content._2, content._3, content._4))
 
-  private def contentsToCells(filter: (((Int, Int), (Int, Int), String, Any)) => Boolean) =
+  private def contentsToCells(filter: (((Int, Int), (Int, Int), String, Any, Styles)) => Boolean) =
     translatedContents
       .filter(filter)
       .foldLeft(Map[(Int, Int), DataCell]())((cells, content) =>
-      cells + (content._1 -> DataCell.newEvaluated(content._3, content._4)))
+      cells + (content._1 -> DataCell.newEvaluated(content._3, content._4, content._5)))
 
   val data = {
     // transform cell contents contained in window into DataCells
@@ -28,7 +29,7 @@ class LabeledDataTable(_dataWindow: DataWindow = LabeledDataTable.defaultDataWin
     LabeledDataTable.buildDataTable(_dataWindow.rowCount, _dataWindow.columnCount, _cells, _dataWindow)
   }
 
-  def updateContents(contents: Iterable[((Int, Int), String, Any)]) =
+  def updateContents(contents: Iterable[((Int, Int), String, Any, Styles)]) =
     new LabeledDataTable(_dataWindow, contents, _sortColumn, sortAscending)
 
   def updateWindow(dataWindow: DataWindow) = {
