@@ -2,7 +2,7 @@
 package scalaExcel.formula
 
 import math.{pow, abs}
-import scalaExcel.formula.ReferenceFinder.{colToNum, numToCol}
+import scalaExcel.util.ColumnTranslator.{numToCol, colToNum}
 
 object Evaluator {
 
@@ -98,7 +98,7 @@ object Evaluator {
           ACell(c1, r1)
         else {
           val rs = List.range(r1, r2 + 1)
-          var cs = List.range(colToNum(c1), colToNum(c2) + 1)
+          val cs = List.range(colToNum(c1), colToNum(c2) + 1)
           ARange(for (r <- rs; c <- cs) yield ACell(numToCol(c), r))
         }
   }
