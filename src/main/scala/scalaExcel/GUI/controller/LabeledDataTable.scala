@@ -20,7 +20,7 @@ class LabeledDataTable(_dataWindow: DataWindow = LabeledDataTable.defaultDataWin
     translatedContents
       .filter(filter)
       .foldLeft(Map[(Int, Int), DataCell]())((cells, content) =>
-      cells + (content._1 -> DataCell.newEvaluated(content._2, content._3, content._4)))
+      cells + (content._1 -> DataCell.newEvaluated(content._3, content._4)))
 
   val data = {
     // transform cell contents contained in window into DataCells

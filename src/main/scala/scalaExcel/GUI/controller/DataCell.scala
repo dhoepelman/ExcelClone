@@ -12,7 +12,7 @@ object DataCell {
   def newEmpty(): DataCell =
     new DataCellImpl("", null)
 
-  def newEvaluated(absoluteIndex: (Int, Int), expression: String, value: Any): DataCell =
+  def newEvaluated(expression: String, value: Any): DataCell =
     new DataCellImpl(expression, value)
 }
 
