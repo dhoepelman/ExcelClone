@@ -8,6 +8,7 @@ import scalafx.beans.property.ObjectProperty
 import javafx.scene.{control => jfxc}
 import javafx.event.EventHandler
 import javafx.scene.input.{MouseButton, MouseEvent}
+import scalaExcel.util.DefaultProperties
 
 class DataCellColumn(colIndex: Int,
                      header: String,
@@ -38,7 +39,7 @@ class DataCellColumn(colIndex: Int,
 }
 
 class NumberedColumn extends TableColumn[DataRow, DataCell] {
-  text = "#"
+  text = DefaultProperties.NUMBERED_COLUMN_HEADER
   id = "-1"
   cellValueFactory = _ => ObjectProperty.apply(DataCell.newEmpty())
   cellFactory = _ => new TableCell[DataRow, DataCell] {
@@ -48,7 +49,7 @@ class NumberedColumn extends TableColumn[DataRow, DataCell] {
         style = "-fx-alignment: CENTER;"
     }
   }
-  prefWidth = 35
+  prefWidth = DefaultProperties.NUMBERED_COLUMN_WIDTH
   editable = false
   sortable = false
 }

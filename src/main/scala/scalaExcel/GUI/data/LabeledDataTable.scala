@@ -3,24 +3,30 @@ package scalaExcel.GUI.data
 import scalafx.collections.ObservableBuffer
 import scalafx.beans.property.ObjectProperty
 import scalaExcel.model.Styles
+import scalaExcel.util.{ColumnTranslator, DefaultProperties}
 
 class LabeledDataTable(_dataWindow: DataWindow = LabeledDataTable.defaultDataWindow,
+                       _allHeaderWidths: List[Double] = LabeledDataTable.defaultHeaderWidths,
                        _cellContents: Iterable[((Int, Int), String, Any, Styles)] = List(),
                        _sortColumn: Int = -1,
-                       val sortAscending: Boolean = true) {
+                       val sortAscending: Boolean = true,
+                       val rebuild: Boolean) {
 
-  val headers = _dataWindow.columnHeaders
-  val headerWidths = _dataWindow.columnWidths
+  def headers = LabeledDataTable.getHeaders(_dataWindow.visibleBounds)
+
+  def headerWidths = _allHeaderWidths.drop(_dataWindow.visibleBounds._3).take(_dataWindow.columnCount)
+
+  def sortColumn = _dataWindow.absoluteToWindowColumn(_sortColumn)
 
   private val translatedContents =
     _cellContents
-      .map(content => (_dataWindow.absoluteToWindow(content._1), content._1, content._2, content._3, content._4))
+      .map(content => (_dataWindow.absoluteToWindow(content._1), content._2, content._3, content._4))
 
-  private def contentsToCells(filter: (((Int, Int), (Int, Int), String, Any, Styles)) => Boolean) =
+  private def contentsToCells(filter: (((Int, Int), String, Any, Styles)) => Boolean) =
     translatedContents
       .filter(filter)
       .foldLeft(Map[(Int, Int), DataCell]())((cells, content) =>
-      cells + (content._1 -> DataCell.newEvaluated(content._3, content._4, content._5)))
+      cells + (content._1 -> DataCell.newEvaluated(content._2, content._3, content._4)))
 
   val data = {
     // transform cell contents contained in window into DataCells
@@ -30,58 +36,39 @@ class LabeledDataTable(_dataWindow: DataWindow = LabeledDataTable.defaultDataWin
   }
 
   def updateContents(contents: Iterable[((Int, Int), String, Any, Styles)]) =
-    new LabeledDataTable(_dataWindow, contents, _sortColumn, sortAscending)
+    new LabeledDataTable(_dataWindow,
+      _allHeaderWidths,
+      contents,
+      _sortColumn,
+      sortAscending,
+      false)
 
   def updateWindow(dataWindow: DataWindow) = {
-    new LabeledDataTable(dataWindow, _cellContents, _sortColumn, sortAscending)
-  }
-
-  def slideWindowBy(offsets: (Int, Int, Int, Int)) = {
-    new LabeledDataTable(_dataWindow.slideBy(offsets), _cellContents, _sortColumn, sortAscending)
-  }
-
-  def slideWindowTo(bounds: (Int, Int, Int, Int)) = {
-    new LabeledDataTable(_dataWindow.slideTo(bounds), _cellContents, _sortColumn, sortAscending)
-  }
-
-  def reorderColumns(permutations: Map[Int, Int]) = {
-    new LabeledDataTable(_dataWindow.reorderColumns(permutations), _cellContents, _sortColumn, sortAscending)
-  }
-
-  def sortRows(sortColumn: Int, sortAscending: Boolean) = {
-    val absoluteSortColumn = _dataWindow.windowToAbsoluteColumn(sortColumn)
-    new LabeledDataTable(_dataWindow.reorderRows(computeSortOrder(absoluteSortColumn, sortAscending)),
+    new LabeledDataTable(dataWindow,
+      _allHeaderWidths,
       _cellContents,
-      absoluteSortColumn,
-      sortAscending)
+      _sortColumn,
+      sortAscending,
+      rebuild = true)
   }
 
-  def translateIndex(index: (Int, Int)) =
-    _dataWindow.windowToAbsolute(index)
+  def updateColumnOrder(permutations: Map[Int, Int]) = {
+    val reversePermutations = permutations map (_.swap)
+    val newWidths = Range(0, _allHeaderWidths.length - 1)
+      .map(i => _allHeaderWidths(reversePermutations.getOrElse(i, i)))
+    new LabeledDataTable(_dataWindow,
+      newWidths.toList,
+      _cellContents,
+      _sortColumn,
+      sortAscending,
+      rebuild = true)
+  }
 
-  def sortColumn = _dataWindow.absoluteToWindowColumn(_sortColumn)
-
-  def computeSortOrder(sortColumn: Int, sortAscending: Boolean) =
-  //    if (sortColumn < 0)
-    Map[Int, Int]()
-
-  //    else {
-  //      val original = contentsToCells(contents => contents._2._2 == sortColumn).map(cell => cell._2).toList
-  //      val nulls = _dataWindow.rowCount - original.length
-  //      val sorted = original.sortWith((c1, c2) => if (sortAscending) c1.compare(c2) < 0 else c1.compare(c2) > 0)
-  //      val permutations = sorted.view.zipWithIndex.map(pair =>
-  //        pair._1.absoluteIndex._1 -> (pair._2 + (if (sortAscending) nulls else 0)))
-  //      Map[Int, Int]() ++ permutations
-  //    }
 }
 
 object LabeledDataTable {
   type DataRow = ObservableBuffer[ObjectProperty[DataCell]]
   type DataTable = ObservableBuffer[DataRow]
-
-  private val _defaultDataSize = (10, 10)
-  private val _defaultHeaders = List("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
-  private val _defaultWidths = List(100.0, 200.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0)
 
   def buildDataTable(rows: Int, columns: Int, data: Map[(Int, Int), DataCell], dataWindow: DataWindow): DataTable = {
     new DataTable() ++=
@@ -90,12 +77,14 @@ object LabeledDataTable {
           ObjectProperty.apply(data.getOrElse((i, j), DataCell.newEmpty()))))
   }
 
-  def defaultDataWindow = new DataWindow((0, _defaultDataSize._1, 0, _defaultDataSize._2),
-    (0, _defaultDataSize._1, 0, _defaultDataSize._2),
-    _defaultHeaders,
-    _defaultWidths,
-    Map[Int, Int](),
-    Map[Int, Int]())
+  def getHeaders(bounds: (Int, Int, Int, Int)) =
+    (Range(bounds._3, bounds._4 - 1) map ColumnTranslator.numToCol).toList
+
+  val defaultDataWindow = new DataWindow((0, DefaultProperties.GRID_SIZE._1, 0, DefaultProperties.GRID_SIZE._2),
+    (0, DefaultProperties.GRID_SIZE._1, 0, DefaultProperties.GRID_SIZE._2))
+
+  val defaultHeaderWidths = List(100.0, 200.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0)
+  //List.fill(defaultDataWindow.columnCount)(DefaultProperties.COLUMN_WIDTH)
 
   def dataWithIndex(data: List[List[String]]): List[(Int, Int, String)] =
     data.zipWithIndex.map({
