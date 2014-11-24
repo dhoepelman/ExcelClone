@@ -134,7 +134,7 @@ class ViewManager extends jfxf.Initializable {
     })
     // Update color pickers when selection changes
     selectedCellStream.map(x => {
-      if (x.size == 1) x.head._2.style
+      if (x.size == 1) x.head._2.styleString
       else ""
     })
       .subscribe(x => {
