@@ -1,11 +1,18 @@
 package scalaExcel.GUI.data
 
 import scalaExcel.model.Model
-import scalaExcel.GUI.controller.{Mediator, LabeledDataTable}
 import rx.lang.scala.Subject
+import scalaExcel.GUI.view.ViewManager
 
 
-class DataManager {
+object DataManager {
+
+  private val _defaultData = List(List("Cell11", "Cell12"), List("Cell21", "Cell22"))
+
+  def initialize() = {
+    println("DataManager initializing...")
+    populateDataModel(_defaultData)
+  }
 
   private val _immutableModel = new Model()
 
@@ -30,10 +37,14 @@ class DataManager {
         _immutableModel.changeFormula(realIndex._1, realIndex._2, expression)
         window
       case ReorderColumns(permutations) =>
-        // TODO smth like  _immutableModel.reorderColumns(permutations)
+        val realPermutations = permutations.map({
+          case (c1, c2) => (window.windowToAbsoluteColumn(c1), window.windowToAbsoluteColumn(c2))
+        })
+        // TODO smth like  _immutableModel.reorderColumns(realPermutations)
         window
       case SortRows(sortColumn, sortAscending) =>
-        // TODO smth like _immutableModel.reorderRows(permutations)
+        val realColumn = window.windowToAbsoluteColumn(sortColumn)
+        // TODO smth like _immutableModel.sortRows(realColumn)
         window
     }).subscribe(_ => Unit)
 
@@ -47,7 +58,7 @@ class DataManager {
       case UpdateContents(contents) => table.updateContents(contents)
       case UpdateWindow(window) => table.updateWindow(window)
       case RefreshTable() => table
-    }).subscribe(Mediator.dataChanged _)
+    }).subscribe(ViewManager.dataChanged _)
 
   def tableScrolled(offsets: (Int, Int, Int, Int)) = {
     _windowMutationStream.onNext(new SlideWindowBy(offsets))
