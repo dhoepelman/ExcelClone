@@ -14,13 +14,23 @@ class LabeledDataTable(_dataWindow: DataWindow = LabeledDataTable.defaultDataWin
 
   private val translatedContents =
     _cellContents
-      .map(content => (_dataWindow.absoluteToWindow(content._1), content._1, content._2, content._3, content._4))
+      .map({
+        case (index, formula, value, style) => (
+            _dataWindow.absoluteToWindow(index),
+            index,
+            formula,
+            value,
+            style
+          )
+      })
 
   private def contentsToCells(filter: (((Int, Int), (Int, Int), String, Any, Styles)) => Boolean) =
     translatedContents
       .filter(filter)
-      .foldLeft(Map[(Int, Int), DataCell]())((cells, content) =>
-      cells + (content._1 -> DataCell.newEvaluated(content._3, content._4, content._5)))
+      .foldLeft(Map[(Int, Int), DataCell]())({
+        case (cells, (abs, index, formula, value, style)) =>
+          cells + (abs -> DataCell.newEvaluated(formula, value, style))
+      })
 
   val data = {
     // transform cell contents contained in window into DataCells
@@ -83,11 +93,16 @@ object LabeledDataTable {
   private val _defaultHeaders = List("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
   private val _defaultWidths = List(100.0, 200.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0)
 
-  def buildDataTable(rows: Int, columns: Int, data: Map[(Int, Int), DataCell], dataWindow: DataWindow): DataTable = {
+  def buildDataTable(rows: Int,
+                     columns: Int,
+                     data: Map[(Int, Int), DataCell],
+                     dataWindow: DataWindow): DataTable = {
+
     new DataTable() ++=
       List.range(0, rows).map(i => new DataRow() ++=
         List.range(0, columns).map(j =>
-          ObjectProperty.apply(data.getOrElse((i, j), DataCell.newEmpty()))))
+          ObjectProperty.apply(data.getOrElse((j, i), DataCell.newEmpty()))))
+
   }
 
   def defaultDataWindow = new DataWindow((0, _defaultDataSize._1, 0, _defaultDataSize._2),

@@ -19,6 +19,7 @@ class DataCellColumn(colIndex: Int,
   cellValueFactory = _.value.get(colIndex)
   cellFactory = _ => new DataCellView
   prefWidth = headerWidth
+
   if (sorted)
     if (ascending)
       sortType = TableColumn.SortType.ASCENDING
@@ -31,7 +32,7 @@ class DataCellColumn(colIndex: Int,
       // account for numbered column
       val column = e.getTablePosition.getColumn - 1
       val row = e.getTablePosition.getRow
-      DataManager.changeCellExpression((row, column), text)
+      DataManager.changeCellExpression((column, row), text)
       ViewManagerObject.changeEditorText(text)
     }
   }
@@ -54,14 +55,19 @@ class NumberedColumn extends TableColumn[DataRow, DataCell] {
 }
 
 object TableViewBuilder {
+
   type TableColumns = ObservableBuffer[jfxc.TableColumn[DataRow, DataCell]]
 
   private def buildColumns(headers: List[String],
                            widths: List[Double],
                            sortColumn: Int,
-                           sortAscending: Boolean): TableColumns =
-    headers.view.zip(widths).foldLeft(new TableColumns())((cols: TableColumns, data: (String, Double)) =>
-      cols += new DataCellColumn(cols.length, data._1, data._2, cols.length == sortColumn, sortAscending))
+                           sortAscending: Boolean): TableColumns = {
+    headers.view
+      .zip(widths)
+      .foldLeft(new TableColumns())((cols, data) => {
+        cols += new DataCellColumn(cols.length, data._1, data._2, cols.length == sortColumn, sortAscending)
+      })
+  }
 
   def build(labeledTable: LabeledDataTable) = {
     new TableView[DataRow](labeledTable.data) {

@@ -33,7 +33,7 @@ class DataCellViewDelegate extends jfxsc.cell.TextFieldTableCell[DataRow, DataCe
 class DataCellView extends TextFieldTableCell[DataRow, DataCell](new DataCellViewDelegate) {
   item.onChange {
     (_, _, newCell) =>
-    // apply cell customization
+      // apply cell customization
       if (newCell != null) style = newCell.styleString
   }
 }
