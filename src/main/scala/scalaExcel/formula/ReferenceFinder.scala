@@ -1,7 +1,5 @@
 package scalaExcel.formula
 
-import scala.collection.immutable.{Range => SeqRange}
-
 object ReferenceFinder {
 
   sealed trait Node
@@ -41,11 +39,9 @@ object ReferenceFinder {
         Cell(ColRef(c1, _), RowRef(r1, _)),
         Cell(ColRef(c2, _), RowRef(r2, _))
       ) => {
-        Leafs((SeqRange(r1, r2 + 1).toList.map(r => {
-          (SeqRange(colToNum(c1), colToNum(c2) + 1) map (c => {
-            Leaf(ACell(numToCol(c), r))
-          })).toList
-        })).flatten)
+        val rs = List.range(r1, r2 + 1)
+        var cs = List.range(colToNum(c1), colToNum(c2) + 1)
+        Leafs(for (r <- rs; c <- cs) yield Leaf(ACell(numToCol(c), r)))
       }
     case _ => Empty
   }
