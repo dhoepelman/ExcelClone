@@ -40,7 +40,7 @@ object DataManager {
         val realPermutations = permutations.map({
           case (c1, c2) => (window.windowToAbsoluteColumn(c1), window.windowToAbsoluteColumn(c2))
         })
-        _tableMutationStream.onNext(new UpdateColumnOrder(permutations))
+        _tableMutationStream.onNext(new UpdateColumnOrder(realPermutations))
         // TODO smth like  _immutableModel.reorderColumns(realPermutations)
         window
       case SortRows(sortColumn, sortAscending) =>
@@ -66,6 +66,7 @@ object DataManager {
     action match {
       case UpdateContents(contents) => table.updateContents(contents)
       case UpdateWindow(window) => table.updateWindow(window)
+      case UpdateColumnOrder(permutations) => table.updateColumnOrder(permutations)
       case RefreshTable() => table
     }).subscribe(ViewManagerObject.dataChanged _)
 

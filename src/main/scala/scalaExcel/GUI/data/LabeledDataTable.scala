@@ -26,9 +26,9 @@ class LabeledDataTable(_dataWindow: DataWindow = LabeledDataTable.defaultDataWin
     translatedContents
       .filter(filter)
       .foldLeft(Map[(Int, Int), DataCell]())({
-        case (cells, (index, formula, value, style)) =>
-          cells + (index -> DataCell.newEvaluated(formula, value, style))
-      })
+      case (cells, (index, formula, value, style)) =>
+        cells + (index -> DataCell.newEvaluated(formula, value, style))
+    })
 
   val data = {
     // transform cell contents contained in window into DataCells
@@ -56,10 +56,10 @@ class LabeledDataTable(_dataWindow: DataWindow = LabeledDataTable.defaultDataWin
 
   def updateColumnOrder(permutations: Map[Int, Int]) = {
     val reversePermutations = permutations map (_.swap)
-    val newWidths = Range(0, _allHeaderWidths.length - 1)
+    val newWidths = List.range(0, _allHeaderWidths.length)
       .map(i => _allHeaderWidths(reversePermutations.getOrElse(i, i)))
     new LabeledDataTable(_dataWindow,
-      newWidths.toList,
+      newWidths,
       _cellContents,
       _sortColumn,
       sortAscending,
@@ -74,13 +74,13 @@ object LabeledDataTable {
 
   def buildDataTable(rows: Int, columns: Int, data: Map[(Int, Int), DataCell], dataWindow: DataWindow): DataTable = {
     new DataTable() ++=
-      List.range(0, rows).map(i => new DataRow() ++=
-        List.range(0, columns).map(j =>
+      List.range(0, rows + 1).map(i => new DataRow() ++=
+        List.range(0, columns + 1).map(j =>
           ObjectProperty.apply(data.getOrElse((i, j), DataCell.newEmpty()))))
   }
 
   def getHeaders(bounds: (Int, Int, Int, Int)) =
-    (Range(bounds._3, bounds._4 - 1) map ColumnTranslator.numToCol).toList
+    List.range(bounds._3, bounds._4) map ColumnTranslator.numToCol
 
   val defaultDataWindow = new DataWindow((0, DefaultProperties.GRID_SIZE._1, 0, DefaultProperties.GRID_SIZE._2),
     (0, DefaultProperties.GRID_SIZE._1, 0, DefaultProperties.GRID_SIZE._2))
