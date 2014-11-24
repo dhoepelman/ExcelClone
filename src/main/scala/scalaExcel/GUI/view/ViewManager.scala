@@ -191,17 +191,17 @@ class ViewManager extends jfxf.Initializable {
 
     // Load - Save
     saveStream.map(x => {
-      fileChooser.setTitle("Save destination")
-      fileChooser
-    })
+        fileChooser.setTitle("Save destination")
+        fileChooser
+      })
       .map(chooser => chooser.showSaveDialog(tableContainer.scene.window.getValue))
       .filter(_ != null)
       .subscribe(file => Filer.saveCSV(file, table.items.getValue))
 
     loadStream.map(x => {
-      fileChooser.setTitle("Open file")
-      fileChooser
-    })
+        fileChooser.setTitle("Open file")
+        fileChooser
+      })
       .map(chooser => chooser.showOpenDialog(tableContainer.scene.window.getValue))
       .filter(_ != null)
       .map(file => Filer.loadCSV(file))
