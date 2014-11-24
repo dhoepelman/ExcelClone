@@ -2,9 +2,9 @@ package scalaExcel.GUI.view
 
 import javafx.scene.{control => jfxsc}
 import scalafx.scene.control.TextField
-import scalaExcel.GUI.controller.{DataCell, Mediator}
 import scalafx.scene.control.cell.TextFieldTableCell
-import scalaExcel.GUI.controller.LabeledDataTable.DataRow
+import scalaExcel.GUI.data.{DataManager, LabeledDataTable, DataCell}
+import LabeledDataTable.DataRow
 import scalafx.util.StringConverter
 
 
@@ -15,8 +15,8 @@ class DataCellStringConverter(column: DataCellColumn) extends StringConverter[Da
     //TODO move to tableview
     val index = column.getTableView.getEditingCell
     // account for numbered column
-    Mediator.changeCellExpression((index.getRow, index.getColumn - 1), expression)
-    Mediator.changeEditorText(expression)
+    DataManager.changeCellExpression((index.getRow, index.getColumn - 1), expression)
+    ViewManagerObject.changeEditorText(expression)
     // return a mock cell instance
     DataCell.newEmpty()
   }
@@ -31,7 +31,7 @@ class DataCellViewDelegate(column: DataCellColumn) extends jfxsc.cell.TextFieldT
       case null => ""
       case cell => cell.expression
     }
-    Mediator.changeEditorText(textField.getText)
+    ViewManagerObject.changeEditorText(textField.getText)
   }
 
   override def commitEdit(p1: DataCell): Unit = {

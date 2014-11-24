@@ -10,7 +10,6 @@ import javafx.{event => jfxe, fxml => jfxf}
 import rx.lang.scala._
 
 import scalafx.scene.layout.AnchorPane
-import scalaExcel.GUI.controller.{DataCell, LabeledDataTable, Mediator}
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.control._
 import scalafx.scene.paint.Color
@@ -18,9 +17,9 @@ import scalaExcel.GUI.util.CSSHelper
 import scalaExcel.GUI.util.Filer
 
 import scala.language.reflectiveCalls
-import scalaExcel.GUI.controller.LabeledDataTable.DataRow
+import scalaExcel.GUI.data.{DataManager, DataCell, LabeledDataTable}
+import LabeledDataTable.DataRow
 import scalafx.beans.property.ObjectProperty
-
 
 class ViewManager extends jfxf.Initializable {
 
@@ -155,7 +154,7 @@ class ViewManager extends jfxf.Initializable {
       .distinctUntilChanged(_.formula)
       .subscribe(x => x.cells.foreach(cell =>
       if (cell._1._2 > 0)
-        Mediator.changeCellExpression((cell._1._1, cell._1._2 - 1), x.formula)
+        DataManager.changeCellExpression((cell._1._1, cell._1._2 - 1), x.formula)
 ))
 
     // Changes on the ColorPickers are pushed to the model
@@ -205,7 +204,7 @@ class ViewManager extends jfxf.Initializable {
       .map(chooser => chooser.showOpenDialog(tableContainer.scene.window.getValue))
       .filter(_ != null)
       .map(file => Filer.loadCSV(file))
-      .subscribe(data => Mediator.setAllCells(data))
+      .subscribe(data => DataManager.populateDataModel(data))
   }
 
   def initialize(url: URL, rb: java.util.ResourceBundle) {

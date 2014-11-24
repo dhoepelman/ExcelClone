@@ -3,8 +3,9 @@ package scalaExcel.GUI.util
 import java.io.File
 
 import scala.io._
-import scalaExcel.GUI.controller.LabeledDataTable.DataTable
-import scalaExcel.GUI.controller.DataCell
+import scalaExcel.GUI.data.{LabeledDataTable, DataCell}
+import LabeledDataTable.DataTable
+import scalaExcel.GUI.data.DataCell
 
 /**
  * Created by Chris on 10-11-2014.

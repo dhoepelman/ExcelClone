@@ -3,8 +3,8 @@ package scalaExcel.GUI.view
 import scalafx.scene.control._
 import scalafx.collections.ObservableBuffer
 import javafx.scene.{control => jfxc}
-import scalaExcel.GUI.controller.{DataCell, LabeledDataTable, Mediator}
-import scalaExcel.GUI.controller.LabeledDataTable.DataRow
+import scalaExcel.GUI.data.{DataManager, DataCell, LabeledDataTable}
+import LabeledDataTable.DataRow
 import scalafx.beans.property.ObjectProperty
 import javafx.event.EventHandler
 import scalafx.scene.control.TableColumn.{CellEditEvent, SortType}
@@ -78,10 +78,10 @@ object TableViewBuilder {
         })
         if (!permutations.keySet.contains(-1))
         // notify Mediator of change
-          Mediator.columnsReordered(permutations)
+          DataManager.reorderColumns(permutations)
         else
         // revert reordering (numbered column was moved)
-          Mediator.rebuildTable()
+          DataManager.refreshData()
       })
 
       //
@@ -104,11 +104,11 @@ object TableViewBuilder {
           if (columns.size() > 0) {
             // sorting should be applied
             val column = columns.get(0)
-            Mediator.rowsSorted(column.getId.toInt, column.getSortType == jfxc.TableColumn.SortType.ASCENDING)
+            DataManager.sortRows(column.getId.toInt, column.getSortType == jfxc.TableColumn.SortType.ASCENDING)
           }
           else {
             // sorting should not be applied anymore
-            Mediator.rowsSorted(-1, sortAscending = true)
+            DataManager.sortRows(-1, sortAscending = true)
           }
           event.consume()
         }

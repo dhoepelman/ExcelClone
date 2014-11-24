@@ -1,8 +1,7 @@
-package scalaExcel.GUI.controller
+package scalaExcel.GUI.data
 
 import scalafx.collections.ObservableBuffer
 import scalafx.beans.property.ObjectProperty
-import scalaExcel.GUI.data.DataWindow
 
 class LabeledDataTable(_dataWindow: DataWindow = LabeledDataTable.defaultDataWindow,
                        _cellContents: Iterable[((Int, Int), String, Any)] = List(),
