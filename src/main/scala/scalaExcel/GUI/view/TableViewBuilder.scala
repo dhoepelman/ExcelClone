@@ -38,7 +38,7 @@ class DataCellColumn(colIndex: Int,
       // account for numbered column
       val column = e.getTablePosition.getColumn - 1
       val row = e.getTablePosition.getRow
-      DataManager.changeCellExpression((column, row), text)
+      DataManager.changeCellExpression((row, column), text)
       ViewManagerObject.changeEditorText(text)
     }
   }

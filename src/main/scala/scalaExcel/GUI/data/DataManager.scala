@@ -34,7 +34,8 @@ object DataManager {
       case NewWindow(newWindow) => newWindow
       case ChangeCellExpression(index, expression) =>
         val realIndex = window.windowToAbsolute(index)
-        _immutableModel.changeFormula(realIndex._1, realIndex._2, expression)
+        // model uses swapped index
+        _immutableModel.changeFormula(realIndex._2, realIndex._1, expression)
         window
       case ReorderColumns(permutations) =>
         val realPermutations = permutations.map({
@@ -53,7 +54,7 @@ object DataManager {
     .map(newSheet => newSheet.cells
       .map({
         case (index, cell) => (
-            index,
+            index.swap,
             cell.f,
             newSheet.valueAt(index._1, index._2).get,
             newSheet.styles.getOrElse(index, Styles.DEFAULT)
