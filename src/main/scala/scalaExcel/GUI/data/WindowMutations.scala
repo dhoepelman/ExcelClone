@@ -10,3 +10,4 @@ case class AddNewColumn(position: Int) extends WindowMutations
 case class AddNewRow() extends WindowMutations
 case class SlideWindowBy(offsets: (Int, Int, Int, Int)) extends WindowMutations
 case class SlideWindowTo(bounds: (Int, Int, Int, Int)) extends WindowMutations
+

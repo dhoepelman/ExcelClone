@@ -62,9 +62,16 @@ class ViewManager extends jfxf.Initializable {
   fileChooser.getExtensionFilters.add(new ExtensionFilter("Comma separated values", "*.csv"))
 
   def buildTableView(labeledTable: LabeledDataTable): Unit = {
-    println("Building table")
-    // initialize and add the table
 
+    if (!labeledTable.rebuild) {
+      println("Changing table...")
+
+      table.items = labeledTable.data
+      return
+    }
+
+    println("Building table...")
+    // initialize and add the table
     table = TableViewBuilder.build(labeledTable)
     val selectionModel = table.getSelectionModel
     selectionModel.setCellSelectionEnabled(true)
@@ -163,7 +170,6 @@ class ViewManager extends jfxf.Initializable {
       .map(c => c.label.map(cellStyle => (cellStyle._1, c.value(cellStyle._2))))
       .subscribe(_.foreach(newStyle => DataManager.changeCellStylist(newStyle._1, newStyle._2)))
 
-
     // Load - Save
     saveStream.map(x => {
         fileChooser.setTitle("Save destination")
@@ -180,7 +186,7 @@ class ViewManager extends jfxf.Initializable {
       .map(chooser => chooser.showOpenDialog(tableContainer.scene.window.getValue))
       .filter(_ != null)
       .map(file => Filer.loadCSV(file))
-      .subscribe(data => DataManager.populateDataModel(data))
+      .subscribe(data => ??? /* DataManager.populateDataModel(data) */)
   }
 
   def initialize(url: URL, rb: java.util.ResourceBundle) {

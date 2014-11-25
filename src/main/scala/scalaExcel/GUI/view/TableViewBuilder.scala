@@ -8,12 +8,14 @@ import scalafx.beans.property.ObjectProperty
 import javafx.scene.{control => jfxc}
 import javafx.event.EventHandler
 import javafx.scene.input.{MouseButton, MouseEvent}
+import scalaExcel.util.DefaultProperties
 
 class DataCellColumn(colIndex: Int,
                      header: String,
                      headerWidth: Double,
                      sorted: Boolean,
                      ascending: Boolean) extends TableColumn[DataRow, DataCell] {
+
   text = header
   id = colIndex.toString
   cellValueFactory = _.value.get(colIndex)
@@ -26,20 +28,27 @@ class DataCellColumn(colIndex: Int,
     else
       sortType = TableColumn.SortType.DESCENDING
 
+  // listen for column width changes
+  width.onChange {
+    (_, _, newWidth) => DataManager.resizeColumn(colIndex, newWidth.doubleValue())
+  }
+
+  // listen for cell edits
   onEditCommit = new EventHandler[jfxc.TableColumn.CellEditEvent[DataRow, DataCell]] {
     override def handle(e: jfxc.TableColumn.CellEditEvent[DataRow, DataCell]) = {
       val text = e.getNewValue.expression
       // account for numbered column
       val column = e.getTablePosition.getColumn - 1
       val row = e.getTablePosition.getRow
-      DataManager.changeCellExpression((column, row), text)
+      DataManager.changeCellExpression((row, column), text)
       ViewManagerObject.changeEditorText(text)
     }
   }
+
 }
 
 class NumberedColumn extends TableColumn[DataRow, DataCell] {
-  text = "#"
+  text = DefaultProperties.NUMBERED_COLUMN_HEADER
   id = "-1"
   cellValueFactory = _ => ObjectProperty.apply(DataCell.newEmpty())
   cellFactory = _ => new TableCell[DataRow, DataCell] {
@@ -49,7 +58,7 @@ class NumberedColumn extends TableColumn[DataRow, DataCell] {
         style = "-fx-alignment: CENTER;"
     }
   }
-  prefWidth = 35
+  prefWidth = DefaultProperties.NUMBERED_COLUMN_WIDTH
   editable = false
   sortable = false
 }
@@ -87,15 +96,15 @@ object TableViewBuilder {
       // when the order of the columns changes, notify Mediator of new order
       columns.onChange((cols, changes) => {
         val permutations = cols.view.zipWithIndex.foldLeft(Map[Int, Int]())((acc, indexedCol) => {
-          //compare id to index in cols and account for numbered column
+          // compare id to index in cols and account for numbered column
           if (indexedCol._1.getId.toInt == indexedCol._2 - 1) acc
           else acc + (indexedCol._1.getId.toInt -> (indexedCol._2 - 1))
         })
         if (!permutations.keySet.contains(-1))
-        // notify Mediator of change
+          // notify manager of change
           DataManager.reorderColumns(permutations)
         else
-        // revert reordering (numbered column was moved)
+          // revert reordering (numbered column was moved)
           DataManager.refreshData()
       })
 
@@ -109,9 +118,11 @@ object TableViewBuilder {
           event.consume()
         }
       }
+
       // set the sort column in the table's sort order (to make sort arrow visible)
       if (labeledTable.sortColumn >= 0)
         sortOrder.add(columns.drop(labeledTable.sortColumn + 1).head)
+
       // finally, handle sort events, but do not let them propagate to GUI
       onSort = new EventHandler[jfxc.SortEvent[jfxc.TableView[DataRow]]] {
         override def handle(event: jfxc.SortEvent[jfxc.TableView[DataRow]]) {
@@ -128,6 +139,7 @@ object TableViewBuilder {
           event.consume()
         }
       }
+
       onMouseClicked = new EventHandler[MouseEvent] {
         override def handle(event: MouseEvent) {
           if (event.getButton.compareTo(MouseButton.SECONDARY) == 0) {
