@@ -61,8 +61,9 @@ class ViewManager extends jfxf.Initializable {
   val fileChooser = new javafx.stage.FileChooser
   fileChooser.getExtensionFilters.add(new ExtensionFilter("Comma separated values", "*.csv"))
 
+  /** Get observable at position, or empty if outside of bounds  */
   def getObservableAt(index: (Int, Int)) =
-  // account for numbered column
+    // account for numbered column
     if (index._2 < 0) ObjectProperty.apply(DataCell.newEmpty())
     else table.items.getValue.get(index._1).get(index._2)
 
@@ -88,7 +89,7 @@ class ViewManager extends jfxf.Initializable {
       selectedCells.onChange((source, changes) => {
         o.onNext(source.map(x => (x.getRow, x.getColumn)))
       })
-    }).map(selection => selection.map{case (x: Int, y: Int) => (x, y-1)})
+    }).map(selection => selection.map{case (x: Int, y: Int) => (x, y-1)}) // Offset selection (before of row numbering)
       .doOnEach(selection => println("Selection: " + selection))
     // Create cell selection stream (DataCell), accounting for numbered column
     val selectedCellStream = selectionStream.map(_.map(x => (x, getObservableAt(x).value)))
@@ -206,6 +207,9 @@ class ViewManager extends jfxf.Initializable {
   }
 
 
+  /**
+   * Extension functions for Rx Observables
+   */
   implicit class ExtendRx[T](ob: Observable[T]) {
     def labelAlways[L](la: Observable[L]) =
       ob.combineLatest(la)
