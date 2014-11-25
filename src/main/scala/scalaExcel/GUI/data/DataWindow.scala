@@ -3,17 +3,12 @@ package scalaExcel.GUI.data
 class DataWindow(val maxBounds: (Int, Int, Int, Int),
                  val visibleBounds: (Int, Int, Int, Int)) {
 
-  def windowToAbsoluteColumn(colIndex: Int) =
-    colIndex + visibleBounds._3
+  def addToVisibleBound(f: ((Int, Int, Int, Int)) => Int, add: (Int, Int) => Int)(x: Int) = add(x, f(visibleBounds))
 
-  def absoluteToWindowColumn(colIndex: Int) =
-    colIndex - visibleBounds._3
-
-  def windowToAbsoluteRow(rowIndex: Int) =
-    rowIndex + visibleBounds._1
-
-  def absoluteToWindowRow(rowIndex: Int) =
-    rowIndex - visibleBounds._1
+  def windowToAbsoluteColumn = addToVisibleBound(_._3, _ + _) _
+  def absoluteToWindowColumn = addToVisibleBound(_._3, _ - _) _
+  def windowToAbsoluteRow = addToVisibleBound(_._1, _ + _) _
+  def absoluteToWindowRow = addToVisibleBound(_._1, _ - _) _
 
   def windowToAbsolute(index: (Int, Int)): (Int, Int) =
     (windowToAbsoluteRow(index._1), windowToAbsoluteColumn(index._2))

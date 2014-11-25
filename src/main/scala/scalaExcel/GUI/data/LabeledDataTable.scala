@@ -46,7 +46,7 @@ class LabeledDataTable(_dataWindow: DataWindow = LabeledDataTable.defaultDataWin
       contents,
       _sortColumn,
       sortAscending,
-      false)
+      rebuild = false)
 
   def updateWindow(dataWindow: DataWindow) = {
     new LabeledDataTable(dataWindow,
@@ -59,8 +59,9 @@ class LabeledDataTable(_dataWindow: DataWindow = LabeledDataTable.defaultDataWin
 
   def updateColumnOrder(permutations: Map[Int, Int]) = {
     val reversePermutations = permutations map (_.swap)
-    val newWidths = List.range(0, _allHeaderWidths.length)
-      .map(i => _allHeaderWidths(reversePermutations.getOrElse(i, i)))
+    val newWidths =
+      for (i <- List.range(0, _allHeaderWidths.length))
+      yield _allHeaderWidths(reversePermutations.getOrElse(i, i))
     new LabeledDataTable(_dataWindow,
       newWidths,
       _cellContents,
