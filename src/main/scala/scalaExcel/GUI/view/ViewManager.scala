@@ -156,10 +156,7 @@ class ViewManager extends jfxf.Initializable {
         val formula = x._1
       }) // For better readability
       .distinctUntilChanged(_.formula)
-      .subscribe(x => x.cells.foreach(cell =>
-        if (cell._1._2 > 0)
-          DataManager.changeCellExpression((cell._1._1, cell._1._2), x.formula)
-      ))
+      .subscribe(x => x.cells.foreach(cell => DataManager.changeCellExpression((cell._1._1, cell._1._2), x.formula)))
 
     // Changes on the ColorPickers are pushed to the model
     val styleChangerBackgroundStream = backgroundColorStream
