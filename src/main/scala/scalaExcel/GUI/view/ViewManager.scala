@@ -137,7 +137,7 @@ class ViewManager extends jfxf.Initializable {
     })
     // Update color pickers when selection changes
     selectedCellStream.map(x => {
-      if (x.size == 1) x.head._2.styleString
+        if (x.size == 1) x.head._2.styleString
         else ""
       })
       .subscribe(x => {
@@ -148,14 +148,14 @@ class ViewManager extends jfxf.Initializable {
     // Changes on formula editor are pushed to the selected cell
     formulaEditorStream.combineLatest(selectedCellStream)
       .map(x => new {
-      val cells = x._2
+        val cells = x._2
         val formula = x._1
       }) // For better readability
       .distinctUntilChanged(_.formula)
       .subscribe(x => x.cells.foreach(cell =>
-      if (cell._1._2 > 0)
-        DataManager.changeCellExpression((cell._1._1, cell._1._2 - 1), x.formula)
-))
+        if (cell._1._2 > 0)
+          DataManager.changeCellExpression((cell._1._1, cell._1._2 - 1), x.formula)
+      ))
 
     // Changes on the ColorPickers are pushed to the model
     val styleChangerBackgroundStream = backgroundColorStream
