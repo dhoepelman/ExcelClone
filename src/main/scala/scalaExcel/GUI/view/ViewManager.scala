@@ -88,7 +88,7 @@ class ViewManager extends jfxf.Initializable {
       selectedCells.onChange((source, changes) => {
         o.onNext(source.map(x => (x.getRow, x.getColumn)))
       })
-    })
+    }).map(selection => selection.map{case (x: Int, y: Int) => (x, y-1)})
     // Create cell selection stream (DataCell), accounting for numbered column
     val selectedCellStream = selectionStream.map(_.map(x => (x, getObservableAt(x).value)))
     val selectionStylesStream = selectedCellStream.map(_.map(x => (x._1, x._2.styles)))
