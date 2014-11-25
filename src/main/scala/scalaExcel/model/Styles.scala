@@ -26,5 +26,5 @@ class Styles(
 }
 
 object Styles {
-  val DEFAULT = new Styles(Color.Black, Color.White, "", Left())
+  val DEFAULT = new Styles(Color.Azure, Color.Black, "", Left())
 }
