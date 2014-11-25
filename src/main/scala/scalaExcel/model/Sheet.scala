@@ -41,12 +41,12 @@ class Sheet(val cells: Map[(Int, Int), Cell] = Map(),
     val style = styles get ((x, y)) getOrElse(Styles.DEFAULT)
     new Sheet(cells, values, dependents, styles + ((x, y) -> style.setColor(c)))
   }
-  
+
   /**
    * Set a cell to the circular reference error
    */
   def setToCircular(x: Int, y: Int) = {
-    new Sheet(cells, values + ((x,y) -> VErr(CircularRef())), dependents)
+    new Sheet(cells, values + ((x,y) -> VErr(CircularRef)), dependents)
   }
 
   /** Get the cells that depend on this given cell */

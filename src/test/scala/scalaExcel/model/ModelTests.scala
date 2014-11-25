@@ -60,7 +60,7 @@ class ModelTests {
     model.changeFormula(1, 0, "=5")
     model.changeFormula(2, 0, "=A1+B1")
 
-    assertEquals(VErr(CircularRef()), y)
+    assertEquals(VErr(CircularRef), y)
   }
 
   @Test def circularDependency2() = {
@@ -74,7 +74,7 @@ class ModelTests {
     model.changeFormula(1, 0, "=C1+1")
     model.changeFormula(2, 0, "=A1+1")
 
-    assertEquals(VErr(CircularRef()), y)
+    assertEquals(VErr(CircularRef), y)
   }
 
   @Test def circularDependency3() = {
@@ -89,6 +89,6 @@ class ModelTests {
     model.changeFormula(2, 0, "=B1")
     model.changeFormula(0, 0, "=B1")
 
-    assertEquals(VErr(CircularRef()), y)
+    assertEquals(VErr(CircularRef), y)
   }
 }
