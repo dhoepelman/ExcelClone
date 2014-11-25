@@ -20,13 +20,18 @@ class DataCellColumn(colIndex: Int,
   cellValueFactory = _.value.get(colIndex)
   cellFactory = _ => new DataCellView
   prefWidth = headerWidth
-
   if (sorted)
     if (ascending)
       sortType = TableColumn.SortType.ASCENDING
     else
       sortType = TableColumn.SortType.DESCENDING
 
+  // listen for column width changes
+  width.onChange {
+    (_, _, newWidth) => DataManager.resizeColumn(colIndex, newWidth.doubleValue())
+  }
+
+  // listen for cell edits
   onEditCommit = new EventHandler[jfxc.TableColumn.CellEditEvent[DataRow, DataCell]] {
     override def handle(e: jfxc.TableColumn.CellEditEvent[DataRow, DataCell]) = {
       val text = e.getNewValue.expression
@@ -66,8 +71,8 @@ object TableViewBuilder {
     headers.view
       .zip(widths)
       .foldLeft(new TableColumns())((cols, data) => {
-        cols += new DataCellColumn(cols.length, data._1, data._2, cols.length == sortColumn, sortAscending)
-      })
+      cols += new DataCellColumn(cols.length, data._1, data._2, cols.length == sortColumn, sortAscending)
+    })
   }
 
   def build(labeledTable: LabeledDataTable) = {

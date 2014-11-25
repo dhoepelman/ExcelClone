@@ -69,6 +69,16 @@ class LabeledDataTable(_dataWindow: DataWindow = LabeledDataTable.defaultDataWin
       rebuild = true)
   }
 
+  def resizeColumn(columnIndex: Int, width: Double) = {
+    val realIndex = _dataWindow.windowToAbsoluteColumn(columnIndex)
+    new LabeledDataTable(_dataWindow,
+      _allHeaderWidths.take(realIndex) ++ List(width) ++ _allHeaderWidths.drop(realIndex + 1),
+      _cellContents,
+      _sortColumn,
+      sortAscending,
+      rebuild = false)
+  }
+
 }
 
 object LabeledDataTable {
@@ -93,7 +103,7 @@ object LabeledDataTable {
     (0, DefaultProperties.GRID_SIZE._1, 0, DefaultProperties.GRID_SIZE._2))
 
   val defaultHeaderWidths =
-    List.fill(defaultDataWindow.columnCount)(DefaultProperties.COLUMN_WIDTH)
+    List.fill(defaultDataWindow.columnCount)(DefaultProperties.COLUMN_WIDTH.toDouble)
 
   def dataWithIndex(data: List[List[String]]): List[(Int, Int, String)] =
     data.zipWithIndex.map({

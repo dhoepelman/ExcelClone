@@ -66,13 +66,15 @@ class ViewManager extends jfxf.Initializable {
     else table.items.getValue.get(index._1).get(index._2 - 1)
 
   def buildTableView(labeledTable: LabeledDataTable): Unit = {
-    println("Building table")
 
     if (!labeledTable.rebuild) {
+      println("Changing table...")
+
       table.items = labeledTable.data
       return
     }
 
+    println("Building table...")
     // initialize and add the table
     table = TableViewBuilder.build(labeledTable)
     val selectionModel = table.getSelectionModel

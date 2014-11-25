@@ -67,6 +67,7 @@ object DataManager {
       case UpdateContents(contents) => table.updateContents(contents)
       case UpdateWindow(window) => table.updateWindow(window)
       case UpdateColumnOrder(permutations) => table.updateColumnOrder(permutations)
+      case ResizeColumn(columnIndex, width) => table.resizeColumn(columnIndex, width)
       case RefreshTable() => table
     }).subscribe(ViewManagerObject.dataChanged _)
 
@@ -90,6 +91,9 @@ object DataManager {
 
   def refreshData() =
     _tableMutationStream.onNext(new RefreshTable())
+
+  def resizeColumn(columnIndex: Int, width: Double) =
+    _tableMutationStream.onNext(new ResizeColumn(columnIndex, width))
 
   def changeCellStylist(index: (Int, Int), stylist: Any) =
     Unit //TODO when styling is ready
