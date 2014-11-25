@@ -15,11 +15,13 @@ class DataCellColumn(colIndex: Int,
                      headerWidth: Double,
                      sorted: Boolean,
                      ascending: Boolean) extends TableColumn[DataRow, DataCell] {
+
   text = header
   id = colIndex.toString
   cellValueFactory = _.value.get(colIndex)
   cellFactory = _ => new DataCellView
   prefWidth = headerWidth
+
   if (sorted)
     if (ascending)
       sortType = TableColumn.SortType.ASCENDING
@@ -42,6 +44,7 @@ class DataCellColumn(colIndex: Int,
       ViewManagerObject.changeEditorText(text)
     }
   }
+
 }
 
 class NumberedColumn extends TableColumn[DataRow, DataCell] {
@@ -71,8 +74,8 @@ object TableViewBuilder {
     headers.view
       .zip(widths)
       .foldLeft(new TableColumns())((cols, data) => {
-      cols += new DataCellColumn(cols.length, data._1, data._2, cols.length == sortColumn, sortAscending)
-    })
+        cols += new DataCellColumn(cols.length, data._1, data._2, cols.length == sortColumn, sortAscending)
+      })
   }
 
   def build(labeledTable: LabeledDataTable) = {
@@ -93,15 +96,15 @@ object TableViewBuilder {
       // when the order of the columns changes, notify Mediator of new order
       columns.onChange((cols, changes) => {
         val permutations = cols.view.zipWithIndex.foldLeft(Map[Int, Int]())((acc, indexedCol) => {
-          //compare id to index in cols and account for numbered column
+          // compare id to index in cols and account for numbered column
           if (indexedCol._1.getId.toInt == indexedCol._2 - 1) acc
           else acc + (indexedCol._1.getId.toInt -> (indexedCol._2 - 1))
         })
         if (!permutations.keySet.contains(-1))
-        // notify Mediator of change
+          // notify manager of change
           DataManager.reorderColumns(permutations)
         else
-        // revert reordering (numbered column was moved)
+          // revert reordering (numbered column was moved)
           DataManager.refreshData()
       })
 
@@ -115,9 +118,11 @@ object TableViewBuilder {
           event.consume()
         }
       }
+
       // set the sort column in the table's sort order (to make sort arrow visible)
       if (labeledTable.sortColumn >= 0)
         sortOrder.add(columns.drop(labeledTable.sortColumn + 1).head)
+
       // finally, handle sort events, but do not let them propagate to GUI
       onSort = new EventHandler[jfxc.SortEvent[jfxc.TableView[DataRow]]] {
         override def handle(event: jfxc.SortEvent[jfxc.TableView[DataRow]]) {
@@ -134,6 +139,7 @@ object TableViewBuilder {
           event.consume()
         }
       }
+
       onMouseClicked = new EventHandler[MouseEvent] {
         override def handle(event: MouseEvent) {
           if (event.getButton.compareTo(MouseButton.SECONDARY) == 0) {
@@ -143,6 +149,7 @@ object TableViewBuilder {
           }
         }
       }
+
     }
   }
 }

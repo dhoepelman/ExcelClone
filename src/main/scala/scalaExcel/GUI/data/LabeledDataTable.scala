@@ -26,9 +26,9 @@ class LabeledDataTable(_dataWindow: DataWindow = LabeledDataTable.defaultDataWin
     translatedContents
       .filter(filter)
       .foldLeft(Map[(Int, Int), DataCell]())({
-      case (cells, (index, formula, value, style)) =>
-        cells + (index -> DataCell.newEvaluated(formula, value, style))
-    })
+        case (cells, (index, formula, value, style)) =>
+          cells + (index -> DataCell.newEvaluated(formula, value, style))
+      })
 
   val data = {
     // transform cell contents contained in window into DataCells
@@ -59,9 +59,9 @@ class LabeledDataTable(_dataWindow: DataWindow = LabeledDataTable.defaultDataWin
 
   def updateColumnOrder(permutations: Map[Int, Int]) = {
     val reversePermutations = permutations map (_.swap)
-    val newWidths =
-      for (i <- List.range(0, _allHeaderWidths.length))
-      yield _allHeaderWidths(reversePermutations.getOrElse(i, i))
+    val newWidths = for (i <- List.range(0, _allHeaderWidths.length)) yield {
+      _allHeaderWidths(reversePermutations.getOrElse(i, i))
+    }
     new LabeledDataTable(_dataWindow,
       newWidths,
       _cellContents,
@@ -112,5 +112,5 @@ object LabeledDataTable {
         case (expression, j) => (i, j, expression)
       })
     }).flatten
-}
 
+}

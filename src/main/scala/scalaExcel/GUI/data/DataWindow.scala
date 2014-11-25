@@ -18,7 +18,7 @@ class DataWindow(val maxBounds: (Int, Int, Int, Int),
 
   def isInBounds(index: (Int, Int)) = {
     if (index._1 >= visibleBounds._1 && index._1 < visibleBounds._2 &&
-      index._2 >= visibleBounds._3 && index._2 < visibleBounds._4)
+        index._2 >= visibleBounds._3 && index._2 < visibleBounds._4)
       true
     else
       false
@@ -29,13 +29,11 @@ class DataWindow(val maxBounds: (Int, Int, Int, Int),
       visibleBounds._2 + offsets._2,
       visibleBounds._3 + offsets._3,
       visibleBounds._4 + offsets._4)
-    new DataWindow(maxBounds,
-      bounds)
+    new DataWindow(maxBounds, bounds)
   }
 
   def slideTo(bounds: (Int, Int, Int, Int)) = {
-    new DataWindow(maxBounds,
-      bounds)
+    new DataWindow(maxBounds, bounds)
   }
 
   def columnCount = visibleBounds._2 - visibleBounds._1
