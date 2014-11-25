@@ -8,6 +8,7 @@ import scalafx.beans.property.ObjectProperty
 import javafx.scene.{control => jfxc}
 import javafx.event.EventHandler
 import javafx.scene.input.{MouseButton, MouseEvent}
+import scalaExcel.util.DefaultProperties
 
 class DataCellColumn(colIndex: Int,
                      header: String,
@@ -19,27 +20,32 @@ class DataCellColumn(colIndex: Int,
   cellValueFactory = _.value.get(colIndex)
   cellFactory = _ => new DataCellView
   prefWidth = headerWidth
-
   if (sorted)
     if (ascending)
       sortType = TableColumn.SortType.ASCENDING
     else
       sortType = TableColumn.SortType.DESCENDING
 
+  // listen for column width changes
+  width.onChange {
+    (_, _, newWidth) => DataManager.resizeColumn(colIndex, newWidth.doubleValue())
+  }
+
+  // listen for cell edits
   onEditCommit = new EventHandler[jfxc.TableColumn.CellEditEvent[DataRow, DataCell]] {
     override def handle(e: jfxc.TableColumn.CellEditEvent[DataRow, DataCell]) = {
       val text = e.getNewValue.expression
       // account for numbered column
       val column = e.getTablePosition.getColumn - 1
       val row = e.getTablePosition.getRow
-      DataManager.changeCellExpression((column, row), text)
+      DataManager.changeCellExpression((row, column), text)
       ViewManagerObject.changeEditorText(text)
     }
   }
 }
 
 class NumberedColumn extends TableColumn[DataRow, DataCell] {
-  text = "#"
+  text = DefaultProperties.NUMBERED_COLUMN_HEADER
   id = "-1"
   cellValueFactory = _ => ObjectProperty.apply(DataCell.newEmpty())
   cellFactory = _ => new TableCell[DataRow, DataCell] {
@@ -49,7 +55,7 @@ class NumberedColumn extends TableColumn[DataRow, DataCell] {
         style = "-fx-alignment: CENTER;"
     }
   }
-  prefWidth = 35
+  prefWidth = DefaultProperties.NUMBERED_COLUMN_WIDTH
   editable = false
   sortable = false
 }
@@ -65,8 +71,8 @@ object TableViewBuilder {
     headers.view
       .zip(widths)
       .foldLeft(new TableColumns())((cols, data) => {
-        cols += new DataCellColumn(cols.length, data._1, data._2, cols.length == sortColumn, sortAscending)
-      })
+      cols += new DataCellColumn(cols.length, data._1, data._2, cols.length == sortColumn, sortAscending)
+    })
   }
 
   def build(labeledTable: LabeledDataTable) = {

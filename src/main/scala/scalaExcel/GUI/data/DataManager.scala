@@ -34,12 +34,14 @@ object DataManager {
       case NewWindow(newWindow) => newWindow
       case ChangeCellExpression(index, expression) =>
         val realIndex = window.windowToAbsolute(index)
-        _immutableModel.changeFormula(realIndex._1, realIndex._2, expression)
+        // in the model, the indexes are swapped
+        _immutableModel.changeFormula(realIndex._2, realIndex._1, expression)
         window
       case ReorderColumns(permutations) =>
         val realPermutations = permutations.map({
           case (c1, c2) => (window.windowToAbsoluteColumn(c1), window.windowToAbsoluteColumn(c2))
         })
+        _tableMutationStream.onNext(new UpdateColumnOrder(realPermutations))
         // TODO smth like  _immutableModel.reorderColumns(realPermutations)
         window
       case SortRows(sortColumn, sortAscending) =>
@@ -50,21 +52,24 @@ object DataManager {
 
   _immutableModel.sheet
     .map(newSheet => newSheet.cells
-      .map({
-        case (index, cell) => (
-            index,
-            cell.f,
-            newSheet.valueAt(index._1, index._2).get,
-            newSheet.styles.getOrElse(index, Styles.DEFAULT)
-          )
-      })
+    .map({
+    case (index, cell) => (
+      //in the model, the indexes are swapped
+      index.swap,
+      cell.f,
+      newSheet.valueAt(index._1, index._2).get,
+      newSheet.styles.getOrElse(index, Styles.DEFAULT)
+      )
+  })
     )
     .subscribe(contents => _tableMutationStream.onNext(new UpdateContents(contents)))
 
-  _tableMutationStream.scan(new LabeledDataTable())((table, action) =>
+  _tableMutationStream.scan(new LabeledDataTable(rebuild = true))((table, action) =>
     action match {
       case UpdateContents(contents) => table.updateContents(contents)
       case UpdateWindow(window) => table.updateWindow(window)
+      case UpdateColumnOrder(permutations) => table.updateColumnOrder(permutations)
+      case ResizeColumn(columnIndex, width) => table.resizeColumn(columnIndex, width)
       case RefreshTable() => table
     }).subscribe(ViewManagerObject.dataChanged _)
 
@@ -88,6 +93,9 @@ object DataManager {
 
   def refreshData() =
     _tableMutationStream.onNext(new RefreshTable())
+
+  def resizeColumn(columnIndex: Int, width: Double) =
+    _tableMutationStream.onNext(new ResizeColumn(columnIndex, width))
 
   def changeCellStylist(index: (Int, Int), stylist: Any) =
     Unit //TODO when styling is ready

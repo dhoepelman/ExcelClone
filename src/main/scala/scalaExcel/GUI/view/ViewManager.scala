@@ -66,9 +66,16 @@ class ViewManager extends jfxf.Initializable {
     else table.items.getValue.get(index._1).get(index._2 - 1)
 
   def buildTableView(labeledTable: LabeledDataTable): Unit = {
-    println("Building table")
-    // initialize and add the table
 
+    if (!labeledTable.rebuild) {
+      println("Changing table...")
+
+      table.items = labeledTable.data
+      return
+    }
+
+    println("Building table...")
+    // initialize and add the table
     table = TableViewBuilder.build(labeledTable)
     val selectionModel = table.getSelectionModel
     selectionModel.setCellSelectionEnabled(true)
@@ -152,7 +159,7 @@ class ViewManager extends jfxf.Initializable {
       .subscribe(x => x.cells.foreach(cell =>
       if (cell._1._2 > 0)
         DataManager.changeCellExpression((cell._1._1, cell._1._2 - 1), x.formula)
-))
+    ))
 
     // Changes on the ColorPickers are pushed to the model
     backgroundColorStream.map(("-fx-background-color", _))
@@ -164,8 +171,8 @@ class ViewManager extends jfxf.Initializable {
     }) // For better readability
       .distinctUntilChanged(_.definition)
       .subscribe(x => x.cells.foreach(cell => Unit
-    //TODO real change
-    //      Mediator.changeCellProperty((cell._1._1, cell._1._2 - 1), x.definition._1, x.definition._2)))
+      //TODO real change
+      //      Mediator.changeCellProperty((cell._1._1, cell._1._2 - 1), x.definition._1, x.definition._2)))
     ))
 
 
