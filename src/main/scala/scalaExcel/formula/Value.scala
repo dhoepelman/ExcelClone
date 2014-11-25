@@ -14,6 +14,6 @@ object Values {
     case i: Int     => VDouble(i.toDouble)
     case s: String  => VString(s)
     case b: Boolean => VBool(b)
-    case _          => VErr(NA())
+    case _          => VErr(NA)
   }
 }
