@@ -86,11 +86,13 @@ class ViewManager extends jfxf.Initializable {
     // Create cell selection stream (indices)
     val selectedCells = new ObservableBuffer(selectionModel.getSelectedCells)
     val selectionStream = List() +: Observable.create[Iterable[(Int, Int)]](o => new Subscription {
-      selectedCells.onChange((source, changes) => {
-        o.onNext(source.map(x => (x.getRow, x.getColumn)))
+        selectedCells.onChange((source, changes) => {
+          o.onNext(source.map(x => (x.getRow, x.getColumn)))
+        })
       })
-    }).map(selection => selection.map{case (x: Int, y: Int) => (x, y-1)}) // Offset selection (before of row numbering)
-      .doOnEach(selection => println("Selection: " + selection))
+      .doOnEach(selection => println(s"Selection $selection"))
+      .map(selection => selection.map{ case (x: Int, y: Int) => (x, y-1) } // Offset selection (before of row numbering)
+                                 .filter{ case (x: Int, y: Int) => x>=0 && y>=0 })
     // Create cell selection stream (DataCell), accounting for numbered column
     val selectedCellStream = selectionStream.map(_.map(x => (x, getObservableAt(x).value)))
     val selectionStylesStream = selectedCellStream.map(_.map(x => (x._1, x._2.styles)))
