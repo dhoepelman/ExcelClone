@@ -63,8 +63,8 @@ class ViewManager extends jfxf.Initializable {
 
   def getObservableAt(index: (Int, Int)) =
   // account for numbered column
-    if (index._2 < 1) ObjectProperty.apply(DataCell.newEmpty())
-    else table.items.getValue.get(index._1).get(index._2 - 1)
+    if (index._2 < 0) ObjectProperty.apply(DataCell.newEmpty())
+    else table.items.getValue.get(index._1).get(index._2)
 
   def buildTableView(labeledTable: LabeledDataTable): Unit = {
     println("Building table")
@@ -89,6 +89,7 @@ class ViewManager extends jfxf.Initializable {
         o.onNext(source.map(x => (x.getRow, x.getColumn)))
       })
     }).map(selection => selection.map{case (x: Int, y: Int) => (x, y-1)})
+      .doOnEach(selection => println("Selection: " + selection))
     // Create cell selection stream (DataCell), accounting for numbered column
     val selectedCellStream = selectionStream.map(_.map(x => (x, getObservableAt(x).value)))
     val selectionStylesStream = selectedCellStream.map(_.map(x => (x._1, x._2.styles)))
@@ -141,8 +142,8 @@ class ViewManager extends jfxf.Initializable {
         else ""
       })
       .subscribe(x => {
-        changeBackgroundColorPicker(CSSHelper.colorFromCssOrElse(x, "-fx-background-color", Color.White))
-        changeFontColorPicker(CSSHelper.colorFromCssOrElse(x, "-fx-text-fill", Color.Black))
+        changeBackgroundColorPicker(CSSHelper.colorFromCssOrElse(x, "-fx-background-color", Styles.DEFAULT.background))
+        changeFontColorPicker(CSSHelper.colorFromCssOrElse(x, "-fx-text-fill", Styles.DEFAULT.color))
     })
 
     // Changes on formula editor are pushed to the selected cell
@@ -154,7 +155,7 @@ class ViewManager extends jfxf.Initializable {
       .distinctUntilChanged(_.formula)
       .subscribe(x => x.cells.foreach(cell =>
         if (cell._1._2 > 0)
-          DataManager.changeCellExpression((cell._1._1, cell._1._2 - 1), x.formula)
+          DataManager.changeCellExpression((cell._1._1, cell._1._2), x.formula)
       ))
 
     // Changes on the ColorPickers are pushed to the model
@@ -205,7 +206,7 @@ class ViewManager extends jfxf.Initializable {
   }
 
 
-  implicit class EntendRx[T](ob: Observable[T]) {
+  implicit class ExtendRx[T](ob: Observable[T]) {
     def labelAlways[L](la: Observable[L]) =
       ob.combineLatest(la)
         .distinctUntilChanged(_._1)
