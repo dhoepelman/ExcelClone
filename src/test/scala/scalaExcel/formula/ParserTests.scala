@@ -10,15 +10,15 @@ class ParserTests {
   val p = new Parser()
 
   def test(s1: String, s2: String) = {
-    val parsed1 = p parsing s1
-    val parsed2 = p parsing s2
+    val parsed1 = removeParentheses(p parsing s1)
+    val parsed2 = removeParentheses(p parsing s2)
     if(parsed1 != parsed2) {
       throw new AssertionError(s"Expected <$s1> and <$s2> to have identical AST, was <$parsed1> and <$parsed2>")
     }
   }
 
   def test(e: Expr, s: String) = {
-    val parsed = p parsing s
+    val parsed = removeParentheses(p parsing s)
     if (parsed != e){
       throw new AssertionError(s"Expected <$s> to parse to <$e>, but was <$parsed>")
     }
@@ -32,6 +32,14 @@ class ParserTests {
       case e: IllegalArgumentException =>
       case e: Exception => fail(e.getMessage)
     }
+  }
+
+  private def removeParentheses(e : Expr) : Expr = e match {
+    case Group(e1) => removeParentheses(e1)
+    case UnOp(op, e1) => UnOp(op, removeParentheses(e1))
+    case BinOp(op, e1, e2) => BinOp(op, removeParentheses(e1), removeParentheses(e2))
+    case Call(f, args) => Call(f, args.map(removeParentheses))
+    case _ => e
   }
 
 

@@ -1,6 +1,6 @@
 package scalaExcel.formula
 
-import scalaExcel.util.ColumnTranslator
+import scalaExcel.util.ColumnTranslator.{colToNum, numToCol}
 
 object ReferenceFinder {
 
@@ -8,7 +8,7 @@ object ReferenceFinder {
   case class Leaf(e: ACell) extends Node
   case class Leafs(l: List[Leaf]) extends Node
   case class Branch(l: List[Expr]) extends Node
-  case class Empty() extends Node
+  case object Empty extends Node
 
   def findRefCells(e: Expr, l: List[ACell] = List()): List[ACell] = getChildren(e) match {
     case Empty     => l
@@ -25,6 +25,7 @@ object ReferenceFinder {
     case UnOp(_, e)           => Branch(List(e))
     case Call(_, args)        => Branch(args)
     case SheetReference(_, e) => Branch(List(e))
+    case Group(e)             => Branch(List(e))
     case e: ACell             => Leaf(e)
     case c: Cell              => desugarCell(c)
     case r: Range             => desugarRange(r)
@@ -41,9 +42,9 @@ object ReferenceFinder {
         Cell(ColRef(c1, _), RowRef(r1, _)),
         Cell(ColRef(c2, _), RowRef(r2, _))
       ) => {
-        val rs = List.range(r1 - 1, r2)
-        val cs = List.range(ColumnTranslator.colToNum(c1) - 1, ColumnTranslator.colToNum(c2))
-        Leafs(for (r <- rs; c <- cs) yield Leaf(ACell(ColumnTranslator.numToCol(c), r)))
+        val rs = List.range(r1, r2 + 1)
+        val cs = List.range(colToNum(c1), colToNum(c2) + 1)
+        Leafs(for (r <- rs; c <- cs) yield Leaf(ACell(numToCol(c), r)))
       }
     case _ => Empty
   }

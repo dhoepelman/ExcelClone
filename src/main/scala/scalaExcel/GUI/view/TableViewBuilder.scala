@@ -2,36 +2,40 @@ package scalaExcel.GUI.view
 
 import scalafx.scene.control._
 import scalafx.collections.ObservableBuffer
-import javafx.scene.{control => jfxc}
 import scalaExcel.GUI.data.{DataManager, DataCell, LabeledDataTable}
 import LabeledDataTable.DataRow
 import scalafx.beans.property.ObjectProperty
+import javafx.scene.{control => jfxc}
 import javafx.event.EventHandler
-import scalafx.scene.control.TableColumn.{CellEditEvent, SortType}
 import javafx.scene.input.{MouseButton, MouseEvent}
 
-class DataCellColumn(colIndex: Int, header: String, headerWidth: Double, sorted: Boolean, ascending: Boolean) extends TableColumn[DataRow, DataCell] {
+class DataCellColumn(colIndex: Int,
+                     header: String,
+                     headerWidth: Double,
+                     sorted: Boolean,
+                     ascending: Boolean) extends TableColumn[DataRow, DataCell] {
   text = header
   id = colIndex.toString
   cellValueFactory = _.value.get(colIndex)
-  cellFactory = _ => new DataCellView(this)
+  cellFactory = _ => new DataCellView
   prefWidth = headerWidth
+
   if (sorted)
     if (ascending)
-      sortType = SortType.ASCENDING
+      sortType = TableColumn.SortType.ASCENDING
     else
-      sortType = SortType.DESCENDING
+      sortType = TableColumn.SortType.DESCENDING
 
-//  onEditCommit = new EventHandler[CellEditEvent[DataRow, DataCell]] {
-//    override def handle(e: CellEditEvent[DataRow, DataCell]) = {
-//      val text = e.getNewValue.expression
-//      // account for numbered column
-//      val column = e.getTablePosition.getColumn - 1
-//      val row = e.getTablePosition.getRow
-//      Mediator.changeCellExpression((row, column), text)
-//      Mediator.changeEditorText(text)
-//    }
-//  }
+  onEditCommit = new EventHandler[jfxc.TableColumn.CellEditEvent[DataRow, DataCell]] {
+    override def handle(e: jfxc.TableColumn.CellEditEvent[DataRow, DataCell]) = {
+      val text = e.getNewValue.expression
+      // account for numbered column
+      val column = e.getTablePosition.getColumn - 1
+      val row = e.getTablePosition.getRow
+      DataManager.changeCellExpression((column, row), text)
+      ViewManagerObject.changeEditorText(text)
+    }
+  }
 }
 
 class NumberedColumn extends TableColumn[DataRow, DataCell] {
@@ -51,11 +55,19 @@ class NumberedColumn extends TableColumn[DataRow, DataCell] {
 }
 
 object TableViewBuilder {
+
   type TableColumns = ObservableBuffer[jfxc.TableColumn[DataRow, DataCell]]
 
-  private def buildColumns(headers: List[String], widths: List[Double], sortColumn: Int, sortAscending: Boolean): TableColumns =
-    headers.view.zip(widths).foldLeft(new TableColumns())((cols: TableColumns, data: (String, Double)) =>
-      cols += new DataCellColumn(cols.length, data._1, data._2, cols.length == sortColumn, sortAscending))
+  private def buildColumns(headers: List[String],
+                           widths: List[Double],
+                           sortColumn: Int,
+                           sortAscending: Boolean): TableColumns = {
+    headers.view
+      .zip(widths)
+      .foldLeft(new TableColumns())((cols, data) => {
+        cols += new DataCellColumn(cols.length, data._1, data._2, cols.length == sortColumn, sortAscending)
+      })
+  }
 
   def build(labeledTable: LabeledDataTable) = {
     new TableView[DataRow](labeledTable.data) {
@@ -68,7 +80,10 @@ object TableViewBuilder {
       // the first column is special
       columns += new NumberedColumn
       // add the rest of the columns in the order given by the LabeledDataTable
-      columns ++= buildColumns(labeledTable.headers, labeledTable.headerWidths, labeledTable.sortColumn, labeledTable.sortAscending)
+      columns ++= buildColumns(labeledTable.headers,
+        labeledTable.headerWidths,
+        labeledTable.sortColumn,
+        labeledTable.sortAscending)
       // when the order of the columns changes, notify Mediator of new order
       columns.onChange((cols, changes) => {
         val permutations = cols.view.zipWithIndex.foldLeft(Map[Int, Int]())((acc, indexedCol) => {

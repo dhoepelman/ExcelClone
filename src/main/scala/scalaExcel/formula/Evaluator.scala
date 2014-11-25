@@ -2,7 +2,7 @@
 package scalaExcel.formula
 
 import math.{pow, abs}
-import scalaExcel.util.ColumnTranslator
+import scalaExcel.util.ColumnTranslator.{numToCol, colToNum}
 
 object Evaluator {
 
@@ -11,7 +11,7 @@ object Evaluator {
   // for most simple operations, no ranges and errors are valid
   def evalIfValidOperand(ctx: Ctx, e: Expr, f: Value => Value) =
     e match {
-      case r: ARange => VErr(InvalidValue())
+      case r: ARange => VErr(InvalidValue)
       case _ => evalIn(ctx, e) match {
         case err: VErr => err
         case v => f(v)
@@ -36,7 +36,7 @@ object Evaluator {
   def applyToDouble(f: (Double => Double))(v: Value): Value = v match {
     case VDouble(d) => VDouble(f(d))
     case VBool(b)   => applyToDouble(f)(boolToVDouble(b))
-    case _          => VErr(InvalidValue())
+    case _          => VErr(InvalidValue)
   }
 
   // Apply a function to combine two double values
@@ -44,7 +44,7 @@ object Evaluator {
     case (VDouble(l), VDouble(r)) => VDouble(f(l, r))
     case (VBool(b), v)            => applyToDoubles(f)(boolToVDouble(b), v)
     case (v, VBool(b))            => applyToDoubles(f)(v, boolToVDouble(b))
-    case es => pickError(es, InvalidValue())
+    case es => pickError(es, InvalidValue)
   }
 
   def pickError(t: (Value, Value), default: ErrType) = t match {
@@ -58,7 +58,7 @@ object Evaluator {
 
   def boolToString(b: Boolean) = b.toString.toUpperCase
 
-  def doubleToString(d: Double) = if (d.ceil == d) d.toInt.toString else d.toString
+  def doubleToString(d: Double) = if (d.isValidInt) d.toInt.toString else d.toString
 
   def doubleToVBool(d: Double) = VBool(d != 0)
 
@@ -78,9 +78,10 @@ object Evaluator {
     case _ => List()
   }
 
-  def desugar(e: Expr) = e match {
+  def desugar(e: Expr): Expr = e match {
     case c: Cell => desugarCell(c)
     case Range(c1, c2) => desugarRange(c1, c2)
+    case Group(e) => desugar(e)
     case _ => e
   }
 
@@ -97,16 +98,16 @@ object Evaluator {
         if (c1 == c2 && r1 == r2)
           ACell(c1, r1)
         else {
-          val rs = List.range(r1 - 1, r2)
-          val cs = List.range(ColumnTranslator.colToNum(c1) - 1, ColumnTranslator.colToNum(c2))
-          ARange(for (r <- rs; c <- cs) yield ACell(ColumnTranslator.numToCol(c), r))
+          val rs = List.range(r1, r2 + 1)
+          val cs = List.range(colToNum(c1), colToNum(c2) + 1)
+          ARange(for (r <- rs; c <- cs) yield ACell(numToCol(c), r))
         }
   }
 
   // top level eval, returns error for ranges
   def eval(ctx: Ctx, e: Expr) =
     desugar(e) match {
-      case ARange(_) => VErr(InvalidValue())
+      case ARange(_) => VErr(InvalidValue)
       case x => evalIn_(ctx, x)
     }
 
@@ -122,7 +123,7 @@ object Evaluator {
       case UnOp(op, v) => evalUnOp(ctx, op, desugar(v))
       case Call(f, args) => evalCall(ctx, f, args)
       case c: ACell => ctx(c)
-      case _ => VErr(NA())
+      case _ => VErr(NA)
     }
 
   def evalBinOp(ctx: Ctx, op: Op2, lhs: Expr, rhs: Expr) = op match {
@@ -153,7 +154,7 @@ object Evaluator {
     case (v, VBool(b))   => concat(v, VString(boolToString(b)))
     case (VBool(b), v)   => concat(VString(boolToString(b)), v)
     case (VString(s1), VString(s2)) => VString(s1 + s2)
-    case es => pickError(es, NA())
+    case es => pickError(es, NA)
   }
 
   def boolEq(lhs: Value, rhs: Value) = (lhs, rhs) match {
@@ -194,20 +195,20 @@ object Evaluator {
   }
 
   def doubleDiv(lhs: Value, rhs: Value) = applyToDoubles(_ / _)(lhs, rhs) match {
-    case VDouble(d) =>  if (d.isInfinity) VErr(DivBy0())
+    case VDouble(d) =>  if (d.isInfinity) VErr(DivBy0)
                         else VDouble(d)
     case x => x
   }
 
   def doubleExpon(base: Value, expon: Value): Value = (base, expon) match {
-    case (VDouble(0), VDouble(0)) => VErr(NotNumeric())
+    case (VDouble(0), VDouble(0)) => VErr(NotNumeric)
     case (b, e) => applyToDoubles(pow)(base, expon) match {
-      case VDouble(d) => if (d.isInfinity) VErr(DivBy0())
-                         else if (d.isNaN) VErr(NotNumeric())
+      case VDouble(d) => if (d.isInfinity) VErr(DivBy0)
+                         else if (d.isNaN) VErr(NotNumeric)
                          else VDouble(d)
       case x => x
     }
-    case _ => VErr(InvalidValue())
+    case _ => VErr(InvalidValue)
   }
 
   def evalCall(ctx: Ctx, fn: String, args: List[Expr]) =
@@ -226,7 +227,7 @@ object Evaluator {
       case "LOWER"   => evalCallLower(ctx, args)
       case "LEN"     => evalCallLen(ctx, args)
       case "TRIM"    => evalCallTrim(ctx, args)
-      case _ => VErr(InvalidName())
+      case _ => VErr(InvalidName)
     }
 
   def evalCallAverage(ctx: Ctx, args: List[Expr]) =
@@ -241,7 +242,7 @@ object Evaluator {
 
   def evalCallColumns(args: List[Expr]) = args match {
     case List(Range(Cell(ColRef(c1, _), _), Cell(ColRef(c2, _), _))) => {
-      VDouble(abs(ColumnTranslator.colToNum(c2) - ColumnTranslator.colToNum(c1)) + 1)
+      VDouble(abs(colToNum(c2) - colToNum(c1)) + 1)
     }
     case _ => throw new Exception("Wrong number of arguments")
   }
@@ -263,7 +264,7 @@ object Evaluator {
     // evaluate the condition and then either the true or left value
     case List(condition, trueValue, falseValue) => valueToVBool(evalIn(ctx, condition)) match {
       case VBool(b) => evalIn(ctx, if (b) trueValue else falseValue)
-      case _ => VErr(InvalidValue())
+      case _ => VErr(InvalidValue)
     }
     case _ => throw new Exception("Wrong number of arguments")
   }
@@ -285,7 +286,7 @@ object Evaluator {
   def evalCallNot(ctx: Ctx, args: List[Expr]) = args match {
     case List(arg) => valueToVBool(evalIn(ctx, arg)) match {
       case VBool(v) => VBool(!v)
-      case _ => VErr(InvalidValue())
+      case _ => VErr(InvalidValue)
     }
     case _ => throw new Exception("Wrong number of arguments")
   }

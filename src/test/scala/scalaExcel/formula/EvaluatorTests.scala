@@ -57,7 +57,7 @@ object EvaluatorTests {
         ("evalConst", VBool(false), Const(tv(false)), ectx),
         ("evalConst", VString("hi"), Const(tv("hi")), ectx),
         ("evalConst", VString("hi"), "=\"hi\"", ectx),
-        ("evalConst Err", VErr(NA()), Const(VErr(NA())), ectx)
+        ("evalConst Err", VErr(NA), Const(VErr(NA)), ectx)
       )) ++ lst("binop =", List(
         (true, "=TRUE = TRUE"),
         (false, "=FALSE = TRUE"),
@@ -166,7 +166,7 @@ object EvaluatorTests {
         (-30, "=-20 + -10"),
         (5, "=4 + TRUE")
       )) ++ lstErr("binop + errors", List(
-        (InvalidValue(), "=2 + \"a\"")
+        (InvalidValue, "=2 + \"a\"")
       )) ++ lst("binop - minus", List(
         (1, "=3 - 2"),
         (0.5, "=1.5 - 1"),
@@ -175,23 +175,23 @@ object EvaluatorTests {
         (1, "=2 - TRUE"),
         (-2, "=FALSE - 2")
       )) ++ lstErr("binop - errors", List(
-        (InvalidValue(), "=2 - \"a\"")
+        (InvalidValue, "=2 - \"a\"")
       )) ++ lst("binop * multiply", List(
         (6, "=2 * 3"),
         (5, "=2.5 * 2"),
         (4, "=4 * TRUE"),
         (0, "=FALSE * 3")
       )) ++ lstErr("binop * errors", List(
-        (InvalidValue(), "=2 * \"a\"")
+        (InvalidValue, "=2 * \"a\"")
       )) ++ lst("binop / divide", List(
         (2, "=6 / 3"),
         (2.5, "=10 / 4"),
         (0, "=0 / 1"),
         (2, "=2 / TRUE")
       )) ++ lstErr("binop / errors", List(
-        (DivBy0(), "=1 / 0"),
-        (DivBy0(), "=1 / FALSE"),
-        (InvalidValue(), "=2 / \"a\"")
+        (DivBy0, "=1 / 0"),
+        (DivBy0, "=1 / FALSE"),
+        (InvalidValue, "=2 / \"a\"")
       )) ++ lst("binop / divide", (
         (Map[Double,List[Double]](
           -2.0 -> List(-2, -1, 0, 1, 2),
@@ -208,16 +208,16 @@ object EvaluatorTests {
           (0, "=FALSE^1")
         )
       )) ++ lstErr("binop ^ errors", List(
-        (DivBy0(), "=0^-2"),
-        (DivBy0(), "=0^-1"),
-        (DivBy0(), "=0^-0.5"),
-        (NotNumeric(), "=0^0"),
-        (NotNumeric(), "=-2^-0.5"),
-        (NotNumeric(), "=-0.5^-0.5"),
-        (NotNumeric(), "=-2^0.5"),
-        (NotNumeric(), "=-0.5^0.5"),
-        (InvalidValue(), "=\"a\"^2"),
-        (InvalidValue(), "=2^\"a\"")
+        (DivBy0, "=0^-2"),
+        (DivBy0, "=0^-1"),
+        (DivBy0, "=0^-0.5"),
+        (NotNumeric, "=0^0"),
+        (NotNumeric, "=-2^-0.5"),
+        (NotNumeric, "=-0.5^-0.5"),
+        (NotNumeric, "=-2^0.5"),
+        (NotNumeric, "=-0.5^0.5"),
+        (InvalidValue, "=\"a\"^2"),
+        (InvalidValue, "=2^\"a\"")
       )) ++ lst("unop", List(
         (5, "=+5"),
         ("A", "=+\"A\""),
@@ -231,16 +231,16 @@ object EvaluatorTests {
         (0.01, "=TRUE%"),
         (0, "=FALSE%")
       )) ++ lstErr("unop", List(
-        (InvalidValue(), "=-\"A\""),
-        (InvalidValue(), "=\"A\"%")
+        (InvalidValue, "=-\"A\""),
+        (InvalidValue, "=\"A\"%")
       )) ++ lstErr("call unknown function", List(
-        (InvalidName(), "=FOOBAR11()")
+        (InvalidName, "=FOOBAR11()")
       )) ++ lst("call SUM", List(
         (1, "=SUM(1)"),
         (4, "=SUM(1+1, 2)"),
         (10, "=SUM(1,2,3,4)")
       )) ++ lstErr("call SUM invalids", List(
-        (InvalidValue(), "=SUM(\"A\")")
+        (InvalidValue, "=SUM(\"A\")")
       )) ++ lstCtx("cell reference", List(
         (4, "=A1", Map(ACell("A", 1) -> VDouble(4))),
         (8, "=A1*2", Map(ACell("A", 1) -> VDouble(4)))
@@ -253,9 +253,9 @@ object EvaluatorTests {
         (6, "=SUM(A1:C1)", newCtx(Map("A1" -> 1, "B1" -> 2, "C1" -> 3))),
         (10, "=SUM(A1:B2)", newCtx(Map("A1" -> 1, "B1" -> 2, "A2" -> 3, "B2" -> 4)))
       )) ++ lstErr("just a range", List(
-        (InvalidValue(), "=A1:A3"),
-        (InvalidValue(), "=2 + A1:A3"),
-        (InvalidValue(), "=A1:A3%")
+        (InvalidValue, "=A1:A3"),
+        (InvalidValue, "=2 + A1:A3"),
+        (InvalidValue, "=A1:A3%")
       )) ++ lst("function ROWS", List(
         (4, "=ROWS(A2:A5)"),
         (1, "=ROWS(B31:B31)"),
@@ -280,7 +280,7 @@ object EvaluatorTests {
         (2, "=IF(1,2,3)"),
         (3, "=IF(0,2,3)")
       )) ++ lstErr("function IF", List(
-        (InvalidValue(), "=IF(\"A\")")
+        (InvalidValue, "=IF(\"A\")")
       )) ++ lst("function OR", List(
         (true,  "=OR(TRUE, TRUE)"),
         (true,  "=OR(FALSE, TRUE)"),
@@ -331,8 +331,12 @@ object EvaluatorTests {
         ("abc", "=TRIM(\"abc\")"),
         ("abc", "=TRIM(\" abc \")"),
         ("abc", "=TRIM(\"   abc   \")")
-      ))
-    ) foreach ({
+      )) ++ lst("grouping", List(
+        (10, "=(1 + 4) * 2"),
+        (5, "=(2+3)")
+      )) ++ lstCtx("grouping", List(
+        (6, "=SUM((A1:A2),1+2)", newCtx(Map("A1" -> 1, "A2" -> 2)))
+      ))) foreach ({
       case (a, b, c, ctx) => list.add(Array(a, b, c, ctx))
     })
 
