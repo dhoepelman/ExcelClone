@@ -331,8 +331,12 @@ object EvaluatorTests {
         ("abc", "=TRIM(\"abc\")"),
         ("abc", "=TRIM(\" abc \")"),
         ("abc", "=TRIM(\"   abc   \")")
-      ))
-    ) foreach ({
+      )) ++ lst("grouping", List(
+        (10, "=(1 + 4) * 2"),
+        (5, "=(2+3)")
+      )) ++ lstCtx("grouping", List(
+        (6, "=SUM((A1:A2),1+2)", newCtx(Map("A1" -> 1, "A2" -> 2)))
+      ))) foreach ({
       case (a, b, c, ctx) => list.add(Array(a, b, c, ctx))
     })
 

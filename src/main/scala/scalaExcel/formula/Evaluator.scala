@@ -78,9 +78,10 @@ object Evaluator {
     case _ => List()
   }
 
-  def desugar(e: Expr) = e match {
+  def desugar(e: Expr): Expr = e match {
     case c: Cell => desugarCell(c)
     case Range(c1, c2) => desugarRange(c1, c2)
+    case Group(e) => desugar(e)
     case _ => e
   }
 
@@ -120,7 +121,6 @@ object Evaluator {
       case Const(c) => c
       case BinOp(op, lhs, rhs) => evalBinOp(ctx, op, desugar(lhs), desugar(rhs))
       case UnOp(op, v) => evalUnOp(ctx, op, desugar(v))
-      case Group(e) => eval(ctx, e)
       case Call(f, args) => evalCall(ctx, f, args)
       case c: ACell => ctx(c)
       case _ => VErr(NA)
