@@ -48,10 +48,6 @@ class Model {
     sheetMutations.onNext(SetFormula(x, y, f))
   }
 
-//  def changeColor(x: Int, y: Int, c: Color) {
-//    sheetMutations.onNext(SetColor(x, y, c))
-//  }
-
   def changeStyle(x: Int, y: Int, s: Styles): Unit = {
     sheetMutations.onNext(SetStyle(x, y, s))
   }
