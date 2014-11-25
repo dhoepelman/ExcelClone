@@ -61,12 +61,6 @@ class ViewManager extends jfxf.Initializable {
   val fileChooser = new javafx.stage.FileChooser
   fileChooser.getExtensionFilters.add(new ExtensionFilter("Comma separated values", "*.csv"))
 
-  /** Get observable at position, or empty if outside of bounds  */
-  def getObservableAt(index: (Int, Int)) =
-    // account for numbered column
-    if (index._2 < 0) ObjectProperty.apply(DataCell.newEmpty())
-    else table.items.getValue.get(index._1).get(index._2)
-
   def buildTableView(labeledTable: LabeledDataTable): Unit = {
     println("Building table")
     // initialize and add the table
@@ -90,11 +84,11 @@ class ViewManager extends jfxf.Initializable {
           o.onNext(source.map(x => (x.getRow, x.getColumn)))
         })
       })
-      .doOnEach(selection => println(s"Selection $selection"))
       .map(selection => selection.map{ case (x: Int, y: Int) => (x, y-1) } // Offset selection (before of row numbering)
                                  .filter{ case (x: Int, y: Int) => x>=0 && y>=0 })
+      .doOnEach(selection => println(s"Selection $selection"))
     // Create cell selection stream (DataCell), accounting for numbered column
-    val selectedCellStream = selectionStream.map(_.map(x => (x, getObservableAt(x).value)))
+    val selectedCellStream = selectionStream.map(_.map(x => (x, table.items.getValue.get(x._1).get(x._2).value)))
     val selectionStylesStream = selectedCellStream.map(_.map(x => (x._1, x._2.styles)))
 
     // The user input on the background colour
