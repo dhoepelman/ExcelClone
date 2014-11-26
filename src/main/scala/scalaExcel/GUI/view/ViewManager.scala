@@ -85,45 +85,57 @@ class ViewManager extends jfxf.Initializable {
     //
 
     // Create cell selection stream (indices)
-    val selectedCells = new ObservableBuffer(selectionModel.getSelectedCells)
-    val selectionStream = List() +: Observable.create[Iterable[(Int, Int)]](o => new Subscription {
-        selectedCells.onChange((source, changes) => {
-          o.onNext(source.map(x => (x.getRow, x.getColumn)))
-        })
+    val selectionStream = Observable.apply[List[(Int, Int)]](o => {
+      selectionModel.getSelectedCells.onChange((source, _) => {
+        // first column is -1, because it's reserved for row numbers
+        o.onNext(source.map(x => (x.getColumn, x.getRow)).toList)
       })
-      .map(selection => selection.map{ case (x: Int, y: Int) => (x, y-1) } // Offset selection (before of row numbering)
-                                 .filter{ case (x: Int, y: Int) => x>=0 && y>=0 })
-      .doOnEach(selection => println(s"Selection $selection"))
-    // Create cell selection stream (DataCell), accounting for numbered column
-    val selectedCellStream = selectionStream.map(_.map(x => (x, table.items.getValue.get(x._1).get(x._2).value)))
+    })
+
+    val selectedCellStream = selectionStream
+      .map(selections => {
+        selections
+          .map(index => (index._1 - 1, index._2))
+          .filter({
+            case (col, row) => col >= 0 && row >= 0
+          })
+          .map({
+            case (col, row) => ((col, row), table.items.getValue.get(row).get(col).value)
+          })
+      })
+
     val selectionStylesStream = selectedCellStream.map(_.map(x => (x._1, x._2.styles)))
 
     // The user input on the background colour
-    val backgroundColorStream = Observable.create[Color](o => new Subscription {
+    val backgroundColorStream = Observable.apply[Color](o => {
       backgroundColorPicker.onAction = handle {
         o.onNext(backgroundColorPicker.value.value)
       }
     })
+
     // The user input on the font colour
-    val fontColorStream = Observable.create[Color](o => new Subscription {
+    val fontColorStream = Observable.apply[Color](o => {
       fontColorPicker.onAction = handle {
         o.onNext(fontColorPicker.value.value)
       }
     })
+
     // The user input on the formula
-    val formulaEditorStream = Observable.create[String](o => new Subscription {
+    val formulaEditorStream = Observable.apply[String](o => {
       formulaEditor.onAction = handle {
         o.onNext(formulaEditor.getText)
       }
     })
+
     //Save requests
-    val saveStream = Observable.create[String](o => new Subscription {
+    val saveStream = Observable.apply[String](o => {
       menuSave.onAction = handle {
         o.onNext("temp.csv")
       }
     })
+
     // Load requests
-    val loadStream = Observable.create[String](o => new Subscription {
+    val loadStream = Observable.apply[String](o => {
       menuLoad.onAction = handle {
         o.onNext("temp.csv")
       }
@@ -157,7 +169,9 @@ class ViewManager extends jfxf.Initializable {
         val formula = x._1
       }) // For better readability
       .distinctUntilChanged(_.formula)
-      .subscribe(x => x.cells.foreach(cell => DataManager.changeCellExpression((cell._1._1, cell._1._2), x.formula)))
+      .subscribe(x => x.cells.foreach({
+        case ((col, row), _) => DataManager.changeCellExpression((row, col), x.formula)
+      }))
 
     // Changes on the ColorPickers are pushed to the model
     val styleChangerBackgroundStream = backgroundColorStream

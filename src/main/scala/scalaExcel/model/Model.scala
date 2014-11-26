@@ -83,6 +83,4 @@ object ModelExample extends App {
   model.changeFormula(4, 1, "=A1+A1")
   model.changeFormula(1, 1, "=4+6")
   model.changeFormula(2, 1, "=4+0")
-
-//  model.changeColor(1, 1, Color.Yellow)
 }
