@@ -25,29 +25,28 @@ class ViewManager extends jfxf.Initializable {
   private var streamTable: StreamingTable = _
   private var table: TableView[DataRow] = _
 
-  @jfxf.FXML
-  private var redRegion: jfxsl.Region = _
-
-  @jfxf.FXML
-  private var tableContainerDelegate: jfxsl.AnchorPane = _
+  @jfxf.FXML private var tableContainerDelegate: jfxsl.AnchorPane = _
   private var tableContainer: AnchorPane = _
 
-  @jfxf.FXML
-  private var formulaEditorDelegate: javafx.scene.control.TextField = _
+  @jfxf.FXML private var formulaEditorDelegate: javafx.scene.control.TextField = _
   private var formulaEditor: TextField = _
+  private var formulaEditorStream: Observable[String] = _
 
-  @jfxf.FXML
-  private var backgroundColorPickerDelegate: javafx.scene.control.ColorPicker = _
+  @jfxf.FXML private var backgroundColorPickerDelegate: javafx.scene.control.ColorPicker = _
   private var backgroundColorPicker: scalafx.scene.control.ColorPicker = _
+  private var backgroundColorStream: Observable[Color] = _
 
-  @jfxf.FXML
-  private var fontColorPickerDelegate: javafx.scene.control.ColorPicker = _
+  @jfxf.FXML private var fontColorPickerDelegate: javafx.scene.control.ColorPicker = _
   private var fontColorPicker: scalafx.scene.control.ColorPicker = _
+  private var fontColorStream: Observable[Color] = _
 
   @jfxf.FXML private var menuLoadDelegate: javafx.scene.control.MenuItem = _
-  @jfxf.FXML private var menuSaveDelegate: javafx.scene.control.MenuItem = _
   private var menuLoad: scalafx.scene.control.MenuItem = _
+  private var loadStream: Observable[String] = _
+
+  @jfxf.FXML private var menuSaveDelegate: javafx.scene.control.MenuItem = _
   private var menuSave: scalafx.scene.control.MenuItem = _
+  private var saveStream: Observable[String] = _
 
   @jfxf.FXML
   private var testButtonDelegate: jfxsc.Button = _
@@ -86,75 +85,14 @@ class ViewManager extends jfxf.Initializable {
     AnchorPane.setAnchors(table, 0, 0, 0, 0)
     tableContainer.content = List(table)
 
-    // events we get from the GUI
-
     // streamTable.onRightClick.subscribe(_ => println("right click"))
     // streamTable.onSort.subscribe(_ => println("right click"))
 
     // forward edits
     streamTable.onCellEdit.subscribe(x => onCellEdit.onNext(x))
 
-    //
-    // Create streams
-    //
-
-    // Create cell selection stream (indices)
-    val selectionStream = Observable.apply[List[(Int, Int)]](o => {
-      streamTable.selectionModel.getSelectedCells.onChange((source, _) => {
-        // first column is -1, because it's reserved for row numbers
-        val cells = source
-          .toList
-          .map(x => (x.getColumn - 1, x.getRow))
-          .filter({
-            case (col, row) => col >= 0 && row >= 0
-          })
-        o.onNext(cells)
-      })
-    })
-
-    // The user input on the background colour
-    val backgroundColorStream = Observable.apply[Color](o => {
-      backgroundColorPicker.onAction = handle {
-        o.onNext(backgroundColorPicker.value.value)
-      }
-    })
-
-    // The user input on the font colour
-    val fontColorStream = Observable.apply[Color](o => {
-      fontColorPicker.onAction = handle {
-        o.onNext(fontColorPicker.value.value)
-      }
-    })
-
-    // The user input on the formula
-    val formulaEditorStream = Observable.apply[String](o => {
-      formulaEditor.onAction = handle {
-        o.onNext(formulaEditor.getText)
-      }
-    })
-
-    //Save requests
-    val saveStream = Observable.apply[String](o => {
-      menuSave.onAction = handle {
-        o.onNext("temp.csv")
-      }
-    })
-
-    // Load requests
-    val loadStream = Observable.apply[String](o => {
-      menuLoad.onAction = handle {
-        o.onNext("temp.csv")
-      }
-    })
-
-
-    //
-    // Behavior
-    //
-
-    // Update toolbar when selection changes
-
-    val singleSelectedCell = selectionStream
+    // A stream with the first selected cell
+    val singleSelectedCell = streamTable.onSelection
       .filter(_.size == 1)
       .map(_.head)
 
@@ -191,12 +129,12 @@ class ViewManager extends jfxf.Initializable {
       .subscribe(x => onCellEdit.onNext(x))
 
     // Changes on the ColorPickers are pushed to the model
-    selectionStream.combineLatest(backgroundColorStream)
+    streamTable.onSelection.combineLatest(backgroundColorStream)
       .distinctUntilChanged(_._2)
       .flatMap(x => Observable.from(x._1.map(i => (i, x._2))))
       .subscribe(x => onBackgroundChange.onNext(x))
 
-    selectionStream.combineLatest(fontColorStream)
+    streamTable.onSelection.combineLatest(fontColorStream)
       .distinctUntilChanged(_._2)
       .flatMap(x => Observable.from(x._1.map(i => (i, x._2))))
       .subscribe(x => onColorChange.onNext(x))
@@ -226,13 +164,43 @@ class ViewManager extends jfxf.Initializable {
     // Initialization of GUI object handles
     //
 
-    backgroundColorPicker = new ColorPicker(backgroundColorPickerDelegate)
-    fontColorPicker = new ColorPicker(fontColorPickerDelegate)
     tableContainer = new AnchorPane(tableContainerDelegate)
-    formulaEditor = new TextField(formulaEditorDelegate)
     testButton = new Button(testButtonDelegate)
+
+    backgroundColorPicker = new ColorPicker(backgroundColorPickerDelegate)
+    backgroundColorStream = Observable.apply[Color](o => {
+      backgroundColorPicker.onAction = handle {
+        o.onNext(backgroundColorPicker.value.value)
+      }
+    })
+
+    fontColorPicker = new ColorPicker(fontColorPickerDelegate)
+    fontColorStream = Observable.apply[Color](o => {
+      fontColorPicker.onAction = handle {
+        o.onNext(fontColorPicker.value.value)
+      }
+    })
+
+    formulaEditor = new TextField(formulaEditorDelegate)
+    formulaEditorStream = Observable.apply[String](o => {
+      formulaEditor.onAction = handle {
+        o.onNext(formulaEditor.getText)
+      }
+    })
+
     menuLoad = new MenuItem(menuLoadDelegate)
+    loadStream = Observable.apply[String](o => {
+      menuLoad.onAction = handle {
+        o.onNext("temp.csv")
+      }
+    })
+
     menuSave = new MenuItem(menuSaveDelegate)
+    saveStream = Observable.apply[String](o => {
+      menuSave.onAction = handle {
+        o.onNext("temp.csv")
+      }
+    })
 
   }
 

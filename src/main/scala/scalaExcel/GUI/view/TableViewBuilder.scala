@@ -2,6 +2,7 @@ package scalaExcel.GUI.view
 
 import rx.lang.scala.{Observable, Observer, Subject}
 
+import scalafx.Includes._
 import scalafx.scene.control._
 import scalafx.collections.ObservableBuffer
 import scalaExcel.GUI.data.{DataManager, DataCell, LabeledDataTable}
@@ -91,6 +92,19 @@ class StreamingTable(labeledTable: LabeledDataTable) {
   val selectionModel = table.getSelectionModel
   selectionModel.setCellSelectionEnabled(true)
   selectionModel.setSelectionMode(SelectionMode.MULTIPLE)
+
+  val onSelection = Observable.apply[List[(Int, Int)]](o => {
+    selectionModel.getSelectedCells.onChange((source, _) => {
+      // first column is -1, because it's reserved for row numbers
+      val cells = source
+        .toList
+        .map(x => (x.getColumn - 1, x.getRow))
+        .filter({
+          case (col, row) => col >= 0 && row >= 0
+        })
+      o.onNext(cells)
+    })
+  })
 
   val onColumnReorder = Observable.apply[Map[Int, Int]](o => {
     table.columns.onChange((cols, changes) => {
