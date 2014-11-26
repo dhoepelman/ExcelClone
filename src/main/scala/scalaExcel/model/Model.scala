@@ -30,6 +30,9 @@ class Model {
     case (s, updates) => updateSheet(s, updates)
   }
 
+  def updateStyle(sheet: Sheet, x: Int, y: Int, f: Styles => Styles) =
+    sheet.setCellStyle(x, y, f(sheet.styles.get((x, y)).getOrElse(Styles.DEFAULT)))
+
   // this combines the initial Sheet with all input mutations from the outside
   // world
   val sheet = sheetMutations.scan(new Sheet())((sheet, action) => action match {
@@ -37,8 +40,8 @@ class Model {
       val (s, updates) = sheet.setCell(x, y, f)
       updateSheet(s, updates, Set((x, y)))
     }
-    //case SetColor(x, y, c) => sheet.setCellColor(x, y, c)
-    case SetStyle(x, y, s) => sheet.setCellStyle(x, y, s)
+    case SetColor(x, y, c) => updateStyle(sheet, x, y, s => s.setColor(c))
+    case SetBackground(x, y, c) => updateStyle(sheet, x, y, s => s.setBackground(c))
     case Refresh() => sheet
   })
 
@@ -48,8 +51,12 @@ class Model {
     sheetMutations.onNext(SetFormula(x, y, f))
   }
 
-  def changeStyle(x: Int, y: Int, s: Styles): Unit = {
-    sheetMutations.onNext(SetStyle(x, y, s))
+  def changeBackground(x: Int, y: Int, c: Color): Unit = {
+    sheetMutations.onNext(SetBackground(x, y, c))
+  }
+
+  def changeColor(x: Int, y: Int, c: Color): Unit = {
+    sheetMutations.onNext(SetColor(x, y, c))
   }
 
 }

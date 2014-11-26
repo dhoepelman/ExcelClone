@@ -39,4 +39,9 @@ class DataWindow(val maxBounds: (Int, Int, Int, Int),
   def columnCount = visibleBounds._2 - visibleBounds._1
 
   def rowCount = visibleBounds._4 - visibleBounds._3
+
+  lazy val visibleIndexes =
+    List.range(visibleBounds._1, visibleBounds._2).flatMap(c =>
+      List.range(visibleBounds._3, visibleBounds._4).map(r => (c, r)))
+
 }
