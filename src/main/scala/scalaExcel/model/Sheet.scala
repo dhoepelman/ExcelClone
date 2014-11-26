@@ -37,9 +37,9 @@ class Sheet(val cells: Map[(Int, Int), Cell] = Map(),
     }
   }
 
-  def setCellColor(x: Int, y: Int, c: Color) = {
-    val style = styles get ((x, y)) getOrElse(Styles.DEFAULT)
-    new Sheet(cells, values, dependents, styles + ((x, y) -> style.setColor(c)))
+  /** Set the style of a cell */
+  def setCellStyle(x: Int, y: Int, s: Styles) = {
+    new Sheet(cells, values, dependents, styles + ((x, y) -> s))
   }
 
   /**

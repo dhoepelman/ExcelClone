@@ -1,5 +1,6 @@
 package scalaExcel.GUI.data
 
+import scalaExcel.GUI.util.CSSHelper
 import scalaExcel.model.Styles
 
 sealed trait DataCell {
@@ -31,7 +32,7 @@ private class DataCellImpl(val expression: String,
                            val evaluated: Any,
                            val styles: Styles) extends DataCell {
 
-  val styleString = "" //TODO smth like stylist.style(this)
+  val styleString = CSSHelper.CSSFromStyle(styles) //TODO smth like stylist.style(this)
 
   override def toString =
     if (evaluated == null) ""

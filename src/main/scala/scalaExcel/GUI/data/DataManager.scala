@@ -47,6 +47,10 @@ object DataManager {
         val realColumn = window.windowToAbsoluteColumn(sortColumn)
         // TODO smth like model.sortRows(realColumn)
         window
+      case ChangeCellStyle(index, style) =>
+        val realIndex = window.windowToAbsolute(index)
+        model.changeStyle(realIndex._1, realIndex._2, style)
+        window
     }).subscribe(_ => Unit)
 
   model.sheet
@@ -90,16 +94,10 @@ object DataManager {
   def refreshData() =
     _tableMutationStream.onNext(new RefreshTable())
 
+  def changeCellStylist(index: (Int, Int), stylist: Styles) =
+    _windowActionStream.onNext(new ChangeCellStyle(index, stylist))
+
   def resizeColumn(columnIndex: Int, width: Double) =
     _tableMutationStream.onNext(new ResizeColumn(columnIndex, width))
-
-  def changeCellStylist(index: (Int, Int), stylist: Any) =
-    Unit //TODO when styling is ready
-
-  def changeCellProperty(index: (Int, Int), styleProperty: String, styleValue: Any) =
-    Unit //TODO when styling is ready
-
-  def changeCellFormatter(index: (Int, Int), formatter: Any) =
-    Unit //TODO when styling is ready
 
 }

@@ -149,7 +149,6 @@ object TableViewBuilder {
           }
         }
       }
-
     }
   }
 }
