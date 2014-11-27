@@ -33,6 +33,7 @@ object Cell {
   def apply(x : Int, y : Int, f : String) : Cell = new FormulaCell((x,y), f)
   def apply(pos : CellPos, f : String) : Cell = new FormulaCell(pos, f)
   def apply(pos : CellPos, AST : Expr) : Cell = new ASTCell(pos, AST)
+  def apply(pos : CellPos, original : Cell) : Cell = new CopyCell(pos, original.AST, original.f, original.refs)
 
   val parser = new Parser()
 
@@ -49,5 +50,10 @@ object Cell {
   }
   private class FormulaCell(val position : CellPos, val f_ : String) extends Cell {
     override lazy val f = f_
+  }
+  private class CopyCell(val position : CellPos, val AST_ : Expr, val f_ : String, val refs_ : List[CellPos]) extends Cell {
+    override lazy val f = f_
+    override lazy val AST = AST_
+    override lazy val refs = refs_
   }
 }

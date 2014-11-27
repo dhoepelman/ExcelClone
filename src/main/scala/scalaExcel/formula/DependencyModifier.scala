@@ -8,6 +8,8 @@ object DependencyModifier {
    * Change every dependency of ''from'' to ''to''
    * Only single dependencies, not in ranges
    *
+   * Use this when cut-pasting
+   *
    * @example (=A1, (1,1), (2,3)) becomes =B3
    * @example (=SUM(A1:A5), (1,1), (2,3)) stays =SUM(A1:A5)
    */
@@ -16,12 +18,12 @@ object DependencyModifier {
   }
 
   private def changeDependency_(from: CellPos, to: CellPos)(e: Expr): Expr = {
+    // TODO: Maybe there's an easier/better way to "fix" these parameters?
     val me : Expr => Expr = changeDependency_(from, to)
     e match {
       case c: Cell => if (cellToPos(c) == from) changeCellPos(c, to) else e
       // Easily possible, but probably indicates a mistake elsewhere
       case inv: ACell => throw new IllegalArgumentException("Invalid AST type")
-      // TODO: Maybe there's an easier/better way to "fix" these parameters?
       case _ => applyToAST(me, e)
     }
   }
@@ -36,6 +38,7 @@ object DependencyModifier {
 
   /**
    * Move the non-absolute dependencies of a cell relative to its new position
+   * Use this when copy-pasting
    * @example (=B1+C1, (3,1), (4,3)) becomes =C3+D3
    * @example (=$B1+C$1), (3,1), (4,3)) becomes =$B3+D$1
    */

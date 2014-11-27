@@ -5,7 +5,6 @@ import rx.lang.scala.subjects.BehaviorSubject
 import scalaExcel.model.OperationHelpers._
 
 class Model {
-
   /** This is a stream of inputs from 'the world' that will effect the state of the sheet model */
   val sheetMutations = BehaviorSubject.apply[ModelMutations](Refresh())
 
@@ -37,6 +36,9 @@ class Model {
       val (s, updates) = sheet.setCell(x, y, f)
       updateSheet(s, updates, Set((x, y)))
     }
+    case EmptyCell(x, y) => updateSheet(sheet.deleteCell((x,y)))
+    case CopyCell(x1,y1,x2,y2) => updateSheet(sheet.copyCell((x1,y1),(x2,y2)))
+    case CutCell(x1,y1,x2,y2) => updateSheet(sheet.cutCell((x1,y1),(x2,y2)))
     case SetColor(x, y, c) => sheet.setCellColor(x, y, c)
     case Refresh() => sheet
   })
