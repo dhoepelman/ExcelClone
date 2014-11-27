@@ -4,24 +4,24 @@ import scalaExcel.formula._
 
 // This is a cell object, it can execute it self and find the references inside
 // the formula. This implements a dummy parser/executor
-class Cell(
-    val x: Int,
-    val y: Int,
-    val f: String
-  ) {
+sealed trait Cell {
 
-  // AST of the cell
-  lazy val AST = Cell.parser.parsing(f)
+  /** Cell position */
+  def position : CellPos
 
-  // Dependencies of this cell
+  /** Cell AST */
+  lazy val AST : Expr = Cell.parser.parsing(f)
+
+  /** Cell formula */
+  lazy val f : String = PPrinter.pprint(AST)
+
+  /** Dependencies of this cell */
   lazy val refs: List[(Int, Int)] = ReferenceFinder.findRefCells(AST).map(Cell.ACellToPos)
 
-  val position = (x, y)
-
-  // Get the current value of this cell
+  /** Get the current value of this cell */
   def eval(deps: Map[(Int, Int), Value]): Value = Evaluator.eval(Ctx(deps), AST)
 
-  private def Ctx(values: Map[(Int, Int), Value])(c: ACell) = values get ((colToNum(c.c), c.r)) match {
+  protected def Ctx(values: Map[(Int, Int), Value])(c: ACell) = values get ((colToNum(c.c), c.r)) match {
     case Some(v) => v
     case None => VDouble(0)//throw new IllegalArgumentException(s"Dependency (${c.c},${c.r}}) not found in map")
   }
@@ -29,8 +29,25 @@ class Cell(
 }
 
 object Cell {
+  def apply(pos : CellPos) : Cell = new EmptyCell(pos)
+  def apply(x : Int, y : Int, f : String) : Cell = new FormulaCell((x,y), f)
+  def apply(pos : CellPos, f : String) : Cell = new FormulaCell(pos, f)
+  def apply(pos : CellPos, AST : Expr) : Cell = new ASTCell(pos, AST)
+
   val parser = new Parser()
 
   def posToACell(c: Int, r: Int) = ACell(numToCol(c), r)
   def ACellToPos(c: ACell) = (colToNum(c.c), c.r)
+
+  private class EmptyCell(val position : CellPos) extends Cell {
+    override lazy val f = ""
+    override lazy val AST = Const(VString(""))
+    override lazy val refs = List()
+  }
+  private class ASTCell(val position : CellPos, val AST_ : Expr) extends Cell {
+    override lazy val AST = AST_
+  }
+  private class FormulaCell(val position : CellPos, val f_ : String) extends Cell {
+    override lazy val f = f_
+  }
 }
