@@ -45,7 +45,7 @@ object DependencyModifier {
     moveDependencies_(dX, dY)(AST)
   }
 
-  def moveDependencies_(dX: Int, dY: Int)(e: Expr): Expr = {
+  private def moveDependencies_(dX: Int, dY: Int)(e: Expr): Expr = {
     val me : Expr => Expr = moveDependencies_(dX, dY)
 
     def moveCell(c : Cell) = c match { case Cell(c, r) => Cell(moveC(c), moveR(r)) }
