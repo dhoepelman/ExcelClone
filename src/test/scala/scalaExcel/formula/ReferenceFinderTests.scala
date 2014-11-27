@@ -5,7 +5,7 @@ import org.junit._
 
 import scala.collection.immutable.{Range => SeqRange}
 
-import scalaExcel.formula.ReferenceFinder.{findRefCells, colToNum, numToCol}
+import scalaExcel.formula.ReferenceFinder.{findRefCells}
 import scalaExcel.formula.Values.{toVal => tv}
 
 class ReferenceFinderTests {

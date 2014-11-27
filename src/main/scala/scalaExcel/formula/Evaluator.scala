@@ -2,7 +2,6 @@
 package scalaExcel.formula
 
 import math.{pow, abs}
-import scalaExcel.formula.ReferenceFinder.{colToNum, numToCol}
 
 object Evaluator {
 

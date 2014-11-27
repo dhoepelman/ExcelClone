@@ -1,7 +1,6 @@
 package scalaExcel.model
 
-import scalaExcel.formula.{Evaluator, ACell, Value, Parser, VDouble}
-import scalaExcel.formula.ReferenceFinder.{findRefCells, colToNum, numToCol}
+import scalaExcel.formula._
 
 // This is a cell object, it can execute it self and find the references inside
 // the formula. This implements a dummy parser/executor
@@ -15,7 +14,7 @@ class Cell(
   lazy val AST = Cell.parser.parsing(f)
 
   // Dependencies of this cell
-  lazy val refs: List[(Int, Int)] = findRefCells(AST).map(Cell.ACellToPos)
+  lazy val refs: List[(Int, Int)] = ReferenceFinder.findRefCells(AST).map(Cell.ACellToPos)
 
   val position = (x, y)
 
