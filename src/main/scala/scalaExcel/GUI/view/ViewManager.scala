@@ -159,26 +159,24 @@ class ViewManager extends jfxf.Initializable {
       .map(file => Filer.loadCSV(file))
       .subscribe(data => ??? /* DataManager.populateDataModel(data) */)
 
-    // TODO: Fix this and/or put it in a correct place
-    def getCurrentCoords() = {
-      // TODO: Multiple selection
-      val selected = table.selectionModel.value.getSelectedCells.head
-      // First column is row numbers
-      val coords = (selected.getColumn - 1, selected.getRow)
-      coords
+    // TODO: Fix this and/or put it in a correct place?
+    def currentCoords() = {
+      table.selectionModel.value.getSelectedCells.map( p => (p.getColumn-1, p.getRow))
     }
 
     menuCutDelegate.onAction = handle {
-      clipboard = Some(Cut, getCurrentCoords())
+      // TODO: Multiple selection
+      clipboard = Some(Cut, currentCoords.head)
     }
 
     menuCopyDelegate.onAction = handle {
-      clipboard = Some(Copy, getCurrentCoords())
+      // TODO: Multiple selection
+      clipboard = Some(Copy, currentCoords.head)
     }
 
     menuPasteDelegate.onAction = handle {
       if (clipboard.isDefined) {
-        val to = getCurrentCoords()
+        val to = currentCoords.head
         clipboard get match {
           case (Cut, from) => model.cutCell(from, to)
           case (Copy, from) => model.copyCell(from, to)
@@ -187,7 +185,7 @@ class ViewManager extends jfxf.Initializable {
     }
 
     menuDeleteDelegate.onAction = handle {
-      val coords = getCurrentCoords()
+      val coords = currentCoords.head
       model.emptyCell(coords._1, coords._2)
     }
   }
