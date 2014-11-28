@@ -159,28 +159,36 @@ class ViewManager extends jfxf.Initializable {
       .map(file => Filer.loadCSV(file))
       .subscribe(data => ??? /* DataManager.populateDataModel(data) */)
 
+    // TODO: Fix this and/or put it in a correct place
+    def getCurrentCoords() = {
+      // TODO: Multiple selection
+      val selected = table.selectionModel.value.getSelectedCells.head
+      // First column is row numbers
+      val coords = (selected.getColumn - 1, selected.getRow)
+      coords
+    }
+
     menuCutDelegate.onAction = handle {
-      // TODO: Actually get the coördinates currently in focus
-      val coords = (0, 0)
-      clipboard = Some(Cut, coords)
+      clipboard = Some(Cut, getCurrentCoords())
     }
 
     menuCopyDelegate.onAction = handle {
-      // TODO: Actually get the coördinates currently in focus
-      val coords = (0, 0)
-      clipboard = Some(Copy, coords)
+      clipboard = Some(Copy, getCurrentCoords())
     }
 
     menuPasteDelegate.onAction = handle {
       if (clipboard.isDefined) {
-        // TODO: Actually get the coördinates currently in focus
-        val to = (1, 0)
-        // TODO: Actually do this on the real model
+        val to = getCurrentCoords()
         clipboard get match {
           case (Cut, from) => model.cutCell(from, to)
           case (Copy, from) => model.copyCell(from, to)
         }
       }
+    }
+
+    menuDeleteDelegate.onAction = handle {
+      val coords = getCurrentCoords()
+      model.emptyCell(coords._1, coords._2)
     }
   }
 
