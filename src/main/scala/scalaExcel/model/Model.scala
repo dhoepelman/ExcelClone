@@ -71,7 +71,6 @@ class Model {
   def changeColor(x: Int, y: Int, c: Color): Unit = {
     sheetMutations.onNext(SetColor(x, y, c))
   }
-
 }
 
 object ModelExample extends App {

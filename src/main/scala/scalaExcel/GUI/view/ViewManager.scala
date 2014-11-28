@@ -14,8 +14,10 @@ import scalaExcel.GUI.util.Filer
 import scalaExcel.model.{CellPos, Model, Styles}
 import scalafx.Includes._
 import scalafx.scene.control._
+import scalafx.scene.input._
 import scalafx.scene.layout.AnchorPane
 import scalafx.scene.paint.Color
+import scalafx.scene.input.ClipboardContent
 
 class ViewManager extends jfxf.Initializable {
 
@@ -159,28 +161,43 @@ class ViewManager extends jfxf.Initializable {
       .map(file => Filer.loadCSV(file))
       .subscribe(data => ??? /* DataManager.populateDataModel(data) */)
 
-    // TODO: Fix this and/or put it in a correct place?
+    // TODO: Put it in a better/correct place?
     def currentCoords() = {
       table.selectionModel.value.getSelectedCells.map( p => (p.getColumn-1, p.getRow))
     }
 
+    // TODO: Make the cell immidiatly dissapear when cut
     menuCutDelegate.onAction = handle {
       // TODO: Multiple selection
-      clipboard = Some(Cut, currentCoords.head)
+      val c = new ClipboardContent()
+      val p = currentCoords.head
+      // TODO: Replace "cut" with proper serializable case class
+      c.put(copyPasteFormat, ("cut", p))
+      // TODO: Place the cell value as a string on the clipboard
+      c.putString("We lied! Cut pasting the cell value isn't actually implemented")
+      Clipboard.systemClipboard.setContent(c)
     }
 
     menuCopyDelegate.onAction = handle {
       // TODO: Multiple selection
-      clipboard = Some(Copy, currentCoords.head)
+      val c = new ClipboardContent()
+      val p = currentCoords.head
+      c.put(copyPasteFormat, ("copy",p))
+      // TODO: Place the cell value as a string on the clipboard
+      c.putString("We lied! Copy pasting the cell value isn't actually implemented")
+      Clipboard.systemClipboard.setContent(c)
     }
 
     menuPasteDelegate.onAction = handle {
-      if (clipboard.isDefined) {
-        val to = currentCoords.head
-        clipboard get match {
-          case (Cut, from) => model.cutCell(from, to)
-          case (Copy, from) => model.copyCell(from, to)
+      val to = currentCoords.head
+      if (Clipboard.systemClipboard.hasContent(copyPasteFormat)) {
+        Clipboard.systemClipboard.getContent(copyPasteFormat) match {
+          case ("cut", from) => model.cutCell(from.asInstanceOf[CellPos], to)
+          case ("copy", from) => model.copyCell(from.asInstanceOf[CellPos], to)
+          case _ => throw new IllegalArgumentException("Clipboard contained invalid copy-paste data")
         }
+      } else if (Clipboard.systemClipboard.hasString) {
+        model.changeFormula(to._1, to._2, Clipboard.systemClipboard.getString)
       }
     }
 
@@ -189,6 +206,8 @@ class ViewManager extends jfxf.Initializable {
       model.emptyCell(coords._1, coords._2)
     }
   }
+
+  val copyPasteFormat = new DataFormat("x-excelClone/cutcopy")
 
   def initialize(url: URL, rb: java.util.ResourceBundle) {
 
@@ -255,11 +274,9 @@ class ViewManager extends jfxf.Initializable {
 
   def changeFontColorPicker(color: Color) = fontColorPicker.value = color
 
-  // TODO: Put this on the system clipboard with Clipboard class.
-  // TODO: Put the cell value on the systen clipboard for copy-pasting outside of our program
-  private var clipboard: Option[(ClipboardAction, CellPos)] = None
-
-  private sealed trait ClipboardAction
-  private case object Cut extends ClipboardAction
-  private case object Copy extends ClipboardAction
+  /* JVM said this wasn't actually serializable >:-(
+  sealed trait ClipboardAction extends Serializable
+  case object Cut extends ClipboardAction
+  case object Copy extends ClipboardAction
+  */
 }
