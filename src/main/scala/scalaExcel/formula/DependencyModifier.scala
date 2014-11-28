@@ -1,6 +1,7 @@
 package scalaExcel.formula
 
 import scalaExcel.model.CellPos
+import scalaExcel.util.ColumnTranslator._
 
 /** Modifies cell dependencies in their AST */
 object DependencyModifier {
@@ -91,4 +92,5 @@ object DependencyModifier {
     }
     case _ => e
   }
+
 }

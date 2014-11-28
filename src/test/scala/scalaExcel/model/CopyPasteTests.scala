@@ -13,14 +13,14 @@ class CopyPasteTests {
 
     var y: Value = null
     model.sheet
-      .filterCellValueAt(2, 2)
+      .filterCellValueAt(1, 1)
       .subscribe(x => y = x)
 
-    model.changeFormula(1, 1, "1")
-    model.changeFormula(2, 1, "2")
-    model.changeFormula(1, 2, "=A1+1")
+    model.changeFormula(0, 0, "1")
+    model.changeFormula(1, 0, "2")
+    model.changeFormula(0, 1, "=A1+1")
 
-    model.copyCell((1,2),(2,2))
+    model.copyCell((0,1),(1,1))
 
     assertEquals(VDouble(3), y)
   }
@@ -30,14 +30,14 @@ class CopyPasteTests {
 
     var y: Value = null
     model.sheet
-      .filterCellValueAt(2, 2)
+      .filterCellValueAt(1, 1)
       .subscribe(x => y = x)
 
-    model.changeFormula(1, 1, "1")
-    model.changeFormula(2, 1, "2")
-    model.changeFormula(1, 2, "=A1+1")
+    model.changeFormula(0, 0, "1")
+    model.changeFormula(1, 0, "2")
+    model.changeFormula(0, 1, "=A1+1")
 
-    model.cutCell((1,2),(2,2))
+    model.cutCell((0,1),(1,1))
 
     assertEquals(VDouble(2), y)
   }
@@ -47,21 +47,22 @@ class CopyPasteTests {
 
     var sheet : Sheet = null
     model.sheet.subscribe(x => sheet = x)
+    model.sheet.subscribe({ println(_)})
 
-    model.changeFormula(1, 1, "1")
-    model.changeFormula(2, 1, "2")
+    model.changeFormula(0, 0, "1")
+    model.changeFormula(1, 0, "2")
 
-    model.changeFormula(1, 2, "=A1+1")
-    model.changeFormula(2, 2, "=$A$1+1")
+    model.changeFormula(0, 1, "=A1+1")
+    model.changeFormula(1, 1, "=$A$1+1")
 
-    model.changeFormula(4, 1, "=C1+0.5")
+    model.changeFormula(3, 0, "=C1+0.5")
 
-    assertEquals(VDouble(0.5), sheet.valueAt(4,1).get)
+    assertEquals(VDouble(0.5), sheet.valueAt(3,0).get)
 
-    model.cutCell((1,1), (3,1))
+    model.cutCell((0,0), (2,0))
 
-    assertEquals(VDouble(2), sheet.valueAt(1,2).get)
-    assertEquals(VDouble(2), sheet.valueAt(2,2).get)
-    assertEquals(VDouble(1.5), sheet.valueAt(4,1).get)
+    assertEquals(VDouble(2), sheet.valueAt(0,1).get)
+    assertEquals(VDouble(2), sheet.valueAt(1,1).get)
+    assertEquals(VDouble(1.5), sheet.valueAt(3,0).get)
   }
 }
