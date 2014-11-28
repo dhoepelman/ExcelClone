@@ -56,13 +56,24 @@ object DependencyModifier {
     def moveR(r : RowRef) = r match { case RowRef(r2, abs) => if (abs) r else RowRef(r2 + dY, abs) }
 
     e match {
-      case c: Cell => moveCell(c)
-      case Range(start, end) => Range(moveCell(start), moveCell(end))
-      case RowRange(r1, r2) => RowRange(moveR(r1), moveR(r2))
-      case ColRange(c1, c2) => ColRange(moveC(c1), moveC(c2))
+      case c: Cell => checkValidRef(moveCell(c))
+      case Range(start, end) => checkValidRef(Range(moveCell(start), moveCell(end)))
+      case RowRange(r1, r2) => checkValidRef(RowRange(moveR(r1), moveR(r2)))
+      case ColRange(c1, c2) => checkValidRef(ColRange(moveC(c1), moveC(c2)))
       case _ : ACell => throw new IllegalArgumentException
       case _ : ARange => throw new IllegalArgumentException
       case _ => applyToAST(me, e)
+    }
+  }
+
+  private def checkValidRef(e : ParseRef) : Expr = {
+    val error = Const(VErr(InvalidRef()))
+    e match {
+      case Cell(ColRef(c,_), RowRef(r, _)) => if(colToNum(c) < 1 || r < 1) error else e
+      case Range(start, end) => if(checkValidRef(start) == error || checkValidRef(end) == error) error else e
+      case RowRange(RowRef(r1,_), RowRef(r2,_)) => if(r1 < 1 || r2 < 1) error else e
+      case ColRange(ColRef(c1, _), ColRef(c2, _)) => if(colToNum(c1) < 1 || colToNum(c2) < 1) error else e
+      case SheetReference(f, e2) => if(checkValidRef(e2) == error) error else e
     }
   }
 
@@ -75,7 +86,7 @@ object DependencyModifier {
     case Call(n, args) => Call(n, args map f)
     case Group(e) => Group(f(e))
     case SheetReference(s, r) => f(r) match {
-      case r2 : ParseRef => SheetReference(s,r2)
+      case r2 : ParseRef => checkValidRef(SheetReference(s,r2))
       case _ => throw new IllegalArgumentException("AST transformation did not return a valid ParseRef for SheetReference")
     }
     case _ => e
