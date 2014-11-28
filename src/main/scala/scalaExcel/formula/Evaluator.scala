@@ -121,7 +121,6 @@ object Evaluator {
       case Const(c) => c
       case BinOp(op, lhs, rhs) => evalBinOp(ctx, op, desugar(lhs), desugar(rhs))
       case UnOp(op, v) => evalUnOp(ctx, op, desugar(v))
-      case Group(e) => eval(ctx, e)
       case Call(f, args) => evalCall(ctx, f, args)
       case c: ACell => ctx(c)
       case _ => VErr(NA)
