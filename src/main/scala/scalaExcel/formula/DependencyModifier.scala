@@ -11,8 +11,8 @@ object DependencyModifier {
    *
    * Use this when cut-pasting
    *
-   * @example (=A1, (1,1), (2,3)) becomes =B3
-   * @example (=SUM(A1:A5), (1,1), (2,3)) stays =SUM(A1:A5)
+   * @example (=A1, (0,0), (1,2)) becomes =B3
+   * @example (=SUM(A1:A5), (0,0), (1,2)) stays =SUM(A1:A5)
    */
   def changeDependency(AST: Expr, from: CellPos, to: CellPos): Expr = {
     changeDependency_(from, to)(AST)
@@ -22,7 +22,11 @@ object DependencyModifier {
     // TODO: Maybe there's an easier/better way to "fix" these parameters?
     val me : Expr => Expr = changeDependency_(from, to)
     e match {
-      case c: Cell => if (cellToPos(c) == from) changeCellPos(c, to) else e
+      case c: Cell =>
+          if (cellToPos(c) == from)
+            changeCellPos(c, to)
+          else
+            e
       // Easily possible, but probably indicates a mistake elsewhere
       case inv: ACell => throw new IllegalArgumentException("Invalid AST type")
       case _ => applyToAST(me, e)
@@ -30,18 +34,21 @@ object DependencyModifier {
   }
 
   private def cellToPos(c: Cell): CellPos = c match {
-    case Cell(ColRef(c, _), RowRef(r, _)) => (colToNum(c), r)
+    case Cell(ColRef(c2, _), RowRef(r, _)) => (colToNum(c2), r-1)
   }
 
+  private def posToCell(p : CellPos, absc : Boolean, absr : Boolean) =
+    Cell(ColRef(numToCol(p._1), absc), RowRef(p._2+1, absr))
+
   private def changeCellPos(c: Cell, newPos: CellPos) = c match {
-    case Cell(ColRef(_, absc), RowRef(_, absr)) => Cell(ColRef(numToCol(newPos._1), absc), RowRef(newPos._2, absr))
+    case Cell(ColRef(_, absc), RowRef(_, absr)) => posToCell(newPos, absc, absr)
   }
 
   /**
    * Move the non-absolute dependencies of a cell relative to its new position
    * Use this when copy-pasting
-   * @example (=B1+C1, (3,1), (4,3)) becomes =C3+D3
-   * @example (=$B1+C$1), (3,1), (4,3)) becomes =$B3+D$1
+   * @example (=B1+C1, (2,0), (3,2)) becomes =C3+D3
+   * @example (=$B1+C$1), (2,0), (3,2)) becomes =$B3+D$1
    */
   def moveDependencies(AST: Expr, from: CellPos, to: CellPos): Expr = {
     val dX = to._1 - from._1
@@ -93,4 +100,14 @@ object DependencyModifier {
     case _ => e
   }
 
+}
+
+object DependencyModifierRun extends App {
+  val p = new Parser()
+
+  val or = p parsing "=A1"
+  val cut = p parsing "=B3"
+
+  println(cut)
+  println(DependencyModifier.changeDependency(or, (0,0), (1,2)))
 }
