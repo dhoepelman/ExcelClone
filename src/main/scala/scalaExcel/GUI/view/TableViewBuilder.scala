@@ -2,6 +2,7 @@ package scalaExcel.GUI.view
 
 import rx.lang.scala.{Observable, Observer, Subject}
 
+import scalaExcel.model.CellPos
 import scalafx.Includes._
 import scalafx.scene.control._
 import scalafx.collections.ObservableBuffer
@@ -178,6 +179,13 @@ class StreamingTable(labeledTable: LabeledDataTable) {
       })
   }
 
+  /** Observable of selected cells in the table */
+  val onSelectedCellChange = Observable.apply[List[CellPos]]({ o =>
+    table.selectionModel.value.getSelectedCells.onChange({ (poss, _) => o.onNext(poss.toList map ({
+      pos => (pos.getColumn - 1, pos.getRow)
+    }))
+    })
+  })
 }
 
 object TableViewBuilder {
