@@ -109,14 +109,14 @@ class Parser extends RegexParsers {
   }
 
   def ErrorExpression : Parser[Const]= """(?i)(#DIV/0!)|(#N/A)|(#NAME?)|(#NUM!)|(#NULL!)|(#REF!)|(#VALUE!)|(#CIRCULAR!)""".r^^ {
-    case "#DIV/0!" => Const(VErr(DivBy0()))
-    case "#N/A"    => Const(VErr(NA()))
-    case "#NAME?"  => Const(VErr(InvalidName()))
-    case "#NUM!"   => Const(VErr(NotNumeric()))
-    case "#NULL!"  => Const(VErr(Null()))
-    case "#REF!"   => Const(VErr(InvalidRef()))
-    case "#VALUE!" => Const(VErr(InvalidValue()))
-    case "#CIRCULAR!" => Const(VErr(CircularRef()))
+    case "#DIV/0!" => Const(VErr(DivBy0))
+    case "#N/A"    => Const(VErr(NA))
+    case "#NAME?"  => Const(VErr(InvalidName))
+    case "#NUM!"   => Const(VErr(NotNumeric))
+    case "#NULL!"  => Const(VErr(Null))
+    case "#REF!"   => Const(VErr(InvalidRef))
+    case "#VALUE!" => Const(VErr(InvalidValue))
+    case "#CIRCULAR!" => Const(VErr(CircularRef))
   }
 
   //****************************

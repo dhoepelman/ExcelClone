@@ -2,18 +2,15 @@ package scalaExcel.GUI
 
 import scalafx.Includes._
 import scalafx.application.JFXApp
-import javafx.{scene => jfxs}
 import javafx.{fxml => jfxf}
 import javafx.{scene => jfxs}
 import java.io.IOException
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.scene.Scene
-import scalaExcel.GUI.controller.Mediator
-import scalaExcel.GUI.view.ViewManager
+import scalaExcel.GUI.view.{ViewManagerObject, ViewManager}
+import scalaExcel.GUI.data.DataManager
 
 object RunGUI extends JFXApp {
-
-  Mediator.initialize()
 
   val resource = getClass.getResource("/MainContainer.fxml")
 
@@ -24,7 +21,8 @@ object RunGUI extends JFXApp {
   val loader = new jfxf.FXMLLoader(resource)
   val root = loader.load[jfxs.Parent]
 
-  Mediator.controller = loader.getController[ViewManager]
+  ViewManagerObject.initialize(loader.getController[ViewManager])
+  DataManager.initialize()
 
   stage = new PrimaryStage() {
     title = "Scala Excel"

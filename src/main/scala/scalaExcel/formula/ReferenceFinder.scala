@@ -1,5 +1,7 @@
 package scalaExcel.formula
 
+import scalaExcel.util.ColumnTranslator.{colToNum, numToCol}
+
 object ReferenceFinder {
 
   sealed trait Node
@@ -41,9 +43,10 @@ object ReferenceFinder {
         Cell(ColRef(c2, _), RowRef(r2, _))
       ) => {
         val rs = List.range(r1, r2 + 1)
-        var cs = List.range(colToNum(c1), colToNum(c2) + 1)
+        val cs = List.range(colToNum(c1), colToNum(c2) + 1)
         Leafs(for (r <- rs; c <- cs) yield Leaf(ACell(numToCol(c), r)))
       }
     case _ => Empty
   }
+
 }

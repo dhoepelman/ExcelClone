@@ -77,16 +77,16 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
     }
   }
 
-  def setCellColor(x: Int, y: Int, c: Color) = {
-    val style = styles getOrElse ((x, y), Styles.DEFAULT)
-    new Sheet(cells, values, dependents, styles + ((x, y) -> style.setColor(c)))
+  /** Set the style of a cell */
+  def setCellStyle(x: Int, y: Int, s: Styles) = {
+    new Sheet(cells, values, dependents, styles + ((x, y) -> s))
   }
-  
+
   /**
    * Set a cell to the circular reference error
    */
   def setToCircular(x: Int, y: Int) = {
-    new Sheet(cells, values + ((x,y) -> VErr(CircularRef())), dependents)
+    new Sheet(cells, values + ((x,y) -> VErr(CircularRef)), dependents)
   }
 
   /** Get the cells that depend on this given cell */

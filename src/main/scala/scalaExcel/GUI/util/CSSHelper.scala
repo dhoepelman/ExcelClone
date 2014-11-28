@@ -1,5 +1,6 @@
 package scalaExcel.GUI.util
 
+import scalaExcel.model.Styles
 import scalafx.scene.paint.Color
 
 object CSSHelper {
@@ -53,10 +54,20 @@ object CSSHelper {
   }
 
   def propertyFromCssOrElse(css: String, property: String, orElse: String): String = property match {
-    case "-fx-background-color" => fieldsFromCss(css).getOrElse(property, orElse).split(",").last
+    case "-fx-background-color" => fieldsFromCss(css).getOrElse(property, orElse).split(",").last.trim()
     case _ => fieldsFromCss(css).getOrElse(property, orElse)
   }
 
   def colorFromCssOrElse(css: String, property: String, orElse: Color): Color =
     Color.web(propertyFromCssOrElse(css, property, colorToWeb(orElse)))
+
+
+  def CSSFromStyle(style: Styles): String = {
+    val props = Map(
+      "-fx-background-color"  -> colorToWeb(style.background),
+      "-fx-text-fill"         -> colorToWeb(style.color),
+      "-fx-background-insets" -> "0, 0 0 1 0"
+    )
+    fieldsToCss(props)
+  }
 }

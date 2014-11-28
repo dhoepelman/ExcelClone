@@ -38,7 +38,7 @@ class Model {
     case EmptyCell(x, y) => updateSheet(sheet.deleteCell((x,y)))
     case CopyCell(from, to) => updateSheet(sheet.copyCell(from, to))
     case CutCell(from, to) => updateSheet(sheet.cutCell(from, to))
-    case SetColor(x, y, c) => sheet.setCellColor(x, y, c)
+    case SetStyle(x, y, s) => sheet.setCellStyle(x, y, s)
     case Refresh => sheet
   })
 
@@ -60,9 +60,10 @@ class Model {
     sheetMutations.onNext(SetFormula(x, y, f))
   }
 
-  def changeColor(x: Int, y: Int, c: Color) {
-    sheetMutations.onNext(SetColor(x, y, c))
+  def changeStyle(x: Int, y: Int, s: Styles): Unit = {
+    sheetMutations.onNext(SetStyle(x, y, s))
   }
+
 }
 
 object ModelExample extends App {
@@ -94,6 +95,4 @@ object ModelExample extends App {
   model.changeFormula(4, 1, "=A1+A1")
   model.changeFormula(1, 1, "=4+6")
   model.changeFormula(2, 1, "=4+0")
-
-  model.changeColor(1, 1, Color.Yellow)
 }
