@@ -6,16 +6,12 @@ import rx.lang.scala.subjects.BehaviorSubject
 import scalaExcel.GUI.view.ViewManagerObject
 
 
-object DataManager {
+class DataManager(val model: Model) {
 
-  def initialize() = {
-    println("DataManager initializing...")
-  }
+  println("DataManager initializing...")
 
-  private val model = new Model()
-
-  private val _windowActionStream = Subject[WindowActions]()
-  private val _windowMutationStream = Subject[WindowMutations]()
+  // private val _windowActionStream = Subject[WindowActions]()
+  private val _windowMutationStream = BehaviorSubject[WindowMutations](RefreshWindow())
   private val _tableMutationStream = BehaviorSubject.apply[TableMutations](RefreshTable())
 
   private val windowStream = _windowMutationStream.scan(LabeledDataTable.defaultDataWindow)((window, action) =>
@@ -26,6 +22,8 @@ object DataManager {
     })
 
   windowStream.subscribe(window => _tableMutationStream.onNext(new UpdateWindow(window)))
+
+/* this should be in ViewManagerObject
   windowStream.subscribe(window => _windowActionStream.onNext(new NewWindow(window)))
 
   _windowActionStream.scan(LabeledDataTable.defaultDataWindow)((window, action) =>
@@ -52,30 +50,37 @@ object DataManager {
         model.changeStyle(realIndex._1, realIndex._2, style)
         window
     }).subscribe(_ => Unit)
+*/
 
-  model.sheet
-    .map(newSheet => {
-      newSheet.cells.map({
-        case (index, cell) => (
-          //in the model, the indexes are swapped
-          index.swap,
-          cell.f,
-          newSheet.valueAt(index._1, index._2).get,
-          newSheet.styles.getOrElse(index, Styles.DEFAULT)
-        )
-      })
+
+
+  model.sheet.combineLatest(windowStream)
+    .map({
+      case (sheet, window) =>
+        window.visibleIndexes.map(i => (
+          i.swap,
+          sheet.cells.get(i) match {
+            case Some(c) => c.f
+            case None => ""
+          },
+          sheet.valueAt(i._1, i._2).getOrElse(""),
+          sheet.styles.getOrElse(i, Styles.DEFAULT)
+        ))
     })
     .subscribe(contents => _tableMutationStream.onNext(new UpdateContents(contents)))
 
-  _tableMutationStream.scan(new LabeledDataTable(rebuild = true))((table, action) =>
+  /**
+   * A Rx stream of LabeledDataTables, that should be drawn on the screen
+   */
+  val labeledDataTable = _tableMutationStream.scan(new LabeledDataTable(rebuild = true))((table, action) =>
     action match {
       case UpdateContents(contents) => table.updateContents(contents)
       case UpdateWindow(window) => table.updateWindow(window)
       case UpdateColumnOrder(permutations) => table.updateColumnOrder(permutations)
       case ResizeColumn(columnIndex, width) => table.resizeColumn(columnIndex, width)
       case RefreshTable() => table
-    }).subscribe(ViewManagerObject.dataChanged _)
-
+    })
+/*
   def tableScrolled(offsets: (Int, Int, Int, Int)) = {
     _windowMutationStream.onNext(new SlideWindowBy(offsets))
   }
@@ -99,5 +104,5 @@ object DataManager {
 
   def resizeColumn(columnIndex: Int, width: Double) =
     _tableMutationStream.onNext(new ResizeColumn(columnIndex, width))
-
+*/
 }

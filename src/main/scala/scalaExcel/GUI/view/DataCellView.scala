@@ -7,7 +7,6 @@ import scalaExcel.GUI.data.{LabeledDataTable, DataCell}
 import LabeledDataTable.DataRow
 import scalafx.util.StringConverter
 
-
 class DataCellStringConverter extends StringConverter[DataCell] {
   override def toString(cell: DataCell): String = if (cell == null) "" else cell.toString
 
@@ -26,7 +25,7 @@ class DataCellViewDelegate extends jfxsc.cell.TextFieldTableCell[DataRow, DataCe
       case null => ""
       case cell => cell.expression
     }
-    ViewManagerObject.changeEditorText(textField.getText)
+    // ViewManagerObject.changeEditorText(textField.getText)
   }
 }
 

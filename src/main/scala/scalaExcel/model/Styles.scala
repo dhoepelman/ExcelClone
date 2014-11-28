@@ -7,7 +7,7 @@ case class Left()   extends Alignment
 case class Center() extends Alignment
 case class Right()  extends Alignment
 
-class Styles(
+class Styles (
     val background: Color,
     val color: Color,
     val format: String,
@@ -22,7 +22,18 @@ class Styles(
     Map(
       "background" -> background,
       "text-fill" -> color
-    ).toString;
+    ).toString
+
+  override def equals(other: Any) = other match {
+    case that: Styles =>
+      background == that.background &&
+      color == that.color &&
+      format == that.format &&
+      align == that.align
+    case _ => false
+  }
+
+
 }
 
 object Styles {
