@@ -77,10 +77,10 @@ object DependencyModifier {
   private def checkValidRef(e : ParseRef) : Expr = {
     val error = Const(VErr(InvalidRef))
     e match {
-      case Cell(ColRef(c,_), RowRef(r, _)) => if(colToNum(c) < 1 || r < 1) error else e
+      case Cell(ColRef(c,_), RowRef(r, _)) => if(colToNum(c) < 0 || r < 0) error else e
       case Range(start, end) => if(checkValidRef(start) == error || checkValidRef(end) == error) error else e
-      case RowRange(RowRef(r1,_), RowRef(r2,_)) => if(r1 < 1 || r2 < 1) error else e
-      case ColRange(ColRef(c1, _), ColRef(c2, _)) => if(colToNum(c1) < 1 || colToNum(c2) < 1) error else e
+      case RowRange(RowRef(r1,_), RowRef(r2,_)) => if(r1 < 0 || r2 < 0) error else e
+      case ColRange(ColRef(c1, _), ColRef(c2, _)) => if(colToNum(c1) < 0 || colToNum(c2) < 0) error else e
       case SheetReference(f, e2) => if(checkValidRef(e2) == error) error else e
     }
   }
