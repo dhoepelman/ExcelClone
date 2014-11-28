@@ -9,6 +9,8 @@ import scalafx.application.JFXApp.PrimaryStage
 import scalafx.scene.Scene
 import scalaExcel.GUI.view.{ViewManagerObject, ViewManager}
 import scalaExcel.GUI.data.DataManager
+import scalaExcel.model.Model
+import scalaExcel.model.Styles
 
 object RunGUI extends JFXApp {
 
@@ -21,8 +23,28 @@ object RunGUI extends JFXApp {
   val loader = new jfxf.FXMLLoader(resource)
   val root = loader.load[jfxs.Parent]
 
-  ViewManagerObject.initialize(loader.getController[ViewManager])
-  DataManager.initialize()
+  val model = new Model()
+
+  val vm = new ViewManagerObject(model, loader.getController[ViewManager])
+  val dm = new DataManager(model)
+
+  // Putting events from the GUI into the model
+  // This should be the only place where that ever happens
+
+  vm.onCellEdit.subscribe(edit => {
+    model.changeFormula(edit._1._1, edit._1._2, edit._2)
+  })
+
+  vm.onBackgroundChange.subscribe(edit => {
+    model.changeBackground(edit._1._1, edit._1._2, edit._2)
+  })
+
+  vm.onColorChange.subscribe(edit => {
+    model.changeColor(edit._1._1, edit._1._2, edit._2)
+  })
+
+  // rerender table after data/resize/scroll changes
+  dm.labeledDataTable.subscribe(table => vm.dataChanged(table))
 
   stage = new PrimaryStage() {
     title = "Scala Excel"

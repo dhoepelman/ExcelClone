@@ -5,12 +5,13 @@ import scalafx.beans.property.ObjectProperty
 import scalaExcel.model.Styles
 import scalaExcel.util.{ColumnTranslator, DefaultProperties}
 
-class LabeledDataTable(_dataWindow: DataWindow = LabeledDataTable.defaultDataWindow,
-                       _allHeaderWidths: List[Double] = LabeledDataTable.defaultHeaderWidths,
-                       _cellContents: Iterable[((Int, Int), String, Any, Styles)] = List(),
-                       _sortColumn: Int = -1,
-                       val sortAscending: Boolean = true,
-                       val rebuild: Boolean) {
+class LabeledDataTable(
+    _dataWindow: DataWindow = LabeledDataTable.defaultDataWindow,
+    _allHeaderWidths: List[Double] = LabeledDataTable.defaultHeaderWidths,
+    _cellContents: Iterable[((Int, Int), String, Any, Styles)] = List(),
+    _sortColumn: Int = -1,
+    val sortAscending: Boolean = true,
+    val rebuild: Boolean) {
 
   def headers = LabeledDataTable.getHeaders(_dataWindow.visibleBounds)
 
