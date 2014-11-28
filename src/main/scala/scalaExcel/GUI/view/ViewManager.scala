@@ -14,10 +14,9 @@ import scalaExcel.GUI.util.Filer
 import scalaExcel.model.{CellPos, Model, Styles}
 import scalafx.Includes._
 import scalafx.scene.control._
-import scalafx.scene.input._
+import scalafx.scene.input.{ClipboardContent, _}
 import scalafx.scene.layout.AnchorPane
 import scalafx.scene.paint.Color
-import scalafx.scene.input.ClipboardContent
 
 class ViewManager extends jfxf.Initializable {
 
@@ -163,7 +162,7 @@ class ViewManager extends jfxf.Initializable {
 
     // TODO: Put it in a better/correct place?
     def currentCoords() = {
-      table.selectionModel.value.getSelectedCells.map( p => (p.getColumn-1, p.getRow))
+      table.selectionModel.value.getSelectedCells.map(p => (p.getColumn - 1, p.getRow))
     }
 
     // TODO: Make the cell immidiatly dissapear when cut
@@ -182,7 +181,7 @@ class ViewManager extends jfxf.Initializable {
       // TODO: Multiple selection
       val c = new ClipboardContent()
       val p = currentCoords.head
-      c.put(copyPasteFormat, ("copy",p))
+      c.put(copyPasteFormat, ("copy", p))
       // TODO: Place the cell value as a string on the clipboard
       c.putString("We lied! Copy pasting the cell value isn't actually implemented")
       Clipboard.systemClipboard.setContent(c)
