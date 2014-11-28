@@ -101,13 +101,3 @@ object DependencyModifier {
   }
 
 }
-
-object DependencyModifierRun extends App {
-  val p = new Parser()
-
-  val or = p parsing "=A1"
-  val cut = p parsing "=B3"
-
-  println(cut)
-  println(DependencyModifier.changeDependency(or, (0,0), (1,2)))
-}
