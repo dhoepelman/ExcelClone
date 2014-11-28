@@ -21,6 +21,8 @@ sealed trait Cell {
   /** Get the current value of this cell */
   def eval(deps: Map[(Int, Int), Value]): Value = Evaluator.eval(Ctx(deps), AST)
 
+  override def toString = '"' + f + '"'
+
   protected def Ctx(values: Map[(Int, Int), Value])(c: ACell) = values get ((colToNum(c.c), c.r)) match {
     case Some(v) => v
     case None => VDouble(0)//throw new IllegalArgumentException(s"Dependency (${c.c},${c.r}}) not found in map")

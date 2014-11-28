@@ -6,7 +6,7 @@ import scalaExcel.model.OperationHelpers._
 
 class Model {
   /** This is a stream of inputs from 'the world' that will effect the state of the sheet model */
-  val sheetMutations = BehaviorSubject.apply[ModelMutations](Refresh())
+  val sheetMutations = BehaviorSubject.apply[ModelMutations](Refresh)
 
   /**
    * function to propagate updates to dependent cells
@@ -32,18 +32,29 @@ class Model {
   // this combines the initial Sheet with all input mutations from the outside
   // world
   val sheet = sheetMutations.scan(new Sheet())((sheet, action) => action match {
-    case SetFormula(x, y, f) => {
+    case SetFormula(x, y, f) =>
       val (s, updates) = sheet.setCell(x, y, f)
       updateSheet(s, updates, Set((x, y)))
-    }
     case EmptyCell(x, y) => updateSheet(sheet.deleteCell((x,y)))
-    case CopyCell(x1,y1,x2,y2) => updateSheet(sheet.copyCell((x1,y1),(x2,y2)))
-    case CutCell(x1,y1,x2,y2) => updateSheet(sheet.cutCell((x1,y1),(x2,y2)))
+    case CopyCell(from, to) => updateSheet(sheet.copyCell(from, to))
+    case CutCell(from, to) => updateSheet(sheet.cutCell(from, to))
     case SetColor(x, y, c) => sheet.setCellColor(x, y, c)
-    case Refresh() => sheet
+    case Refresh => sheet
   })
 
-  def refresh() = sheetMutations.onNext(Refresh())
+  def refresh() = sheetMutations.onNext(Refresh)
+
+  def emptyCell(x : Int, y : Int)  {
+    sheetMutations.onNext(EmptyCell(x,y))
+  }
+
+  def copyCell(from : CellPos, to : CellPos) {
+    sheetMutations.onNext(CopyCell(from, to))
+  }
+
+  def cutCell(from : CellPos, to : CellPos) {
+    sheetMutations.onNext(CutCell(from, to))
+  }
 
   def changeFormula(x: Int, y: Int, f: String) {
     sheetMutations.onNext(SetFormula(x, y, f))
@@ -52,7 +63,6 @@ class Model {
   def changeColor(x: Int, y: Int, c: Color) {
     sheetMutations.onNext(SetColor(x, y, c))
   }
-
 }
 
 object ModelExample extends App {

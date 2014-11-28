@@ -78,7 +78,7 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
   }
 
   def setCellColor(x: Int, y: Int, c: Color) = {
-    val style = styles get ((x, y)) getOrElse(Styles.DEFAULT)
+    val style = styles getOrElse ((x, y), Styles.DEFAULT)
     new Sheet(cells, values, dependents, styles + ((x, y) -> style.setColor(c)))
   }
   
@@ -96,7 +96,10 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
   def valueAt(x: Int, y: Int) = values get ((x, y))
 
   /** Get the Cell or return an empty cell */
-  private def getCell(pos : CellPos) : Cell = cells getOrElse(pos, Cell(pos))
+  def getCell(x : Int, y : Int) : Cell = getCell((x,y))
+
+  /** Get the Cell or return an empty cell */
+  def getCell(pos : CellPos) : Cell = cells getOrElse(pos, Cell(pos))
 
   private def calcNewValue(c: Cell) = {
     val value = c.eval(values)
@@ -104,11 +107,8 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
   }
 
   private def calcNewDependents(c: Cell) = {
-    val oldCell = cells get (c.position)
-    val oldDeps = oldCell match {
-      case Some(c) => c.refs
-      case None => List()
-    }
+    val oldCell = getCell(c.position)
+    val oldDeps = oldCell.refs
 
     val r = c.refs
     val rmvDeps = oldDeps diff r
