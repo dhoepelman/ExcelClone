@@ -146,7 +146,11 @@ class ViewManager extends jfxf.Initializable {
       })
       .map(chooser => chooser.showSaveDialog(tableContainer.scene.window.getValue))
       .filter(_ != null)
-      .subscribe(file => Filer.saveCSV(file, table.items.getValue))
+      .labelAlways(model.sheet)
+      .subscribe(fs => {
+          val (file, sheet) = fs
+          Filer.saveCSV(file, sheet)
+      })
 
     loadStream.map(x => {
         fileChooser.setTitle("Open file")
@@ -208,11 +212,14 @@ class ViewManager extends jfxf.Initializable {
    * Extension functions for Rx Observables
    */
   implicit class ExtendRx[T](ob: Observable[T]) {
+    /** Similar to combineLatest, but it emits iff this observable emits */
     def labelAlways[L](la: Observable[L]) =
-      ob.combineLatest(la)
-        .distinctUntilChanged(_._1)
-        .map(c => new {val value = c._1; val label = c._2})
+      ob.timestamp
+        .combineLatest(la)
+        .distinctUntilChanged(_._1._1)
+        .map(x => (x._1._2, x._2))
   }
+
 
   def changeEditorText(text: String) = formulaEditor.text = text
 
