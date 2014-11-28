@@ -1,24 +1,21 @@
 package scalaExcel.GUI.view
 
-import scalaExcel.model.Styles
-import scalaExcel.model.Model
-import scalafx.Includes._
 import java.net.URL
-import javafx.scene.{control => jfxsc}
-import javafx.scene.{layout => jfxsl}
+import javafx.scene.{control => jfxsc, layout => jfxsl}
 import javafx.stage.FileChooser.ExtensionFilter
 import javafx.{event => jfxe, fxml => jfxf}
+
 import rx.lang.scala._
-import scalafx.scene.layout.AnchorPane
-import scalafx.collections.ObservableBuffer
-import scalafx.scene.control._
-import scalafx.scene.paint.Color
-import scalaExcel.GUI.util.CSSHelper
-import scalaExcel.GUI.util.Filer
+
 import scala.language.reflectiveCalls
-import scalaExcel.GUI.data.{DataManager, DataCell, LabeledDataTable}
-import LabeledDataTable.DataRow
-import scalafx.beans.property.ObjectProperty
+import scalaExcel.GUI.data.LabeledDataTable
+import scalaExcel.GUI.data.LabeledDataTable.DataRow
+import scalaExcel.GUI.util.Filer
+import scalaExcel.model.{CellPos, Model, Styles}
+import scalafx.Includes._
+import scalafx.scene.control._
+import scalafx.scene.layout.AnchorPane
+import scalafx.scene.paint.Color
 
 class ViewManager extends jfxf.Initializable {
 
@@ -47,6 +44,11 @@ class ViewManager extends jfxf.Initializable {
   @jfxf.FXML private var menuSaveDelegate: javafx.scene.control.MenuItem = _
   private var menuSave: scalafx.scene.control.MenuItem = _
   private var saveStream: Observable[String] = _
+
+  @jfxf.FXML private var menuCutDelegate: javafx.scene.control.MenuItem = _
+  @jfxf.FXML private var menuCopyDelegate: javafx.scene.control.MenuItem = _
+  @jfxf.FXML private var menuPasteDelegate: javafx.scene.control.MenuItem = _
+  @jfxf.FXML private var menuDeleteDelegate: javafx.scene.control.MenuItem = _
 
   @jfxf.FXML
   private var testButtonDelegate: jfxsc.Button = _
@@ -101,27 +103,27 @@ class ViewManager extends jfxf.Initializable {
     // Update the formula editor
     sheetWithSelectedCell
       .map(x => x match {
-        case (sheet, pos) => sheet.cells.get(pos) match {
-          case Some(cell) => cell.f
-          case None => ""
-        }
-      })
+      case (sheet, pos) => sheet.cells.get(pos) match {
+        case Some(cell) => cell.f
+        case None => ""
+      }
+    })
       .distinctUntilChanged
       .subscribe(f => changeEditorText(f))
 
     // Update color pickers when selection changes
     sheetWithSelectedCell
       .map(x => x match {
-        case (sheet, pos) => sheet.styles.get(pos) match {
-          case Some(style) => style
-          case None => Styles.DEFAULT
-        }
-      })
+      case (sheet, pos) => sheet.styles.get(pos) match {
+        case Some(style) => style
+        case None => Styles.DEFAULT
+      }
+    })
       .distinctUntilChanged
       .subscribe(s => {
-        changeBackgroundColorPicker(s.background)
-        changeFontColorPicker(s.color)
-      })
+      changeBackgroundColorPicker(s.background)
+      changeFontColorPicker(s.color)
+    })
 
     // Changes on formula editor are pushed to the selected cell
     singleSelectedCell.combineLatest(formulaEditorStream)
@@ -141,21 +143,45 @@ class ViewManager extends jfxf.Initializable {
 
     // Load - Save
     saveStream.map(x => {
-        fileChooser.setTitle("Save destination")
-        fileChooser
-      })
+      fileChooser.setTitle("Save destination")
+      fileChooser
+    })
       .map(chooser => chooser.showSaveDialog(tableContainer.scene.window.getValue))
       .filter(_ != null)
       .subscribe(file => Filer.saveCSV(file, table.items.getValue))
 
     loadStream.map(x => {
-        fileChooser.setTitle("Open file")
-        fileChooser
-      })
+      fileChooser.setTitle("Open file")
+      fileChooser
+    })
       .map(chooser => chooser.showOpenDialog(tableContainer.scene.window.getValue))
       .filter(_ != null)
       .map(file => Filer.loadCSV(file))
       .subscribe(data => ??? /* DataManager.populateDataModel(data) */)
+
+    menuCutDelegate.onAction = handle {
+      // TODO: Actually get the coördinates currently in focus
+      val coords = (0, 0)
+      clipboard = Some(Cut, coords)
+    }
+
+    menuCopyDelegate.onAction = handle {
+      // TODO: Actually get the coördinates currently in focus
+      val coords = (0, 0)
+      clipboard = Some(Copy, coords)
+    }
+
+    menuPasteDelegate.onAction = handle {
+      if (clipboard.isDefined) {
+        // TODO: Actually get the coördinates currently in focus
+        val to = (1, 0)
+        // TODO: Actually do this on the real model
+        clipboard get match {
+          case (Cut, from) => model.cutCell(from, to)
+          case (Copy, from) => model.copyCell(from, to)
+        }
+      }
+    }
   }
 
   def initialize(url: URL, rb: java.util.ResourceBundle) {
@@ -211,7 +237,10 @@ class ViewManager extends jfxf.Initializable {
     def labelAlways[L](la: Observable[L]) =
       ob.combineLatest(la)
         .distinctUntilChanged(_._1)
-        .map(c => new {val value = c._1; val label = c._2})
+        .map(c => new {
+        val value = c._1;
+        val label = c._2
+      })
   }
 
   def changeEditorText(text: String) = formulaEditor.text = text
@@ -220,4 +249,11 @@ class ViewManager extends jfxf.Initializable {
 
   def changeFontColorPicker(color: Color) = fontColorPicker.value = color
 
+  // TODO: Put this on the system clipboard with Clipboard class.
+  // TODO: Put the cell value on the systen clipboard for copy-pasting outside of our program
+  private var clipboard: Option[(ClipboardAction, CellPos)] = None
+
+  private sealed trait ClipboardAction
+  private case object Cut extends ClipboardAction
+  private case object Copy extends ClipboardAction
 }
