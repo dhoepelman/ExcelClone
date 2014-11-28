@@ -67,7 +67,7 @@ object DependencyModifier {
   }
 
   private def checkValidRef(e : ParseRef) : Expr = {
-    val error = Const(VErr(InvalidRef()))
+    val error = Const(VErr(InvalidRef))
     e match {
       case Cell(ColRef(c,_), RowRef(r, _)) => if(colToNum(c) < 1 || r < 1) error else e
       case Range(start, end) => if(checkValidRef(start) == error || checkValidRef(end) == error) error else e

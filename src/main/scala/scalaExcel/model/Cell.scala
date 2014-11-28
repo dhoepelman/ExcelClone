@@ -1,6 +1,6 @@
 package scalaExcel.model
 
-import scalaExcel.formula.{Evaluator, ACell, Value, Parser, VDouble}
+import scalaExcel.formula._
 import scalaExcel.formula.ReferenceFinder.findRefCells
 import scalaExcel.util.ColumnTranslator.{numToCol, colToNum}
 
