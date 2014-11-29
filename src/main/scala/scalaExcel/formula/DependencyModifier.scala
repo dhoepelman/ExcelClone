@@ -5,6 +5,7 @@ import scalaExcel.util.ColumnTranslator._
 
 /** Modifies cell dependencies in their AST */
 object DependencyModifier {
+
   /**
    * Change every dependency of ''from'' to ''to''
    * Only single dependencies, not in ranges
@@ -93,5 +94,22 @@ object DependencyModifier {
     }
     case _ => f(e)
   }
+
+  /**
+   * Change the dependencies of formulas when sorting rows, so if A1 is referred
+   * but A1 will be moved to row 5, this will move all A1 references to A5
+   *
+   * Use this when sorting rows
+   * @example ((A1, A3), Map(0 -> 4)) results into (A5, A3)
+   */
+  def changeDependencyRows(muts: Map[Int, Int]) = applyToAST(e => e match {
+    case c: Cell => {
+      val (col, row) = cellToPos(c)
+      val row2 = muts.get(row).getOrElse(row)
+      changeCellPos(c, (col, row2))
+    }
+    case inv: ACell => throw new IllegalArgumentException("Invalid AST type")
+    case _ => e
+  }) _
 
 }

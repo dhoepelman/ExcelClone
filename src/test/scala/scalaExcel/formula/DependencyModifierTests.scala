@@ -9,21 +9,23 @@ import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
 
 import scalaExcel.model.CellPos
+import scalaExcel.formula.DependencyModifier.{changeDependency, moveDependencies, changeDependencyRows}
+import scalaExcel.formula.PPrinter.pprint
 
 @RunWith(value = classOf[Parameterized])
-class DependencyModifierTests(orf: String, from : CellPos, to : CellPos, cutf : String, copyf : String) {
+class DependencyModifierParameterizedTests(orf: String, from : CellPos, to : CellPos, cutf : String, copyf : String) {
   val p = new Parser()
 
   val or = p parsing orf
   val cut = p parsing cutf
   val copy = p parsing copyf
 
-  @Test def testChangeDependency() = assertEquals(cut, DependencyModifier.changeDependency(from, to)(or))
+  @Test def testChangeDependency() = assertEquals(cut, changeDependency(from, to)(or))
 
-  @Test def testMoveDependencies() = assertEquals(copy, DependencyModifier.moveDependencies(from, to)(or))
+  @Test def testMoveDependencies() = assertEquals(copy, moveDependencies(from, to)(or))
 }
 
-object DependencyModifierTests {
+object DependencyModifierParameterizedTests {
   @Parameters def parameters: ju.Collection[Array[jl.Object]] = {
     val data = new ju.ArrayList[Array[jl.Object]]()
     List(
@@ -39,4 +41,24 @@ object DependencyModifierTests {
       ).foreach({case (a,b,c,d,e) => data.add(Array(a,b,c,d,e))})
     data
   }
+}
+
+class DependencyModifierTests {
+
+  val parser= new Parser()
+  def p = parser parsing _
+
+  def change(s: String) =
+    pprint(changeDependencyRows(Map(
+      0 -> 4,
+      1 -> 5
+    ))(p(s)))
+
+  @Test def changeDependencyRowsTest() = {
+    assertEquals("=A5", change("=A1"))
+    assertEquals("=A6", change("=A2"))
+    assertEquals("=A5 + A6", change("=A1 + A2"))
+    assertEquals("=A4", change("=A4"))
+  }
+
 }
