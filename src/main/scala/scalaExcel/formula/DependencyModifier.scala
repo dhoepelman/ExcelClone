@@ -14,8 +14,7 @@ object DependencyModifier {
    * @example (=A1, (0,0), (1,2)) becomes =B3
    * @example (=SUM(A1:A5), (0,0), (1,2)) stays =SUM(A1:A5)
    */
-  def changeDependency(ast: Expr, from: CellPos, to: CellPos): Expr = {
-    applyToAST(e => e match {
+  def changeDependency(from: CellPos, to: CellPos) = applyToAST(e => e match {
       case c: Cell =>
           if (cellToPos(c) == from)
             changeCellPos(c, to)
@@ -24,8 +23,7 @@ object DependencyModifier {
       // Easily possible, but probably indicates a mistake elsewhere
       case inv: ACell => throw new IllegalArgumentException("Invalid AST type")
       case _ => e
-    })(ast)
-  }
+    }) _
 
   private def cellToPos(c: Cell): CellPos = c match {
     case Cell(ColRef(c2, _), RowRef(r, _)) => (colToNum(c2), r-1)
@@ -44,7 +42,8 @@ object DependencyModifier {
    * @example (=B1+C1, (2,0), (3,2)) becomes =C3+D3
    * @example (=$B1+C$1), (2,0), (3,2)) becomes =$B3+D$1
    */
-  def moveDependencies(ast: Expr, from: CellPos, to: CellPos): Expr = {
+  def moveDependencies(from: CellPos, to: CellPos): (Expr => Expr) = {
+
     val dX = to._1 - from._1
     val dY = to._2 - from._2
 
@@ -66,7 +65,7 @@ object DependencyModifier {
       case _: ACell => throw new IllegalArgumentException
       case _: ARange => throw new IllegalArgumentException
       case _ => e
-    })(ast)
+    })
   }
 
   private def checkValidRef(e : ParseRef) : Expr = {

@@ -18,9 +18,9 @@ class DependencyModifierTests(orf: String, from : CellPos, to : CellPos, cutf : 
   val cut = p parsing cutf
   val copy = p parsing copyf
 
-  @Test def testChangeDependency() = assertEquals(cut, DependencyModifier.changeDependency(or, from, to))
+  @Test def testChangeDependency() = assertEquals(cut, DependencyModifier.changeDependency(from, to)(or))
 
-  @Test def testMoveDependencies() = assertEquals(copy, DependencyModifier.moveDependencies(or, from, to))
+  @Test def testMoveDependencies() = assertEquals(copy, DependencyModifier.moveDependencies(from, to)(or))
 }
 
 object DependencyModifierTests {
