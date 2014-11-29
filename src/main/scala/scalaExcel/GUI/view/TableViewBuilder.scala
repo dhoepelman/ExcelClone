@@ -199,13 +199,7 @@ class StreamingTable(labeledTable: LabeledDataTable) {
   })
 
   // Grumble grumble JVM type erasure can't overload on Observable[Unit] and Observable[T] grumble grumble
-  def withSelectedCellsOnly(o: Observable[Unit]): Observable[List[CellPos]] = Observable.apply({ combinedo =>
-    var last = List[CellPos]()
-    onSelectedCellChange.subscribe({ ps => last = ps})
-    o.subscribe({ _ =>
-      combinedo.onNext(last)
-    })
-  })
+  def withSelectedCellsOnly(o: Observable[Any]): Observable[List[CellPos]] = withSelectedCells(o).map({ case (ps,_) => ps })
 }
 
 object TableViewBuilder {
