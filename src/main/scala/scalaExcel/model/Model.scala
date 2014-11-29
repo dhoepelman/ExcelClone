@@ -6,7 +6,7 @@ import scalaExcel.model.OperationHelpers._
 
 class Model {
   /** This is a stream of inputs from 'the world' that will effect the state of the sheet model */
-  val sheetMutations = BehaviorSubject.apply[ModelMutations](Refresh)
+  val sheetMutations = BehaviorSubject[ModelMutations](Refresh)
 
   /**
    * function to propagate updates to dependent cells

@@ -57,7 +57,7 @@ class DataCellColumn(
 class NumberedColumn extends TableColumn[DataRow, DataCell] {
   text = DefaultProperties.NUMBERED_COLUMN_HEADER
   id = "-1"
-  cellValueFactory = _ => ObjectProperty.apply(DataCell.newEmpty())
+  cellValueFactory = _ => ObjectProperty(DataCell.newEmpty())
   cellFactory = _ => new TableCell[DataRow, DataCell] {
     item.onChange {
       (_, _, _) =>
@@ -95,7 +95,7 @@ class StreamingTable(labeledTable: LabeledDataTable) {
   selectionModel.setCellSelectionEnabled(true)
   selectionModel.setSelectionMode(SelectionMode.MULTIPLE)
 
-  val onSelection = Observable.apply[List[(Int, Int)]](o => {
+  val onSelection = Observable[List[(Int, Int)]](o => {
     selectionModel.getSelectedCells.onChange((source, _) => {
       // first column is -1, because it's reserved for row numbers
       val cells = source
@@ -108,7 +108,7 @@ class StreamingTable(labeledTable: LabeledDataTable) {
     })
   })
 
-  val onColumnReorder = Observable.apply[Map[Int, Int]](o => {
+  val onColumnReorder = Observable[Map[Int, Int]](o => {
     table.columns.onChange((cols, changes) => {
       val permutations = cols
         .view
@@ -130,7 +130,7 @@ class StreamingTable(labeledTable: LabeledDataTable) {
 
   type XSortEvent = jfxc.SortEvent[jfxc.TableView[DataRow]]
 
-  val onSort = Observable.apply[(Int, Boolean)](o => {
+  val onSort = Observable[(Int, Boolean)](o => {
     table.onSort = new EventHandler[XSortEvent] {
       override def handle(event: XSortEvent) {
         val columns = event.getSource.getSortOrder
@@ -147,7 +147,7 @@ class StreamingTable(labeledTable: LabeledDataTable) {
     }
   })
 
-  val onClick = Observable.apply[MouseEvent](o => {
+  val onClick = Observable[MouseEvent](o => {
     table.onMouseClicked = new EventHandler[MouseEvent] {
       override def handle(event: MouseEvent) {
         o.onNext(event)
@@ -181,7 +181,7 @@ class StreamingTable(labeledTable: LabeledDataTable) {
   }
 
   /** Observable of selected cells in the table */
-  val onSelectedCellChange = Observable.apply[List[CellPos]]({ o =>
+  val onSelectedCellChange = Observable[List[CellPos]]({ o =>
     table.selectionModel.value.getSelectedCells.onChange({ (poss, _) => o.onNext(poss.toList map ({
       pos => (pos.getColumn - 1, pos.getRow)
     }))
@@ -190,7 +190,7 @@ class StreamingTable(labeledTable: LabeledDataTable) {
 
   // TODO: There's probably a better way to do this
   /** Combine an observable with the current selected cells in the table */
-  def withSelectedCells[T](o: Observable[T]): Observable[(List[CellPos], T)] = Observable.apply({ combinedo =>
+  def withSelectedCells[T](o: Observable[T]): Observable[(List[CellPos], T)] = Observable({ combinedo =>
     var last = List[CellPos]()
     onSelectedCellChange.subscribe({ ps => last = ps})
     o.subscribe({ t =>

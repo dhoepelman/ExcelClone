@@ -223,35 +223,35 @@ class ViewManager extends jfxf.Initializable {
     testButton = new Button(testButtonDelegate)
 
     backgroundColorPicker = new ColorPicker(backgroundColorPickerDelegate)
-    backgroundColorStream = Observable.apply[Color](o => {
+    backgroundColorStream = Observable[Color](o => {
       backgroundColorPicker.onAction = handle {
         o.onNext(backgroundColorPicker.value.value)
       }
     })
 
     fontColorPicker = new ColorPicker(fontColorPickerDelegate)
-    fontColorStream = Observable.apply[Color](o => {
+    fontColorStream = Observable[Color](o => {
       fontColorPicker.onAction = handle {
         o.onNext(fontColorPicker.value.value)
       }
     })
 
     formulaEditor = new TextField(formulaEditorDelegate)
-    formulaEditorStream = Observable.apply[String](o => {
+    formulaEditorStream = Observable[String](o => {
       formulaEditor.onAction = handle {
         o.onNext(formulaEditor.getText)
       }
     })
 
     menuLoad = new MenuItem(menuLoadDelegate)
-    loadStream = Observable.apply[String](o => {
+    loadStream = Observable[String](o => {
       menuLoad.onAction = handle {
         o.onNext("temp.csv")
       }
     })
 
     menuSave = new MenuItem(menuSaveDelegate)
-    saveStream = Observable.apply[String](o => {
+    saveStream = Observable[String](o => {
       menuSave.onAction = handle {
         o.onNext("temp.csv")
       }

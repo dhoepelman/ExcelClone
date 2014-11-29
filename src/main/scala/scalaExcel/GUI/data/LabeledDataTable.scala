@@ -94,7 +94,7 @@ object LabeledDataTable {
     new DataTable() ++=
       List.range(0, rows + 1).map(i => new DataRow() ++=
         List.range(0, columns + 1).map(j =>
-          ObjectProperty.apply(data.getOrElse((i, j), DataCell.newEmpty()))))
+          ObjectProperty(data.getOrElse((i, j), DataCell.newEmpty()))))
   }
 
   def getHeaders(bounds: (Int, Int, Int, Int)) =
