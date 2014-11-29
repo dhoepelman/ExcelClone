@@ -11,6 +11,7 @@ import scala.language.reflectiveCalls
 import scalaExcel.GUI.data.LabeledDataTable
 import scalaExcel.GUI.data.LabeledDataTable.DataRow
 import scalaExcel.GUI.util.Filer
+import scalaExcel.GUI.view.ViewManager._
 import scalaExcel.model.{CellPos, Model, Styles}
 import scalafx.Includes._
 import scalafx.scene.control._
@@ -47,9 +48,16 @@ class ViewManager extends jfxf.Initializable {
   private var saveStream: Observable[String] = _
 
   @jfxf.FXML private var menuCutDelegate: javafx.scene.control.MenuItem = _
+  private var menuCut: scalafx.scene.control.MenuItem = _
   @jfxf.FXML private var menuCopyDelegate: javafx.scene.control.MenuItem = _
+  private var menuCopy: scalafx.scene.control.MenuItem = _
   @jfxf.FXML private var menuPasteDelegate: javafx.scene.control.MenuItem = _
+  private var menuPaste: scalafx.scene.control.MenuItem = _
+  private var clipboardStream: Observable[ClipboardAction] = _
+
   @jfxf.FXML private var menuDeleteDelegate: javafx.scene.control.MenuItem = _
+  private var menuDelete: scalafx.scene.control.MenuItem = _
+  private var deleteStream : Observable[List[CellPos]] = _
 
   @jfxf.FXML
   private var testButtonDelegate: jfxsc.Button = _
@@ -160,50 +168,47 @@ class ViewManager extends jfxf.Initializable {
       .map(file => Filer.loadCSV(file))
       .subscribe(data => ??? /* DataManager.populateDataModel(data) */)
 
-    // TODO: Put it in a better/correct place?
-    def currentCoords() = {
-      table.selectionModel.value.getSelectedCells.map(p => (p.getColumn - 1, p.getRow))
-    }
+    deleteStream = streamTable.withSelectedCellsOnly(Observable[Unit]( o =>
+      menuDelete.onAction = handle {
+        o.onNext(Unit)
+      }
+    ))
+    deleteStream.subscribe( ps => ps foreach( p => model.emptyCell(p._1, p._2)) )
 
-    // TODO: Make the cell immidiatly dissapear when cut
-    menuCutDelegate.onAction = handle {
+    // TODO:  Yeah, so putting it in a variable first works. But when I put it directly in the subscribe it doesn't?...
+    val clipboardHandler : ((List[CellPos], ClipboardAction)) => Unit = {case (ps,action) =>
+      // Ignore if no cells are selected
+      if(ps.isEmpty)
+        return
       // TODO: Multiple selection
-      val c = new ClipboardContent()
-      val p = currentCoords.head
-      // TODO: Replace "cut" with proper serializable case class
-      c.put(copyPasteFormat, ("cut", p))
-      // TODO: Place the cell value as a string on the clipboard
-      c.putString("We lied! Cut pasting the cell value isn't actually implemented")
-      Clipboard.systemClipboard.setContent(c)
-    }
-
-    menuCopyDelegate.onAction = handle {
-      // TODO: Multiple selection
-      val c = new ClipboardContent()
-      val p = currentCoords.head
-      c.put(copyPasteFormat, ("copy", p))
-      // TODO: Place the cell value as a string on the clipboard
-      c.putString("We lied! Copy pasting the cell value isn't actually implemented")
-      Clipboard.systemClipboard.setContent(c)
-    }
-
-    menuPasteDelegate.onAction = handle {
-      val to = currentCoords.head
-      if (Clipboard.systemClipboard.hasContent(copyPasteFormat)) {
-        Clipboard.systemClipboard.getContent(copyPasteFormat) match {
-          case ("cut", from) => model.cutCell(from.asInstanceOf[CellPos], to)
-          case ("copy", from) => model.copyCell(from.asInstanceOf[CellPos], to)
-          case _ => throw new IllegalArgumentException("Clipboard contained invalid copy-paste data")
+      // TODO: Make the cell immediately disappear when cut
+      val clipboard = Clipboard.systemClipboard
+      val contents = new ClipboardContent()
+      action match {
+        case Cut | Copy => {
+          contents.put(copyPasteFormat, (action, ps.head))
+          // TODO: Place the cell value as a string on the clipboard
+          contents.putString("We lied! Copy pasting the cell value isn't actually implemented")
+          clipboard.setContent(contents)
         }
-      } else if (Clipboard.systemClipboard.hasString) {
-        model.changeFormula(to._1, to._2, Clipboard.systemClipboard.getString)
+        case Paste => {
+          val to = ps.head
+          if(clipboard.hasContent(copyPasteFormat))
+            clipboard.getContent(copyPasteFormat) match {
+              case (Cut, from) => {
+                // Cut-Pasting can only happen once
+                clipboard.clear()
+                model.cutCell(from.asInstanceOf[CellPos], to)
+              }
+              case (Copy, from) => model.copyCell(from.asInstanceOf[CellPos], to)
+              case a => throw new IllegalArgumentException("Clipboard contained invalid copy-paste data {" + a.toString + "}")
+            }
+          else if(clipboard.hasString)
+            model.changeFormula(to._1, to._2, clipboard.getString)
+        }
       }
     }
-
-    menuDeleteDelegate.onAction = handle {
-      val coords = currentCoords.head
-      model.emptyCell(coords._1, coords._2)
-    }
+    streamTable.withSelectedCells(clipboardStream).subscribe(clipboardHandler)
   }
 
   val copyPasteFormat = new DataFormat("x-excelClone/cutcopy")
@@ -252,6 +257,23 @@ class ViewManager extends jfxf.Initializable {
       }
     })
 
+    menuCut = new MenuItem(menuCutDelegate)
+    menuCopy = new MenuItem(menuCopyDelegate)
+    menuPaste = new MenuItem(menuPasteDelegate)
+    clipboardStream = Observable( o => {
+      menuCut.onAction = handle {
+        o.onNext(Cut)
+      }
+      menuCopy.onAction = handle {
+        o.onNext(Copy)
+      }
+      menuPaste.onAction = handle {
+        o.onNext(Paste)
+      }
+    }
+    )
+
+    menuDelete = new MenuItem(menuDeleteDelegate)
   }
 
   /**
@@ -273,9 +295,11 @@ class ViewManager extends jfxf.Initializable {
 
   def changeFontColorPicker(color: Color) = fontColorPicker.value = color
 
-  /* JVM said this wasn't actually serializable >:-(
+}
+
+object ViewManager {
   sealed trait ClipboardAction extends Serializable
   case object Cut extends ClipboardAction
   case object Copy extends ClipboardAction
-  */
+  case object Paste extends ClipboardAction
 }
