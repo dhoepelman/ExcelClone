@@ -47,7 +47,6 @@ class CopyPasteTests {
 
     var sheet : Sheet = null
     model.sheet.subscribe(x => sheet = x)
-    model.sheet.subscribe({ println(_)})
 
     model.changeFormula(0, 0, "1")
     model.changeFormula(1, 0, "2")
