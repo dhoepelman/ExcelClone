@@ -5,9 +5,8 @@ import rx.lang.scala.subjects.BehaviorSubject
 import scalaExcel.model.OperationHelpers._
 
 class Model {
-
   /** This is a stream of inputs from 'the world' that will effect the state of the sheet model */
-  val sheetMutations = BehaviorSubject.apply[ModelMutations](Refresh())
+  val sheetMutations = BehaviorSubject[ModelMutations](Refresh)
 
   /**
    * function to propagate updates to dependent cells
@@ -31,21 +30,35 @@ class Model {
   }
 
   def updateStyle(sheet: Sheet, x: Int, y: Int, f: Styles => Styles) =
-    sheet.setCellStyle(x, y, f(sheet.styles.get((x, y)).getOrElse(Styles.DEFAULT)))
+    sheet.setCellStyle(x, y, f(sheet.styles.getOrElse((x, y), Styles.DEFAULT)))
 
   // this combines the initial Sheet with all input mutations from the outside
   // world
   val sheet = sheetMutations.scan(new Sheet())((sheet, action) => action match {
-    case SetFormula(x, y, f) => {
+    case SetFormula(x, y, f) =>
       val (s, updates) = sheet.setCell(x, y, f)
       updateSheet(s, updates, Set((x, y)))
-    }
+    case EmptyCell(x, y) => updateSheet(sheet.deleteCell((x,y)))
+    case CopyCell(from, to) => updateSheet(sheet.copyCell(from, to))
+    case CutCell(from, to) => updateSheet(sheet.cutCell(from, to))
     case SetColor(x, y, c) => updateStyle(sheet, x, y, s => s.setColor(c))
     case SetBackground(x, y, c) => updateStyle(sheet, x, y, s => s.setBackground(c))
-    case Refresh() => sheet
+    case Refresh => sheet
   })
 
-  def refresh() = sheetMutations.onNext(Refresh())
+  def refresh() = sheetMutations.onNext(Refresh)
+
+  def emptyCell(x : Int, y : Int)  {
+    sheetMutations.onNext(EmptyCell(x,y))
+  }
+
+  def copyCell(from : CellPos, to : CellPos) {
+    sheetMutations.onNext(CopyCell(from, to))
+  }
+
+  def cutCell(from : CellPos, to : CellPos) {
+    sheetMutations.onNext(CutCell(from, to))
+  }
 
   def changeFormula(x: Int, y: Int, f: String) {
     sheetMutations.onNext(SetFormula(x, y, f))
@@ -58,7 +71,6 @@ class Model {
   def changeColor(x: Int, y: Int, c: Color): Unit = {
     sheetMutations.onNext(SetColor(x, y, c))
   }
-
 }
 
 object ModelExample extends App {
@@ -70,7 +82,7 @@ object ModelExample extends App {
   // Or to just get the distinct values at cell (3, 1)
   model.sheet
     .map(_.valueAt(3, 1))
-    .filter(!_.isEmpty)
+    .filter(_.nonEmpty)
     .map(_.get)
     .distinctUntilChanged
     .subscribe(x => println(s"value at (3,1) changed to $x"))

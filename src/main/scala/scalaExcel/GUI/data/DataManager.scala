@@ -12,7 +12,7 @@ class DataManager(val model: Model) {
 
   // private val _windowActionStream = Subject[WindowActions]()
   private val _windowMutationStream = BehaviorSubject[WindowMutations](RefreshWindow())
-  private val _tableMutationStream = BehaviorSubject.apply[TableMutations](RefreshTable())
+  private val _tableMutationStream = BehaviorSubject[TableMutations](RefreshTable())
 
   private val windowStream = _windowMutationStream.scan(LabeledDataTable.defaultDataWindow)((window, action) =>
     action match {

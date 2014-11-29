@@ -5,6 +5,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.input.KeyCodeCombination?>
 
 <GridPane alignment="CENTER" prefHeight="348.0" prefWidth="460.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="scalaExcel.GUI.view.ViewManager">
     <columnConstraints>
@@ -20,14 +21,45 @@
                     <menus>
                         <Menu mnemonicParsing="false" text="File">
                             <items>
-                                <MenuItem fx:id="menuLoadDelegate" mnemonicParsing="false" text="Open" />
-                                <MenuItem fx:id="menuSaveDelegate" mnemonicParsing="false" text="Save" />
-                                <MenuItem mnemonicParsing="false" text="Close" />
+                                <MenuItem fx:id="menuLoadDelegate" text="Open">
+                                    <accelerator>
+                                        <KeyCodeCombination alt="UP" code="O" control="ANY" meta="ANY" shift="UP" shortcut="DOWN" />
+                                    </accelerator>
+                                </MenuItem>
+                                <MenuItem fx:id="menuSaveDelegate" text="Save">
+                                    <accelerator>
+                                        <KeyCodeCombination alt="UP" code="S" control="ANY" meta="ANY" shift="UP" shortcut="DOWN" />
+                                    </accelerator>
+                                </MenuItem>
+                                <MenuItem mnemonicParsing="false" text="Close">
+                                    <accelerator>
+                                        <KeyCodeCombination alt="UP" code="Q" control="ANY" meta="ANY" shift="UP" shortcut="DOWN" />
+                                    </accelerator>
+                                </MenuItem>
                             </items>
                         </Menu>
                         <Menu mnemonicParsing="false" text="Edit">
                             <items>
-                                <MenuItem mnemonicParsing="false" text="Delete" />
+                                <MenuItem fx:id="menuCutDelegate" text="Cut">
+                                    <accelerator>
+                                        <KeyCodeCombination alt="UP" code="X" control="ANY" meta="ANY" shift="UP" shortcut="DOWN" />
+                                    </accelerator>
+                                </MenuItem>
+                                <MenuItem fx:id="menuCopyDelegate" text="Copy">
+                                    <accelerator>
+                                        <KeyCodeCombination alt="UP" code="C" control="ANY" meta="ANY" shift="UP" shortcut="DOWN" />
+                                    </accelerator>
+                                </MenuItem>
+                                <MenuItem fx:id="menuPasteDelegate" text="Paste">
+                                    <accelerator>
+                                        <KeyCodeCombination alt="UP" code="V" control="ANY" meta="ANY" shift="UP" shortcut="DOWN" />
+                                    </accelerator>
+                                </MenuItem>
+                                <MenuItem fx:id="menuDeleteDelegate" text="Delete">
+                                    <accelerator>
+                                        <KeyCodeCombination alt="ANY" code="DELETE" control="ANY" meta="ANY" shift="ANY" shortcut="ANY" />
+                                    </accelerator>
+                                </MenuItem>
                             </items>
                         </Menu>
                         <Menu mnemonicParsing="false" text="Help">
