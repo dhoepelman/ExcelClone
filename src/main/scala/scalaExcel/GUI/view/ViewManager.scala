@@ -111,8 +111,8 @@ class ViewManager extends jfxf.Initializable {
 
     // Update the formula editor
     sheetWithSelectedCell
-      .map(x => x match {
-      case (sheet, pos) => sheet.cells.get(pos) match {
+      .map({
+        case (sheet, pos) => sheet.cells.get(pos) match {
         case Some(cell) => cell.f
         case None => ""
       }
@@ -122,8 +122,8 @@ class ViewManager extends jfxf.Initializable {
 
     // Update color pickers when selection changes
     sheetWithSelectedCell
-      .map(x => x match {
-      case (sheet, pos) => sheet.styles.get(pos) match {
+      .map({
+        case (sheet, pos) => sheet.styles.get(pos) match {
         case Some(style) => style
         case None => Styles.DEFAULT
       }
@@ -284,7 +284,7 @@ class ViewManager extends jfxf.Initializable {
       ob.combineLatest(la)
         .distinctUntilChanged(_._1)
         .map(c => new {
-        val value = c._1;
+        val value = c._1
         val label = c._2
       })
   }

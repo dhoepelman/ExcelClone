@@ -30,7 +30,7 @@ class Model {
   }
 
   def updateStyle(sheet: Sheet, x: Int, y: Int, f: Styles => Styles) =
-    sheet.setCellStyle(x, y, f(sheet.styles.get((x, y)).getOrElse(Styles.DEFAULT)))
+    sheet.setCellStyle(x, y, f(sheet.styles.getOrElse((x, y), Styles.DEFAULT)))
 
   // this combines the initial Sheet with all input mutations from the outside
   // world
@@ -82,7 +82,7 @@ object ModelExample extends App {
   // Or to just get the distinct values at cell (3, 1)
   model.sheet
     .map(_.valueAt(3, 1))
-    .filter(!_.isEmpty)
+    .filter(_.nonEmpty)
     .map(_.get)
     .distinctUntilChanged
     .subscribe(x => println(s"value at (3,1) changed to $x"))
