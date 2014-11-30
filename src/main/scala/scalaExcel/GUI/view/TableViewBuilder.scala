@@ -181,25 +181,25 @@ class StreamingTable(labeledTable: LabeledDataTable) {
   }
 
   /** Observable of selected cells in the table */
-  val onSelectedCellChange = Observable[List[CellPos]]({ o =>
+  val selectedCellStream = Observable[List[CellPos]]({ o =>
     table.selectionModel.value.getSelectedCells.onChange({ (poss, _) => o.onNext(poss.toList map ({
       pos => (pos.getColumn - 1, pos.getRow)
     }))
     })
   })
-
-  // TODO: There's probably a better way to do this
+  
   /** Combine an observable with the current selected cells in the table */
-  def withSelectedCells[T](o: Observable[T]): Observable[(List[CellPos], T)] = Observable({ combinedo =>
-    var last = List[CellPos]()
-    onSelectedCellChange.subscribe({ ps => last = ps})
-    o.subscribe({ t =>
-      combinedo.onNext((last, t))
-    })
-  })
+  def withSelectedCells[T](o: Observable[T]): Observable[(List[CellPos], T)] = o.withLatest(selectedCellStream)
 
   // Grumble grumble JVM type erasure can't overload on Observable[Unit] and Observable[T] grumble grumble
   def withSelectedCellsOnly(o: Observable[Any]): Observable[List[CellPos]] = withSelectedCells(o).map({ case (ps,_) => ps })
+
+  // TODO: Replace this with RxJava's operator if/when it gets available: https://github.com/ReactiveX/RxJava/issues/405
+  // Source: http://stackoverflow.com/a/27207073/572635
+  implicit class RXwithLatest[B](slow: Observable[B]) {
+    def withLatest[A](fast : Observable[A]) : Observable[(A,B)] =
+      fast.map({a => slow.publish.refCount.map({b => (a,b)})}).switch
+  }
 }
 
 object TableViewBuilder {
