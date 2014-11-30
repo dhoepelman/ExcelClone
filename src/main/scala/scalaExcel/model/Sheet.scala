@@ -43,22 +43,24 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
   /**
    * Copy a cell and change its dependencies relative to the new position
    */
-  def copyCell(from : CellPos, to: CellPos) = {
-    val cell = Cell(to, DependencyModifier.moveDependencies(getCell(from).AST, from, to))
+  def copyCell(from: CellPos, to: CellPos) = {
+    val cell = Cell(to, DependencyModifier.moveDependencies(from, to)(getCell(from).AST))
     (new Sheet(cells + (to -> cell), calcNewValue(cell), calcNewDependents(cell), styles), dependentsOf(cell))
   }
 
   /**
    * Cut a cell to a new location and propagate the location change to its dependents.
    */
-  def cutCell(from : CellPos, to: CellPos) = {
+  def cutCell(from: CellPos, to: CellPos) = {
     val dependents = dependentsOf(from)
     val toUpdate = dependents ++ dependentsOf(to)
 
     val (tempSheet, _) = setCell(to, Cell(to, getCell(from)))
 
     // Change all the dependent cells to point to the new cell
-    val tempSheet2 = dependents.foldLeft(tempSheet)( (s, pos) => s.setCell(pos, Cell(pos, DependencyModifier.changeDependency(s.getCell(pos).AST, from, to)))._1 )
+    val tempSheet2 = dependents.foldLeft(tempSheet){(s, pos) =>
+      s.setCell(pos, Cell(pos, DependencyModifier.changeDependency(from, to)(s.getCell(pos).AST)))._1
+    }
 
     // Delete the original cell
     val (newSheet, _) = tempSheet2.deleteCell(from)
