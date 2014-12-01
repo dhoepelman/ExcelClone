@@ -207,6 +207,7 @@ object Evaluator {
       case "ROWS"    => evalCallRows(args)
       case "COLUMNS" => evalCallColumns(args)
       case "COUNT"   => evalCallCount(ctx, desugarArgs(args))
+      case "MATCH"   => evalCallMatch(ctx, args)
       case "VLOOKUP" => evalVLookUp(ctx, args)
 
       case "IF"      => evalCallIf(ctx, args)
@@ -254,6 +255,27 @@ object Evaluator {
         case _ => 0
       })
       .fold(0)(_+_))
+
+  def evalCallMatch(ctx: Ctx, args: List[Expr]): Value = args match {
+    // value, array, type
+    // Default to exact match type = 0 (1 in excel), but 0 makes most sense
+    // Type 1: largest value that is >= v
+    // Type 0: exactly v
+    // Type -1: smallest value <= v
+    case List(v, a) => evalCallMatch(ctx, List(v, a, Const(VDouble(0))))
+    case List(v, Range(a1, a2), t) => {
+      val value = evalIn(ctx, v)
+      val (ACell((c1, r1))) = desugarCell(a1)
+      val (ACell((c2, r2))) = desugarCell(a2)
+      val row = (r1 to r2) find { ri => value == ctx(ACell((c1, ri))) }
+      row match {
+        case Some(r) => VDouble(r + 1)
+        case None => VErr(NA)
+      }
+    }
+    case List(v, a, t) => VErr(InvalidValue)
+    case _ => throw new Exception("Wrong number of arguments")
+  }
 
   def evalVLookUp(ctx: Ctx, args: List[Expr]): Value = args match {
     // value, array, index, exact
