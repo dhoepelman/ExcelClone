@@ -300,26 +300,23 @@ object Evaluator {
     // default exact to FALSE, which is the only type we implement here.
     case List(v, a, i)                => evalVLookUp(ctx, args :+ Const(VBool(false)))
     case List(v, c: Cell, i, e)       => evalVLookUp(ctx, List(v, Range(c, c), i, e))
-    case List(v, Range(a1, a2), i, e) => {
-
-      val (ACell((c1, r1))) = desugarCell(a1)
-      val (ACell((c2, r2))) = desugarCell(a2)
-
-      evalIn(ctx, i) match {
-        case VDouble(index) => {
-          val value = evalIn(ctx, v)
-          val lookupCol = c1 + index.toInt - 1
-          val row = (r1 to r2) find { ri => value == ctx(ACell((c1, ri))) }
-          row match {
-            case Some(r) =>
-              if (lookupCol > c2) VErr(InvalidRef)
-              else ctx(ACell((lookupCol, r)))
-            case None => VErr(NA)
-          }
+    case List(v, Range(a1, a2), i, e) => evalIn(ctx, i) match {
+      case VDouble(index) => {
+        val (ACell((c1, r1))) = desugarCell(a1)
+        val (ACell((c2, r2))) = desugarCell(a2)
+        val (c1_, c2_) = (min(c1, c2), max(c1, c2))
+        val (r1_, r2_) = (min(r1, r2), max(r1, r2))
+        val value = evalIn(ctx, v)
+        val lookupCol = c1_ + index.toInt - 1
+        val row = (r1_ to r2_) find { ri => value == ctx(ACell((c1_, ri))) }
+        row match {
+          case Some(r) =>
+            if (lookupCol > c2_) VErr(InvalidRef)
+            else ctx(ACell((lookupCol, r)))
+          case None => VErr(NA)
         }
-        case _ => VErr(InvalidValue)
       }
-
+      case _ => VErr(InvalidValue)
     }
     case List(v, a, i, e) => VErr(InvalidValue)
     case _ => throw new Exception("Wrong number of arguments")

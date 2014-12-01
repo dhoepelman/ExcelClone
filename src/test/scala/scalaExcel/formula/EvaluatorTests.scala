@@ -350,6 +350,7 @@ object EvaluatorTests {
         (2, "=VLOOKUP(2, A1:A3, 1)", newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3))),
         (3, "=VLOOKUP(3, A1:A3, 1)", newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3))),
         (4, "=VLOOKUP(1, A1:B3, 2)", newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3, "B1" -> 4))),
+        (4, "=VLOOKUP(1, B3:A1, 2)", newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3, "B1" -> 4))),
         (3, "=VLOOKUP(3, B5, 1)",    newCtx(Map("B5" -> 3))),
         (3, "=VLOOKUP(3, B5, 1.6)",  newCtx(Map("B5" -> 3))),
         (3, "=VLOOKUP(A1, B5, 1)",   newCtx(Map("A1" -> 3, "B5" -> 3)))
