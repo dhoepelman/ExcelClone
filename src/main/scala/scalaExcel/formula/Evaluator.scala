@@ -291,12 +291,12 @@ object Evaluator {
     case List(v, c: Cell, i, e)       => evalVLookUp(ctx, List(v, Range(c, c), i, e))
     case List(v, Range(a1, a2), i, e) => {
 
-      val value = evalIn(ctx, v)
       val (ACell((c1, r1))) = desugarCell(a1)
       val (ACell((c2, r2))) = desugarCell(a2)
 
       evalIn(ctx, i) match {
         case VDouble(index) => {
+          val value = evalIn(ctx, v)
           val lookupCol = c1 + index.toInt - 1
           val row = (r1 to r2) find { ri => value == ctx(ACell((c1, ri))) }
           row match {
