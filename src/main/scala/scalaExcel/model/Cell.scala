@@ -1,29 +1,27 @@
 package scalaExcel.model
 
-import scalaExcel.formula.{Evaluator, ACell, Value, Parser, VDouble}
-import scalaExcel.formula.ReferenceFinder.findRefCells
-import scalaExcel.util.ColumnTranslator.{numToCol, colToNum}
+import scalaExcel.CellPos
+import scalaExcel.formula._
 
 // This is a cell object, it can execute it self and find the references inside
 // the formula. This implements a dummy parser/executor
-class Cell(
-    val x: Int,
-    val y: Int,
-    val f: String
-  ) {
+sealed trait Cell {
 
-  // AST of the cell
-  lazy val AST = Cell.parser.parsing(f)
+  /** Cell AST */
+  lazy val AST : Expr = Cell.parser.parsing(f)
 
-  // Dependencies of this cell
-  lazy val refs: List[(Int, Int)] = findRefCells(AST).map(Cell.ACellToPos)
+  /** Cell formula */
+  lazy val f : String = PPrinter.pprint(AST)
 
-  val position = (x, y)
+  /** Dependencies of this cell */
+  lazy val refs: List[CellPos] = ReferenceFinder.findRefCells(AST).map( _.pos )
 
-  // Get the current value of this cell
-  def eval(deps: Map[(Int, Int), Value]): Value = Evaluator.eval(Ctx(deps), AST)
+  /** Get the current value of this cell */
+  def eval(deps: Map[CellPos, Value]): Value = Evaluator.eval(Ctx(deps), AST)
 
-  private def Ctx(values: Map[(Int, Int), Value])(c: ACell) = values get ((colToNum(c.c), c.r - 1)) match {
+  override def toString = '"' + f + '"'
+
+  protected def Ctx(values: Map[CellPos, Value])(c: ACell) = values get c.pos match {
     case Some(v) => v
     case None => VDouble(0)//throw new IllegalArgumentException(s"Dependency (${c.c},${c.r}}) not found in map")
   }
@@ -31,8 +29,21 @@ class Cell(
 }
 
 object Cell {
+  def apply() : Cell = EmptyCell
+  def apply(f : String) : Cell = new FormulaCell(f)
+  def apply(AST : Expr) : Cell = new ASTCell(AST)
+
   val parser = new Parser()
 
-  def posToACell(c: Int, r: Int) = ACell(numToCol(c), r + 1)
-  def ACellToPos(c: ACell) = (colToNum(c.c), c.r - 1)
+  private object EmptyCell extends Cell {
+    override lazy val f = ""
+    override lazy val AST = Const(VString(""))
+    override lazy val refs = List()
+  }
+  private class ASTCell(val AST_ : Expr) extends Cell {
+    override lazy val AST = AST_
+  }
+  private class FormulaCell(val f_ : String) extends Cell {
+    override lazy val f = f_
+  }
 }

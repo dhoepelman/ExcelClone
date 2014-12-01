@@ -43,11 +43,15 @@
 }
 
 .button-bar .button-box{
-    -fx-background-color: #699999;
+    -fx-background-color: #99cccc;
 }
 
-.button-bar .button-box > .label {
+.button-bar .button-box  > Label {
     -fx-font-weight: bold;
+}
+
+.button-bar .button-box Label {
+    -fx-text-align: center;
 }
 
 

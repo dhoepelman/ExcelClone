@@ -2,24 +2,25 @@ package scalaExcel.model
 
 import scalafx.scene.paint.Color
 import rx.lang.scala.subjects.BehaviorSubject
+import scalaExcel.model.Sorter.SheetSorter
 import scalaExcel.model.OperationHelpers._
+import scalaExcel.CellPos
 
 class Model {
-
   /** This is a stream of inputs from 'the world' that will effect the state of the sheet model */
-  val sheetMutations = BehaviorSubject.apply[ModelMutations](Refresh())
+  val sheetMutations = BehaviorSubject[ModelMutations](Refresh)
 
   /**
    * function to propagate updates to dependent cells
    * @param alreadyUpdated Set of cells that were already updated, to detect cycles
    */
-  def updateSheet(s: Sheet, updates: List[(Int,Int)], alreadyUpdated: Set[(Int, Int)] = Set()): Sheet = {
+  def updateSheet(s: Sheet, updates: List[CellPos], alreadyUpdated: Set[CellPos] = Set()): Sheet = {
     updates.foldLeft(s)((s, u) => {
       if (alreadyUpdated contains u)
         // u was already updated, so this means there's a circular reference
-        s.setToCircular(u._1, u._2)
+        s.setToCircular(u)
       else
-        s.updateCell(u._1, u._2) match {
+        s.updateCell(u) match {
           case (newSheet, List()) => newSheet
           case (newSheet, newUpdates) => updateSheet(newSheet, newUpdates, alreadyUpdated + u)
         }
@@ -30,34 +31,37 @@ class Model {
     case (s, updates) => updateSheet(s, updates)
   }
 
-  def updateStyle(sheet: Sheet, x: Int, y: Int, f: Styles => Styles) =
-    sheet.setCellStyle(x, y, f(sheet.styles.get((x, y)).getOrElse(Styles.DEFAULT)))
+  def updateStyle(sheet: Sheet, pos : CellPos, f: Styles => Styles) =
+    sheet.setCellStyle(pos, f(sheet.styles.getOrElse(pos, Styles.DEFAULT)))
 
   // this combines the initial Sheet with all input mutations from the outside
   // world
   val sheet = sheetMutations.scan(new Sheet())((sheet, action) => action match {
-    case SetFormula(x, y, f) => {
-      val (s, updates) = sheet.setCell(x, y, f)
-      updateSheet(s, updates, Set((x, y)))
-    }
-    case SetColor(x, y, c) => updateStyle(sheet, x, y, s => s.setColor(c))
-    case SetBackground(x, y, c) => updateStyle(sheet, x, y, s => s.setBackground(c))
-    case Refresh() => sheet
+    case SetFormula(pos, f) =>
+      val (s, updates) = sheet.setCell(pos, f)
+      updateSheet(s, updates, Set(pos))
+    case EmptyCell(pos) => updateSheet(sheet.deleteCell(pos))
+    case CopyCell(from, to) => updateSheet(sheet.copyCell(from, to))
+    case CutCell(from, to) => updateSheet(sheet.cutCell(from, to))
+    case SetColor(pos, c) => updateStyle(sheet, pos, s => s.setColor(c))
+    case SetBackground(pos, c) => updateStyle(sheet, pos, s => s.setBackground(c))
     case SetSheet(s) => s
+    case SortColumn(x, asc) => sheet.sort(x, asc)
+    case Refresh => sheet
   })
 
-  def refresh() = sheetMutations.onNext(Refresh())
+  def refresh() = sheetMutations.onNext(Refresh)
 
-  def changeFormula(x: Int, y: Int, f: String) {
-    sheetMutations.onNext(SetFormula(x, y, f))
+  def emptyCell(pos : CellPos)  {
+    sheetMutations.onNext(EmptyCell(pos))
   }
 
-  def changeBackground(x: Int, y: Int, c: Color): Unit = {
-    sheetMutations.onNext(SetBackground(x, y, c))
+  def copyCell(from : CellPos, to : CellPos) {
+    sheetMutations.onNext(CopyCell(from, to))
   }
 
-  def changeColor(x: Int, y: Int, c: Color): Unit = {
-    sheetMutations.onNext(SetColor(x, y, c))
+  def cutCell(from : CellPos, to : CellPos) {
+    sheetMutations.onNext(CutCell(from, to))
   }
 
   def clear() = sheetMutations.onNext(Clear())
@@ -66,35 +70,20 @@ class Model {
     sheetMutations.onNext(SetSheet(s))
   }
 
-}
+  def changeFormula(pos : CellPos, f: String) {
+    sheetMutations.onNext(SetFormula(pos, f))
+  }
 
-object ModelExample extends App {
-  val model = new Model()
+  def changeBackground(pos : CellPos, c: Color): Unit = {
+    sheetMutations.onNext(SetBackground(pos, c))
+  }
 
-  // Anything can subscribe to this stream of
-  model.sheet.subscribe(x => println(x.values))
+  def changeColor(pos : CellPos, c: Color): Unit = {
+    sheetMutations.onNext(SetColor(pos, c))
+  }
 
-  // Or to just get the distinct values at cell (3, 1)
-  model.sheet
-    .map(_.valueAt(3, 1))
-    .filter(!_.isEmpty)
-    .map(_.get)
-    .distinctUntilChanged
-    .subscribe(x => println(s"value at (3,1) changed to $x"))
+  def sortColumn(x: Int, asc: Boolean) = {
+    sheetMutations.onNext(SortColumn(x, asc))
+  }
 
-  // Or use the implicit helper class and use the this:
-  model.sheet.filterCellValueAt(4, 1).subscribe(x => println(s"(4,1) value changed to $x"))
-
-  model.sheet
-    .map(s => s.styles)
-    .distinctUntilChanged
-    .subscribe(x => println(s"styles $x"))
-
-  // Input some changes
-  model.changeFormula(1, 1, "=C1")
-  model.changeFormula(2, 1, "=5")
-  model.changeFormula(3, 1, "=A1+B1")
-  model.changeFormula(4, 1, "=A1+A1")
-  model.changeFormula(1, 1, "=4+6")
-  model.changeFormula(2, 1, "=4+0")
 }

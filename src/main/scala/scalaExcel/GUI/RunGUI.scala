@@ -7,10 +7,9 @@ import javafx.{scene => jfxs}
 import java.io.IOException
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.scene.Scene
-import scalaExcel.GUI.view.{ViewManagerObject, ViewManager}
+import scalaExcel.GUI.view.ViewManager
 import scalaExcel.GUI.data.DataManager
 import scalaExcel.model.Model
-import scalaExcel.model.Styles
 
 object RunGUI extends JFXApp {
 
@@ -25,26 +24,34 @@ object RunGUI extends JFXApp {
 
   val model = new Model()
 
-  val vm = new ViewManagerObject(model, loader.getController[ViewManager])
+  val vm = loader.getController[ViewManager]
   val dm = new DataManager(model)
 
   // Putting events from the GUI into the model
   // This should be the only place where that ever happens
 
-  vm.onCellEdit.subscribe(edit => {
-    model.changeFormula(edit._1._1, edit._1._2, edit._2)
-  })
+  // when the user somehow changes the cell
+  vm.onCellEdit.subscribe { edit =>
+      model.changeFormula(edit._1, edit._2)
+  }
 
-  vm.onBackgroundChange.subscribe(edit => {
-    model.changeBackground(edit._1._1, edit._1._2, edit._2)
-  })
+  // when the background color of a cell is selected
+  vm.onBackgroundChange.subscribe { edit =>
+      model.changeBackground(edit._1, edit._2)
+  }
 
-  vm.onColorChange.subscribe(edit => {
-    model.changeColor(edit._1._1, edit._1._2, edit._2)
-  })
+  // when the front color of a cell is selected
+  vm.onColorChange.subscribe { edit =>
+      model.changeColor(edit._1, edit._2)
+  }
 
-  // rerender table after data/resize/scroll changes
-  dm.labeledDataTable.subscribe(table => vm.dataChanged(table))
+  // when a column is sorted
+  vm.onColumnSort.subscribe { s =>
+      model.sortColumn(s._1, s._2)
+  }
+
+  // re-render table after data/resize/scroll/sort changes
+  dm.labeledDataTable.subscribe(table => vm.buildTableView(table, model))
 
   stage = new PrimaryStage() {
     title = "Scala Excel"

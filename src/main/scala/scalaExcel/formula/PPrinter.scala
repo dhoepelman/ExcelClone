@@ -28,16 +28,17 @@ object PPrinter {
     case Call(f, args) => f + "(" + args.tail.foldLeft(print(args.head))((acc,arg) => acc + "," + print(arg)) + ")"
     case Group(e) => "(" + print(e) + ")"
     case Cell(c, r) => print(c) + print(r)
-    case ACell(c, r) => "$" + c + "$" + r
+    case ACell(pos) => "$" + numToCol(pos._1) + "$" + (pos._2+1)
     case ARange(l) => print(l)
     case Range(start, end) => print(start) + ":" + print(end)
     case RowRange(start, end) => print(start) + ":" + print(end)
     case ColRange(start, end) => print(start) + ":" + print(end)
     case SheetReference(sheet, ref) => sheet + "!" + print(ref)
+    case _ => throw new IllegalArgumentException
   }
 
-  private def print(ref: RowRef) = $(ref.absolute) + ref.referent
-  private def print(ref: ColRef) = $(ref.absolute) + ref.referent
+  private def print(ref: RowRef) = $(ref.absolute) + (ref.referent+1)
+  private def print(ref: ColRef) = $(ref.absolute) + numToCol(ref.referent)
   private def $(b: Boolean) = if (b) "$" else ""
 
   private def print(op: Op) = op match {
@@ -61,14 +62,11 @@ object PPrinter {
     case VDouble(d) => if (d.isValidInt) d.toInt.toString else d.toString
     case VString(s) => "\"" + s + "\""
     case VErr(t) => t.expr
+    case VEmpty => ""
   }
 
-  private def _getACellRow(cell: ACell) = cell match {
-      case ACell(r, c) => r
-  }
-  private def _getACellCol(cell: ACell) = cell match {
-      case ACell(r, c) => c
-  }
+  private def _getACellRow(cell: ACell) = cell.pos._2
+  private def _getACellCol(cell: ACell) = cell.pos._1
 
   private def print(l: List[ACell]) = {
     val maxCol = _getACellCol(l.maxBy(_getACellCol))

@@ -1,12 +1,41 @@
 
 package scalaExcel.formula;
 
-sealed abstract class Value
+sealed trait Value extends Ordered[Value]
 
-case class VDouble(d: Double) extends Value
-case class VString(s: String) extends Value
-case class VBool(b: Boolean) extends Value
-case class VErr(t: ErrType) extends Value
+case class VDouble(d: Double) extends Value {
+  def compare(v: Value) = v match {
+    case VDouble(d2) => d.compare(d2)
+    case _ => -1
+  }
+}
+
+case class VString(s: String) extends Value {
+  def compare(v: Value) = v match {
+    case VString(s2) => s.compare(s2)
+    case VDouble(_) => 1
+    case _ => -1
+  }
+}
+
+case class VBool(b: Boolean) extends Value {
+  def compare(v: Value) = v match {
+    case VBool(b2) => b.compare(b2)
+    case VString(_) | VDouble(_) => 1
+    case _ => -1
+  }
+}
+
+case class VErr(t: ErrType) extends Value {
+  def compare(v: Value) = v match {
+    case VEmpty => -1
+    case _ => 1
+  }
+}
+
+case object VEmpty extends Value {
+  def compare(v: Value) = 1
+}
 
 object Values {
   def toVal(v: Any) = v match {

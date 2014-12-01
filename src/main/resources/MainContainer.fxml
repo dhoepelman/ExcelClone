@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.input.*?>
 <?import java.lang.*?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.input.KeyCodeCombination?>
 
-<GridPane alignment="CENTER" prefHeight="348.0" prefWidth="460.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="scalaExcel.GUI.view.ViewManager">
+<GridPane alignment="CENTER" prefHeight="348.0" prefWidth="759.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="scalaExcel.GUI.view.ViewManager">
     <columnConstraints>
         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
     </columnConstraints>
@@ -16,18 +18,49 @@
     <children>
         <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="100.0">
             <children>
-                <MenuBar prefHeight="29.0" prefWidth="610.0">
+                <MenuBar prefHeight="29.0" prefWidth="532.0">
                     <menus>
                         <Menu mnemonicParsing="false" text="File">
                             <items>
-                                <MenuItem fx:id="menuLoadDelegate" mnemonicParsing="false" text="Open" />
-                                <MenuItem fx:id="menuSaveDelegate" mnemonicParsing="false" text="Save" />
-                                <MenuItem mnemonicParsing="false" text="Close" />
+                                <MenuItem fx:id="menuLoadDelegate" text="Open">
+                                    <accelerator>
+                                        <KeyCodeCombination alt="UP" code="O" control="ANY" meta="ANY" shift="UP" shortcut="DOWN" />
+                                    </accelerator>
+                                </MenuItem>
+                                <MenuItem fx:id="menuSaveDelegate" text="Save">
+                                    <accelerator>
+                                        <KeyCodeCombination alt="UP" code="S" control="ANY" meta="ANY" shift="UP" shortcut="DOWN" />
+                                    </accelerator>
+                                </MenuItem>
+                                <MenuItem mnemonicParsing="false" text="Close">
+                                    <accelerator>
+                                        <KeyCodeCombination alt="UP" code="Q" control="ANY" meta="ANY" shift="UP" shortcut="DOWN" />
+                                    </accelerator>
+                                </MenuItem>
                             </items>
                         </Menu>
                         <Menu mnemonicParsing="false" text="Edit">
                             <items>
-                                <MenuItem mnemonicParsing="false" text="Delete" />
+                                <MenuItem fx:id="menuCutDelegate" text="Cut">
+                                    <accelerator>
+                                        <KeyCodeCombination alt="UP" code="X" control="ANY" meta="ANY" shift="UP" shortcut="DOWN" />
+                                    </accelerator>
+                                </MenuItem>
+                                <MenuItem fx:id="menuCopyDelegate" text="Copy">
+                                    <accelerator>
+                                        <KeyCodeCombination alt="UP" code="C" control="ANY" meta="ANY" shift="UP" shortcut="DOWN" />
+                                    </accelerator>
+                                </MenuItem>
+                                <MenuItem fx:id="menuPasteDelegate" text="Paste">
+                                    <accelerator>
+                                        <KeyCodeCombination alt="UP" code="V" control="ANY" meta="ANY" shift="UP" shortcut="DOWN" />
+                                    </accelerator>
+                                </MenuItem>
+                                <MenuItem fx:id="menuDeleteDelegate" text="Delete">
+                                    <accelerator>
+                                        <KeyCodeCombination alt="ANY" code="DELETE" control="ANY" meta="ANY" shift="ANY" shortcut="ANY" />
+                                    </accelerator>
+                                </MenuItem>
                             </items>
                         </Menu>
                         <Menu mnemonicParsing="false" text="Help">
@@ -46,7 +79,7 @@
                         </AnchorPane>
                         <AnchorPane GridPane.columnIndex="1" GridPane.hgrow="ALWAYS">
                             <children>
-                                <VBox alignment="CENTER" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" styleClass="button-box">
+                                <VBox alignment="CENTER" styleClass="button-box" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                     <children>
                                         <Label alignment="CENTER" contentDisplay="CENTER">Background</Label>
                                         <AnchorPane>
@@ -60,26 +93,44 @@
                         </AnchorPane>
                         <AnchorPane GridPane.columnIndex="2" GridPane.hgrow="ALWAYS">
                             <children>
-                                <VBox alignment="CENTER" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" styleClass="button-box">
-                                   <children>
-                                       <Label>Font</Label>
-                              <AnchorPane>
-                                 <children>
-                                             <ColorPicker fx:id="fontColorPickerDelegate" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                                 </children>
-                              </AnchorPane>
-                                   </children>
+                                <VBox alignment="CENTER" styleClass="button-box" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                    <children>
+                                        <Label>Font</Label>
+                                        <AnchorPane>
+                                            <children>
+                                                <ColorPicker fx:id="fontColorPickerDelegate" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                            </children>
+                                        </AnchorPane>
+                                    </children>
                                 </VBox>
                             </children>
                         </AnchorPane>
                         <AnchorPane GridPane.columnIndex="3">
                             <children>
-                                <Button alignment="CENTER" mnemonicParsing="false" text="Button" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" GridPane.halignment="CENTER" />
+                                <VBox alignment="CENTER" prefHeight="42.0" prefWidth="130.0" styleClass="button-box" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                    <children>
+                                        <Label alignment="CENTER" contentDisplay="CENTER" text="Sorting" textAlignment="CENTER">Sorting</Label>
+                                        <HBox alignment="CENTER">
+                                 <children>
+                                    <AnchorPane prefHeight="200.0" prefWidth="200.0">
+                                       <children>
+                                          <Button fx:id="sortUpDelegate" alignment="CENTER" mnemonicParsing="false" text="Asc" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                       </children>
+                                    </AnchorPane>
+                                    <AnchorPane prefHeight="200.0" prefWidth="200.0">
+                                       <children>
+                                          <Button fx:id="sortDownDelegate" alignment="CENTER" mnemonicParsing="false" text="Desc" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                       </children>
+                                    </AnchorPane>
+                                 </children>
+                                        </HBox>
+                                    </children>
+                                </VBox>
                             </children>
                         </AnchorPane>
                         <AnchorPane GridPane.columnIndex="4">
                             <children>
-                                <Button alignment="CENTER" mnemonicParsing="false" text="Button" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" GridPane.columnIndex="4" GridPane.halignment="CENTER" />
+                                <Button alignment="CENTER" mnemonicParsing="false" text="Button" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" GridPane.halignment="CENTER" />
                             </children>
                         </AnchorPane>
                         <AnchorPane GridPane.columnIndex="5">
@@ -97,8 +148,8 @@
                         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="130.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="94.0" minWidth="10.0" prefWidth="68.0" />
                         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                     </columnConstraints>

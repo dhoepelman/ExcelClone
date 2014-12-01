@@ -25,7 +25,6 @@ class DataCellViewDelegate extends jfxsc.cell.TextFieldTableCell[DataRow, DataCe
       case null => ""
       case cell => cell.expression
     }
-    // ViewManagerObject.changeEditorText(textField.getText)
   }
 }
 
@@ -33,6 +32,8 @@ class DataCellView extends TextFieldTableCell[DataRow, DataCell](new DataCellVie
   item.onChange {
     (_, _, newCell) =>
       // apply cell customization
-      if (newCell != null) style = newCell.styleString
+      if (newCell != null) {
+        style = newCell.styleString
+      }
   }
 }

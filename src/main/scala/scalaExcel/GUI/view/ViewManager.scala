@@ -1,24 +1,28 @@
 package scalaExcel.GUI.view
 
-import scalaExcel.model.Styles
-import scalaExcel.model.Model
-import scalafx.Includes._
 import java.net.URL
-import javafx.scene.{control => jfxsc}
-import javafx.scene.{layout => jfxsl}
+import javafx.scene.{control => jfxsc, layout => jfxsl}
 import javafx.stage.FileChooser.ExtensionFilter
 import javafx.{event => jfxe, fxml => jfxf}
+
 import rx.lang.scala._
-import scalafx.scene.layout.AnchorPane
-import scalafx.collections.ObservableBuffer
-import scalafx.scene.control._
-import scalafx.scene.paint.Color
-import scalaExcel.GUI.util.CSSHelper
-import scalaExcel.GUI.util.Filer
+
 import scala.language.reflectiveCalls
-import scalaExcel.GUI.data.{DataManager, DataCell, LabeledDataTable}
-import LabeledDataTable.DataRow
-import scalafx.beans.property.ObjectProperty
+
+import scalaExcel.GUI.data.LabeledDataTable
+import scalaExcel.GUI.data.LabeledDataTable.DataRow
+import scalaExcel.GUI.util.Filer
+import scalaExcel.GUI.view.ViewManager._
+import scalaExcel.model.{Sheet, Model, Styles}
+import scalaExcel.rx.operators.WithLatest._
+
+import scalafx.Includes._
+import scalafx.scene.control._
+import scalafx.scene.input.{ClipboardContent, _}
+import scalafx.scene.layout.AnchorPane
+import scalafx.scene.paint.Color
+
+import scalaExcel.CellPos
 
 class ViewManager extends jfxf.Initializable {
 
@@ -28,25 +32,43 @@ class ViewManager extends jfxf.Initializable {
   @jfxf.FXML private var tableContainerDelegate: jfxsl.AnchorPane = _
   private var tableContainer: AnchorPane = _
 
-  @jfxf.FXML private var formulaEditorDelegate: javafx.scene.control.TextField = _
+  @jfxf.FXML private var formulaEditorDelegate: jfxsc.TextField = _
   private var formulaEditor: TextField = _
   private var formulaEditorStream: Observable[String] = _
 
-  @jfxf.FXML private var backgroundColorPickerDelegate: javafx.scene.control.ColorPicker = _
-  private var backgroundColorPicker: scalafx.scene.control.ColorPicker = _
+  @jfxf.FXML private var backgroundColorPickerDelegate: jfxsc.ColorPicker = _
+  private var backgroundColorPicker: jfxsc.ColorPicker = _
   private var backgroundColorStream: Observable[Color] = _
 
-  @jfxf.FXML private var fontColorPickerDelegate: javafx.scene.control.ColorPicker = _
-  private var fontColorPicker: scalafx.scene.control.ColorPicker = _
+  @jfxf.FXML private var fontColorPickerDelegate: jfxsc.ColorPicker = _
+  private var fontColorPicker: jfxsc.ColorPicker = _
   private var fontColorStream: Observable[Color] = _
 
-  @jfxf.FXML private var menuLoadDelegate: javafx.scene.control.MenuItem = _
-  private var menuLoad: scalafx.scene.control.MenuItem = _
+  @jfxf.FXML private var menuLoadDelegate: jfxsc.MenuItem = _
+  private var menuLoad: jfxsc.MenuItem = _
   private var loadStream: Observable[String] = _
 
-  @jfxf.FXML private var menuSaveDelegate: javafx.scene.control.MenuItem = _
-  private var menuSave: scalafx.scene.control.MenuItem = _
+  @jfxf.FXML private var menuSaveDelegate: jfxsc.MenuItem = _
+  private var menuSave: jfxsc.MenuItem = _
   private var saveStream: Observable[String] = _
+
+  @jfxf.FXML private var menuCutDelegate: jfxsc.MenuItem = _
+  private var menuCut: jfxsc.MenuItem = _
+  @jfxf.FXML private var menuCopyDelegate: jfxsc.MenuItem = _
+  private var menuCopy: jfxsc.MenuItem = _
+  @jfxf.FXML private var menuPasteDelegate: jfxsc.MenuItem = _
+  private var menuPaste: jfxsc.MenuItem = _
+  private var clipboardStream: Observable[ClipboardAction] = _
+
+  @jfxf.FXML private var menuDeleteDelegate: jfxsc.MenuItem = _
+  private var menuDelete: jfxsc.MenuItem = _
+  private var deleteStream: Observable[List[CellPos]] = _
+
+  @jfxf.FXML private var sortUpDelegate: jfxsc.Button = _
+  private var sortUp: jfxsc.Button = _
+  @jfxf.FXML private var sortDownDelegate: jfxsc.Button = _
+  private var sortDown: jfxsc.Button = _
+  private var onSortButtonStream: Observable[Boolean] = _
 
   @jfxf.FXML
   private var testButtonDelegate: jfxsc.Button = _
@@ -63,9 +85,10 @@ class ViewManager extends jfxf.Initializable {
   // Exposed observers, so we can gather those events and put
   // them into the model
 
-  val onCellEdit = Subject[((Int, Int), String)]()
-  val onBackgroundChange = Subject[((Int, Int), Color)]()
-  val onColorChange = Subject[((Int, Int), Color)]()
+  val onCellEdit = Subject[(CellPos, String)]()
+  val onBackgroundChange = Subject[(CellPos, Color)]()
+  val onColorChange = Subject[(CellPos, Color)]()
+  val onColumnSort = Subject[(Int, Boolean)]()
 
   def buildTableView(labeledTable: LabeledDataTable, model: Model): Unit = {
 
@@ -86,7 +109,6 @@ class ViewManager extends jfxf.Initializable {
     tableContainer.content = List(table)
 
     // streamTable.onRightClick.subscribe(_ => println("right click"))
-    // streamTable.onSort.subscribe(_ => println("right click"))
 
     // forward edits
     streamTable.onCellEdit.subscribe(x => onCellEdit.onNext(x))
@@ -100,28 +122,28 @@ class ViewManager extends jfxf.Initializable {
 
     // Update the formula editor
     sheetWithSelectedCell
-      .map(x => x match {
+      .map({
         case (sheet, pos) => sheet.cells.get(pos) match {
-          case Some(cell) => cell.f
-          case None => ""
-        }
-      })
+        case Some(cell) => cell.f
+        case None => ""
+      }
+    })
       .distinctUntilChanged
       .subscribe(f => changeEditorText(f))
 
     // Update color pickers when selection changes
     sheetWithSelectedCell
-      .map(x => x match {
+      .map({
         case (sheet, pos) => sheet.styles.get(pos) match {
-          case Some(style) => style
-          case None => Styles.DEFAULT
-        }
-      })
+        case Some(style) => style
+        case None => Styles.DEFAULT
+      }
+    })
       .distinctUntilChanged
       .subscribe(s => {
-        changeBackgroundColorPicker(s.background)
-        changeFontColorPicker(s.color)
-      })
+      changeBackgroundColorPicker(s.background)
+      changeFontColorPicker(s.color)
+    })
 
     // Changes on formula editor are pushed to the selected cell
     singleSelectedCell.combineLatest(formulaEditorStream)
@@ -141,9 +163,9 @@ class ViewManager extends jfxf.Initializable {
 
     // Load - Save
     saveStream.map(x => {
-        fileChooser.setTitle("Save destination")
-        fileChooser
-      })
+      fileChooser.setTitle("Save destination")
+      fileChooser
+    })
       .map(chooser => chooser.showSaveDialog(tableContainer.scene.window.getValue))
       .filter(_ != null)
       .labelAlways(model.sheet)
@@ -153,16 +175,71 @@ class ViewManager extends jfxf.Initializable {
       })
 
     loadStream.map(x => {
-        fileChooser.setTitle("Open file")
-        fileChooser
-      })
+      fileChooser.setTitle("Open file")
+      fileChooser
+    })
       .map(chooser => chooser.showOpenDialog(tableContainer.scene.window.getValue))
       .filter(_ != null)
       .map(file => Filer.loadCSV(file))
       .subscribe(sheet => model.loadSheet(sheet))
+
+    deleteStream = streamTable.withSelectedCellsOnly(Observable[Unit]( o =>
+      menuDelete.onAction = handle {
+        o.onNext(Unit)
+      }
+    ))
+    deleteStream.subscribe( ps => ps foreach( p => model.emptyCell(p)) )
+
+    // TODO:  Yeah, so putting it in a variable first works. But when I put it directly in the subscribe it doesn't?...
+    val clipboardHandler : ((Sheet, List[CellPos], ClipboardAction)) => Unit = {case (s, ps,action) =>
+      // Ignore if no cells are selected
+      if(ps.isEmpty)
+        return
+      // TODO: Multiple selection
+      // TODO: Make the cell immediately disappear when cut
+      val clipboard = Clipboard.systemClipboard
+      val contents = new ClipboardContent()
+      action match {
+        case Cut | Copy => {
+          contents.put(copyPasteFormat, (action, ps.head))
+          contents.putString(s.valueAt(ps.head).get.toString)
+          clipboard.setContent(contents)
+        }
+        case Paste => {
+          val to = ps.head
+          if(clipboard.hasContent(copyPasteFormat))
+            clipboard.getContent(copyPasteFormat) match {
+              case (Cut, from) => {
+                // Cut-Pasting can only happen once
+                clipboard.clear()
+                model.cutCell(from.asInstanceOf[CellPos], to)
+              }
+              case (Copy, from) => model.copyCell(from.asInstanceOf[CellPos], to)
+              case a => throw new IllegalArgumentException("Clipboard contained invalid copy-paste data {" + a.toString + "}")
+            }
+          else if(clipboard.hasString)
+            model.changeFormula(to, clipboard.getString)
+        }
+      }
+    }
+    streamTable
+      .withSelectedCells(clipboardStream)
+      .withLatest(model.sheet)
+      .map({ case (s, (ps, a)) => (s,ps,a) })
+      .subscribe(clipboardHandler)
+
+    onSortButtonStream
+      .withLatest(singleSelectedCell)
+      .subscribe { s => s match {
+        case ((x, y), asc) => onColumnSort.onNext((x, asc))
+      }}
   }
 
+  val copyPasteFormat = new DataFormat("x-excelClone/cutcopy")
+
   def initialize(url: URL, rb: java.util.ResourceBundle) {
+
+    println("ViewManager initializing...")
 
     //
     // Initialization of GUI object handles
@@ -172,40 +249,68 @@ class ViewManager extends jfxf.Initializable {
     testButton = new Button(testButtonDelegate)
 
     backgroundColorPicker = new ColorPicker(backgroundColorPickerDelegate)
-    backgroundColorStream = Observable.apply[Color](o => {
+    backgroundColorStream = Observable[Color](o => {
       backgroundColorPicker.onAction = handle {
         o.onNext(backgroundColorPicker.value.value)
       }
     })
 
     fontColorPicker = new ColorPicker(fontColorPickerDelegate)
-    fontColorStream = Observable.apply[Color](o => {
+    fontColorStream = Observable[Color](o => {
       fontColorPicker.onAction = handle {
         o.onNext(fontColorPicker.value.value)
       }
     })
 
+    sortUp = new Button(sortUpDelegate)
+    sortDown = new Button(sortDownDelegate)
+    onSortButtonStream = Observable[Boolean](o => {
+      sortUp.onAction = handle {
+        o.onNext(true)
+      }
+      sortDown.onAction = handle {
+        o.onNext(false)
+      }
+    })
+
     formulaEditor = new TextField(formulaEditorDelegate)
-    formulaEditorStream = Observable.apply[String](o => {
+    formulaEditorStream = Observable[String](o => {
       formulaEditor.onAction = handle {
         o.onNext(formulaEditor.getText)
       }
     })
 
     menuLoad = new MenuItem(menuLoadDelegate)
-    loadStream = Observable.apply[String](o => {
+    loadStream = Observable[String](o => {
       menuLoad.onAction = handle {
         o.onNext("temp.csv")
       }
     })
 
     menuSave = new MenuItem(menuSaveDelegate)
-    saveStream = Observable.apply[String](o => {
+    saveStream = Observable[String](o => {
       menuSave.onAction = handle {
         o.onNext("temp.csv")
       }
     })
 
+    menuCut = new MenuItem(menuCutDelegate)
+    menuCopy = new MenuItem(menuCopyDelegate)
+    menuPaste = new MenuItem(menuPasteDelegate)
+    clipboardStream = Observable( o => {
+      menuCut.onAction = handle {
+        o.onNext(Cut)
+      }
+      menuCopy.onAction = handle {
+        o.onNext(Copy)
+      }
+      menuPaste.onAction = handle {
+        o.onNext(Paste)
+      }
+    }
+    )
+
+    menuDelete = new MenuItem(menuDeleteDelegate)
   }
 
   /**
@@ -227,4 +332,11 @@ class ViewManager extends jfxf.Initializable {
 
   def changeFontColorPicker(color: Color) = fontColorPicker.value = color
 
+}
+
+object ViewManager {
+  sealed trait ClipboardAction extends Serializable
+  case object Cut extends ClipboardAction
+  case object Copy extends ClipboardAction
+  case object Paste extends ClipboardAction
 }

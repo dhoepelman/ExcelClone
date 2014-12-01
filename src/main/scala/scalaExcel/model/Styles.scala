@@ -3,9 +3,10 @@ package scalaExcel.model
 import scalafx.scene.paint.Color
 
 abstract class Alignment
-case class Left()   extends Alignment
-case class Center() extends Alignment
-case class Right()  extends Alignment
+case object LeftAlign   extends Alignment
+case object CenterAlign extends Alignment
+case object RightAlign  extends Alignment
+case object NoAlign     extends Alignment
 
 class Styles (
     val background: Color,
@@ -18,11 +19,11 @@ class Styles (
   def setFormat(f: String) = new Styles(background, color, f, align)
   def setAlign(a: Alignment) = new Styles(background, color, format, a)
 
-  override def toString() =
+  override def toString =
     Map(
       "background" -> background,
       "text-fill" -> color
-    ).toString
+    ).toString()
 
   override def equals(other: Any) = other match {
     case that: Styles =>
@@ -37,5 +38,5 @@ class Styles (
 }
 
 object Styles {
-  val DEFAULT = new Styles(Color.Azure, Color.Black, "", Left())
+  val DEFAULT = new Styles(Color.WhiteSmoke, Color.Black, "", NoAlign)
 }
