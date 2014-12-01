@@ -237,20 +237,28 @@ object Evaluator {
 
   // Cell functions
 
+  private def getRangeBounds(e: Cell) = e match {
+    case Cell(ColRef(c, _), RowRef(r, _)) => ((c, r), (c, r))
+  }
+
+  private def getRangeBounds(e: Range) = e match {
+    case Range(Cell(ColRef(c1, _), RowRef(r1, _)), Cell(ColRef(c2, _), RowRef(r2, _))) =>
+      ((min(c1, c2), min(r1, r2)), (max(c1, c2), max(r1, r2)))
+  }
+
   private def execForRangeArg[T](f: (CellPos, CellPos) => T)(args: List[Expr]) = args match {
-    case List(Cell(ColRef(c, _), RowRef(r, _))) =>f((c, r), (c, r))
-    case List(Range(Cell(ColRef(c1, _), RowRef(r1, _)), Cell(ColRef(c2, _), RowRef(r2, _)))) =>
-      f((c1, r1), (c2, r2))
+    case List(c: Cell)  => f tupled getRangeBounds(c)
+    case List(r: Range) => f tupled getRangeBounds(r)
     case _ => throw new Exception("Wrong number of arguments")
   }
 
-  def evalCallRow     = execForRangeArg((c1, c2) => VDouble(min(c1._2, c2._2) + 1)) _
+  def evalCallRow     = execForRangeArg((c1, c2) => VDouble(c1._2 + 1)) _
 
-  def evalCallRows    = execForRangeArg((c1, c2) => VDouble(abs(c2._2 - c1._2) + 1)) _
+  def evalCallRows    = execForRangeArg((c1, c2) => VDouble(c2._2 - c1._2 + 1)) _
 
-  def evalCallColumn  = execForRangeArg((c1, c2) => VDouble(min(c1._1, c2._1) + 1)) _
+  def evalCallColumn  = execForRangeArg((c1, c2) => VDouble(c1._1 + 1)) _
 
-  def evalCallColumns = execForRangeArg((c1, c2) => VDouble(abs(c2._1 - c1._1) + 1)) _
+  def evalCallColumns = execForRangeArg((c1, c2) => VDouble(c2._1 - c1._1 + 1)) _
 
   def evalCallCount(ctx: Ctx, args: List[Expr]) =
     VDouble(args
@@ -267,17 +275,13 @@ object Evaluator {
     // Type 0: exactly v
     // Type -1: smallest value <= v
     case List(v, a) => evalCallMatch(ctx, List(v, a, Const(VDouble(0))))
-    case List(v, Range(a1, a2), t) => {
+    case List(v, r: Range, t) => {
 
-      val (ACell((c1, r1))) = desugarCell(a1)
-      val (ACell((c2, r2))) = desugarCell(a2)
-
-      val (c1_, c2_) = (min(c1, c2), max(c1, c2))
-      val (r1_, r2_) = (min(r1, r2), max(r1, r2))
+      val ((c1, r1), (c2, r2)) = getRangeBounds(r)
 
       val positions =
-        if (r1_ == r2_) (c1_ to c2_) map {(_, r1_)}
-        else if (c1_ == c2_) (r1_ to r2_) map {(c1_, _)}
+        if (r1 == r2) (c1 to c2) map {(_, r1)}
+        else if (c1 == c2) (r1 to r2) map {(c1, _)}
         else List()
 
       val value = evalIn(ctx, v)
@@ -300,18 +304,15 @@ object Evaluator {
     // default exact to FALSE, which is the only type we implement here.
     case List(v, a, i)                => evalVLookUp(ctx, args :+ Const(VBool(false)))
     case List(v, c: Cell, i, e)       => evalVLookUp(ctx, List(v, Range(c, c), i, e))
-    case List(v, Range(a1, a2), i, e) => evalIn(ctx, i) match {
+    case List(v, r: Range, i, e) => evalIn(ctx, i) match {
       case VDouble(index) => {
-        val (ACell((c1, r1))) = desugarCell(a1)
-        val (ACell((c2, r2))) = desugarCell(a2)
-        val (c1_, c2_) = (min(c1, c2), max(c1, c2))
-        val (r1_, r2_) = (min(r1, r2), max(r1, r2))
+        val ((c1, r1), (c2, r2)) = getRangeBounds(r)
         val value = evalIn(ctx, v)
-        val lookupCol = c1_ + index.toInt - 1
-        val row = (r1_ to r2_) find { ri => value == ctx(ACell((c1_, ri))) }
+        val lookupCol = c1 + index.toInt - 1
+        val row = (r1 to r2) find { ri => value == ctx(ACell((c1, ri))) }
         row match {
           case Some(r) =>
-            if (lookupCol > c2_) VErr(InvalidRef)
+            if (lookupCol > c2) VErr(InvalidRef)
             else ctx(ACell((lookupCol, r)))
           case None => VErr(NA)
         }
