@@ -285,7 +285,7 @@ object Evaluator {
         else if (c1 == c2) (r1 to r2) map {(c1, _)}
         else List()
 
-      val value = evalIn(ctx, v)
+      lazy val value = evalIn(ctx, v)
       val pos = positions.zipWithIndex.find {
         case (p, i) => value == ctx(ACell(p))
       }
@@ -308,7 +308,7 @@ object Evaluator {
     case List(v, r: Range, i, e) => evalIn(ctx, i) match {
       case VDouble(index) => {
         val ((c1, r1), (c2, r2)) = getRangeBounds(r)
-        val value = evalIn(ctx, v)
+        lazy val value = evalIn(ctx, v)
         val lookupCol = c1 + index.toInt - 1
         val row = (r1 to r2) find { ri => value == ctx(ACell((c1, ri))) }
         row match {
