@@ -1,15 +1,15 @@
 package scalaExcel.GUI.util
 
-import scalaExcel.model.Styles
+import scalaExcel.model.{Styles, Right, Center, Left, Default}
 import scalafx.scene.paint.Color
 
 object CSSHelper {
 
   private def colorToWeb(c: Color): String =
     "#%02X%02X%02X".format(
-      (c.red   * 255).asInstanceOf[Int],
+      (c.red * 255).asInstanceOf[Int],
       (c.green * 255).asInstanceOf[Int],
-      (c.blue  * 255).asInstanceOf[Int])
+      (c.blue * 255).asInstanceOf[Int])
 
   private def fieldsFromCss(css: String): (Map[String, String]) = {
     val bodyRe = """([^:;{}]+:[^:;{}]+;?)""".r
@@ -64,9 +64,15 @@ object CSSHelper {
 
   def CSSFromStyle(style: Styles): String = {
     val props = Map(
-      "-fx-background-color"  -> colorToWeb(style.background),
-      "-fx-text-fill"         -> colorToWeb(style.color),
-      "-fx-background-insets" -> "0, 0 0 1 0"
+      "-fx-background-color" -> ("-fx-table-cell-border-color, " + colorToWeb(style.background)),
+      "-fx-text-fill" -> colorToWeb(style.color),
+      "-fx-background-insets" -> "0, 0 0 1 0",
+      "-fx-alignment" -> (style.align match {
+        case Left() => "CENTER-LEFT"
+        case Right() => "CENTER-RIGHT"
+        case Center() => "CENTER"
+        case Default() => "CENTER-LEFT"
+      })
     )
     fieldsToCss(props)
   }

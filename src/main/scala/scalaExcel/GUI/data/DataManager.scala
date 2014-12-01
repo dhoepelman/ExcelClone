@@ -3,7 +3,6 @@ package scalaExcel.GUI.data
 import scalaExcel.model.{Styles, Model}
 import rx.lang.scala.Subject
 import rx.lang.scala.subjects.BehaviorSubject
-import scalaExcel.GUI.view.ViewManagerObject
 
 
 class DataManager(val model: Model) {
@@ -63,7 +62,7 @@ class DataManager(val model: Model) {
             case Some(c) => c.f
             case None => ""
           },
-          sheet.valueAt(i).getOrElse(""),
+          sheet.valueAt((i._1, i._2)).getOrElse(null),
           sheet.styles.getOrElse(i, Styles.DEFAULT)
         ))
     })
