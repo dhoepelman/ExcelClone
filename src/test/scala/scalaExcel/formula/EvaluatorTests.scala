@@ -335,6 +335,7 @@ object EvaluatorTests {
       )) ++ lstCtx("function COUNT", List(
         (2, "=COUNT(A1:A5)", sparseCtx)
       )) ++ lstCtx("function MATCH", List(
+        (1, "=MATCH(4, B6)", newCtx(Map("B6" -> 4))),
         (1, "=MATCH(4, A1:A3)", newCtx(Map("A1" -> 4, "A2" -> 5, "A3" -> 6))),
         (2, "=MATCH(5, A1:A3)", newCtx(Map("A1" -> 4, "A2" -> 5, "A3" -> 6))),
         (3, "=MATCH(6, A1:A3)", newCtx(Map("A1" -> 4, "A2" -> 5, "A3" -> 6))),

@@ -274,7 +274,8 @@ object Evaluator {
     // Type 1: largest value that is >= v
     // Type 0: exactly v
     // Type -1: smallest value <= v
-    case List(v, a) => evalCallMatch(ctx, List(v, a, Const(VDouble(0))))
+    case List(v, a)           => evalCallMatch(ctx, List(v, a, Const(VDouble(0))))
+    case List(v, c: Cell, t)  => evalCallMatch(ctx, List(v, Range(c, c), t))
     case List(v, r: Range, t) => {
 
       val ((c1, r1), (c2, r2)) = getRangeBounds(r)
@@ -302,8 +303,8 @@ object Evaluator {
   def evalVLookUp(ctx: Ctx, args: List[Expr]): Value = args match {
     // value, array, index, exact
     // default exact to FALSE, which is the only type we implement here.
-    case List(v, a, i)                => evalVLookUp(ctx, args :+ Const(VBool(false)))
-    case List(v, c: Cell, i, e)       => evalVLookUp(ctx, List(v, Range(c, c), i, e))
+    case List(v, a, i)           => evalVLookUp(ctx, args :+ Const(VBool(false)))
+    case List(v, c: Cell, i, e)  => evalVLookUp(ctx, List(v, Range(c, c), i, e))
     case List(v, r: Range, i, e) => evalIn(ctx, i) match {
       case VDouble(index) => {
         val ((c1, r1), (c2, r2)) = getRangeBounds(r)
