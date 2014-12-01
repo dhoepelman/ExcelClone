@@ -1,7 +1,8 @@
 
 package scalaExcel.formula
 
-import math.{pow, abs}
+import scalaExcel.CellPos
+import math.{min, pow, abs}
 
 object Evaluator {
 
@@ -204,7 +205,9 @@ object Evaluator {
       case "AVERAGE" => evalCallAverage(ctx, desugarArgs(args))
       case "POWER"   => evalCallPower(ctx, args)
 
+      case "ROW"     => evalCallRow(args)
       case "ROWS"    => evalCallRows(args)
+      case "COLUMN"  => evalCallColumn(args)
       case "COLUMNS" => evalCallColumns(args)
       case "COUNT"   => evalCallCount(ctx, desugarArgs(args))
       case "MATCH"   => evalCallMatch(ctx, args)
@@ -234,19 +237,17 @@ object Evaluator {
 
   // Cell functions
 
-  def evalCallRows(args: List[Expr]) = args match {
-    case List(Range(Cell(_, RowRef(r1, _)), Cell(_, RowRef(r2, _)))) => {
-      VDouble(abs(r2 - r1) + 1)
-    }
+  private def execForRangeArg[T](f: (CellPos, CellPos) => T)(args: List[Expr]) = args match {
+    case List(Cell(ColRef(c, _), RowRef(r, _))) =>f((c, r), (c, r))
+    case List(Range(Cell(ColRef(c1, _), RowRef(r1, _)), Cell(ColRef(c2, _), RowRef(r2, _)))) =>
+      f((c1, r1), (c2, r2))
     case _ => throw new Exception("Wrong number of arguments")
   }
 
-  def evalCallColumns(args: List[Expr]) = args match {
-    case List(Range(Cell(ColRef(c1, _), _), Cell(ColRef(c2, _), _))) => {
-      VDouble(abs(c2 - c1) + 1)
-    }
-    case _ => throw new Exception("Wrong number of arguments")
-  }
+  def evalCallRow = execForRangeArg((c1, c2) => VDouble(min(c1._2, c2._2) + 1)) _
+  def evalCallRows = execForRangeArg((c1, c2) => VDouble(abs(c2._2 - c1._2) + 1)) _
+  def evalCallColumn = execForRangeArg((c1, c2) => VDouble(min(c1._1, c2._1) + 1)) _
+  def evalCallColumns = execForRangeArg((c1, c2) => VDouble(abs(c2._1 - c1._1) + 1)) _
 
   def evalCallCount(ctx: Ctx, args: List[Expr]) =
     VDouble(args

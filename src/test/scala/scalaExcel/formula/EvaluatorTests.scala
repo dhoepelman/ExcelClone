@@ -311,11 +311,22 @@ object EvaluatorTests {
         (3, "=AVERAGE(A1:A5)", sparseCtx)
       )) ++ lst("function POWER", List(
         (16, "=POWER(2,4)")
+      )) ++ lst("function ROW", List(
+        (2, "=ROW(A2)"),
+        (31, "=ROW(B31:B66)"),
+        (5, "=ROW(A14:A5)")
       )) ++ lst("function ROWS", List(
+        (1, "=ROWS(A2)"),
         (4, "=ROWS(A2:A5)"),
         (1, "=ROWS(B31:B31)"),
         (10, "=ROWS(A14:A5)")
+      )) ++ lst("function COLUMN", List(
+        (1, "=COLUMN(A2)"),
+        (3, "=COLUMN(C1:Z1)"),
+        (27, "=COLUMN(ZZ31:AA31)"),
+        (2, "=COLUMN(E14:B5)")
       )) ++ lst("function COLUMNS", List(
+        (1, "=COLUMNS(A2)"),
         (3, "=COLUMNS(A1:C1)"),
         (27, "=COLUMNS(A31:AA31)"),
         (4, "=COLUMNS(E14:B5)")
