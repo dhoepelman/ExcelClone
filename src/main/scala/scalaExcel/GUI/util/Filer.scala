@@ -16,31 +16,6 @@ import scalaExcel.model.Sheet
  */
 object Filer {
 
-//  def cellToCSV(cell: DataCell) : String =  cell.expression
-//  def stringToCSV(cell: String) : String = cell
-//
-//  def rowToCSV[T](v : (T => String))(row : Traversable[T]) : String =
-//    row.foldLeft("")((csv, cell) => csv + v(cell) + ",")
-//
-//  def gridToCSV[T](v: (T => String))( grid: Traversable[Traversable[T]]) : String =
-//    grid.foldLeft("")((csv, row) => csv + rowToCSV(v)(row) + "\n")
-//
-//
-//  def save[T](formatter: (Traversable[Traversable[T]])=>String)
-//             (file: File, grid: Traversable[Traversable[T]]) = {
-//    printToFile(file) { _.print(formatter(grid)) }
-//  }
-//
-//
-//  def toStringTable(dataTable: DataTable) : Traversable[Traversable[String]] =
-//    dataTable.map(_.map(_.value.expression))
-//
-//  def saveCSV(file: java.io.File, dataTable: DataTable) = {
-//    val data = toStringTable(dataTable)
-//    Filer.save[String](Filer.gridToCSV(identity))(file, data)
-//  }
-//
-
   /** Save sheet as CSV file */
   def saveCSV(file: java.io.File, sheet: Sheet) = {
     printToFile(file)(_ print sheetToCSV(sheet))
