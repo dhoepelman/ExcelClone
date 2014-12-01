@@ -2,7 +2,6 @@
 package scalaExcel.formula
 
 import math.{pow, abs}
-import scalaExcel.util.ColumnTranslator.{numToCol, colToNum}
 
 object Evaluator {
 
@@ -86,7 +85,7 @@ object Evaluator {
   }
 
   def desugarCell(c: Cell) = c match {
-    case Cell(ColRef(c, _), RowRef(r, _)) => ACell(c, r)
+    case Cell(ColRef(c, _), RowRef(r, _)) => ACell((c, r))
   }
 
   def desugarRange(c1: Cell, c2: Cell): Expr =
@@ -96,7 +95,7 @@ object Evaluator {
         Cell(ColRef(c2, _), RowRef(r2, _))
       ) =>
         if (c1 == c2 && r1 == r2)
-          ACell(c1, r1)
+          ACell((c1, r1))
         else {
           val rs = List.range(r1, r2 + 1)
           val cs = List.range(c1, c2 + 1)

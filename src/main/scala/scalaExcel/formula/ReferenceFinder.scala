@@ -1,7 +1,5 @@
 package scalaExcel.formula
 
-import scalaExcel.util.ColumnTranslator.{colToNum, numToCol}
-
 object ReferenceFinder {
 
   sealed trait Node
@@ -33,7 +31,7 @@ object ReferenceFinder {
   }
 
   private def desugarCell(e: Expr) = e match {
-    case Cell(ColRef(c, _), RowRef(r, _)) => Leaf(ACell(c, r))
+    case Cell(ColRef(c, _), RowRef(r, _)) => Leaf(ACell((c, r)))
     case _ => Empty
   }
 

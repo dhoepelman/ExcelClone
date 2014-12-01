@@ -1,7 +1,6 @@
 package scalaExcel.formula
 
 import scalaExcel.CellPos
-import scalaExcel.util.ColumnTranslator._
 
 /** Modifies cell dependencies in their AST */
 object DependencyModifier {

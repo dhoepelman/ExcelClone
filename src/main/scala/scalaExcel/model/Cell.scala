@@ -1,8 +1,7 @@
 package scalaExcel.model
 
+import scalaExcel.CellPos
 import scalaExcel.formula._
-import scalaExcel.formula.ReferenceFinder.findRefCells
-import scalaExcel.util.ColumnTranslator.{numToCol, colToNum}
 
 // This is a cell object, it can execute it self and find the references inside
 // the formula. This implements a dummy parser/executor

@@ -2,6 +2,8 @@ package scalaExcel.model
 
 import rx.lang.scala.Observable
 
+import scalaExcel.CellPos
+
 object OperationHelpers {
 
   // Shortcuts, to quickly get values from the sheet observable
