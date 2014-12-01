@@ -21,29 +21,31 @@ object Sorter {
     case _ => true
   }
 
-  def compareOption(a: Option[Value], b: Option[Value]) = (a, b) match {
-    case (Some(v1), Some(v2)) => compare(v1, v2)
-    case (Some(v1), None) => true
-    case (None, Some(v2)) => false
-    case _ => true
-  }
-
   implicit class SheetSorter(val sheet: Sheet) extends AnyVal {
 
     def sort(x: Int, ascending: Boolean = true): Sheet = {
 
       val rows = sheet.rows
 
+      type CellValue = (CellPos, Option[Value])
+      def ascOrDescCompare(a: CellValue, b: CellValue) = (a, b) match {
+        case ((_, Some(a)), (_, Some(b))) => {
+          val cmp = compare(a, b)
+          if (ascending) cmp else !cmp
+        }
+        case ((_, Some(_)), (_, None)) => true
+        case ((_, None), (_, Some(_))) => false
+        case ((_, None), (_, None)) => false
+      }
+
       // Get a map for row mutations. Map(0 -> 3), means row 0 becomes row 3
       val rowMutations =
-        (0 to rows)
+        (0 to rows - 1)
         .map { y =>
           ((x, y), sheet.values.get((x, y)))
         }
-        .sortWith {
-          case ((_, a), (_, b)) => compareOption(a, b)
-        }
-        .zip(0 to rows)
+        .sortWith(ascOrDescCompare)
+        .zip(0 to rows - 1)
         .map {
           case (((_, y1), _), y2) => (y1, y2)
         }
