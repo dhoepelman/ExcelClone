@@ -31,16 +31,17 @@ object EvaluatorTests {
   val p = new Parser
 
   val ectx = Map[ACell, Value]();
+
   def lst(name: String, l: List[Tuple2[Any, String]]) =
     lstCtx(name, l map (x => (x._1, x._2, ectx)))
+
+  def lstErr(name: String, l: List[Tuple2[ErrType, String]]): List[TestTuple] =
+    lstErrCtx(name, l map (x => (x._1, x._2, ectx)))
 
   def lstCtx(name: String, l: List[Tuple3[Any, String, Ctx]]) =
     l map (x => (name, tv(x._1), x._2, x._3))
 
-  def lstErr(name: String, l: List[Tuple2[ErrType, String]]): List[TestTuple] =
-    l map (x => (name, VErr(x._1), x._2, ectx))
-
-  def lstErrCtx(name: String, l: List[Tuple3[ErrType, String, Ctx]]): List[TestTuple] =
+  def lstErrCtx(name: String, l: List[Tuple3[ErrType, String, Ctx]]) =
     l map (x => (name, VErr(x._1), x._2, x._3))
 
   def newCtx(values: Map[String, Any]) = values map (x => {
@@ -280,6 +281,13 @@ object EvaluatorTests {
       )) ++ lstErr("unop", List(
         (InvalidValue, "=-\"A\""),
         (InvalidValue, "=\"A\"%")
+      )) ++ lstCtx("cell reference", List(
+        (4, "=A1", Map(ACell((0, 0)) -> VDouble(4))),
+        (8, "=A1*2", Map(ACell((0, 0)) -> VDouble(4)))
+      )) ++ lstErr("just a range", List(
+        (InvalidValue, "=A1:A3"),
+        (InvalidValue, "=2 + A1:A3"),
+        (InvalidValue, "=A1:A3%")
       )) ++ lstErr("call unknown function", List(
         (InvalidName, "=FOOBAR11()")
       )) ++ lst("call SUM", List(
@@ -288,9 +296,6 @@ object EvaluatorTests {
         (10, "=SUM(1,2,3,4)")
       )) ++ lstErr("call SUM invalids", List(
         (InvalidValue, "=SUM(\"A\")")
-      )) ++ lstCtx("cell reference", List(
-        (4, "=A1", Map(ACell((0, 0)) -> VDouble(4))),
-        (8, "=A1*2", Map(ACell((0, 0)) -> VDouble(4)))
       )) ++ lstCtx("a range of cells", List(
         (4, "=A1:A1", newCtx(Map("A1" -> 4))),
         (6, "=2+A1:A1", newCtx(Map("A1" -> 4))),
@@ -299,10 +304,13 @@ object EvaluatorTests {
         (6, "=SUM(A1:A2,1+2)", newCtx(Map("A1" -> 1, "A2" -> 2))),
         (6, "=SUM(A1:C1)", newCtx(Map("A1" -> 1, "B1" -> 2, "C1" -> 3))),
         (10, "=SUM(A1:B2)", newCtx(Map("A1" -> 1, "B1" -> 2, "A2" -> 3, "B2" -> 4)))
-      )) ++ lstErr("just a range", List(
-        (InvalidValue, "=A1:A3"),
-        (InvalidValue, "=2 + A1:A3"),
-        (InvalidValue, "=A1:A3%")
+      )) ++ lstCtx("function AVERAGE", List(
+        (5, "=AVERAGE(A1:A2)", newCtx(Map("A1" -> 3, "A2" -> 7))),
+        (2.5, "=AVERAGE(3, 1, 4, 2)", ectx),
+        (5, "=AVERAGE(5, A1:A2)", newCtx(Map("A1" -> 3, "A2" -> 7))),
+        (3, "=AVERAGE(A1:A5)", sparseCtx)
+      )) ++ lst("function POWER", List(
+        (16, "=POWER(2,4)")
       )) ++ lst("function ROWS", List(
         (4, "=ROWS(A2:A5)"),
         (1, "=ROWS(B31:B31)"),
@@ -315,11 +323,20 @@ object EvaluatorTests {
         (3, "=COUNT(TRUE, 1/0, 1, \"abc\", 10, 0)")
       )) ++ lstCtx("function COUNT", List(
         (2, "=COUNT(A1:A5)", sparseCtx)
-      )) ++ lstCtx("function AVG", List(
-        (5, "=AVERAGE(A1:A2)", newCtx(Map("A1" -> 3, "A2" -> 7))),
-        (2.5, "=AVERAGE(3, 1, 4, 2)", ectx),
-        (5, "=AVERAGE(5, A1:A2)", newCtx(Map("A1" -> 3, "A2" -> 7))),
-        (3, "=AVERAGE(A1:A5)", sparseCtx)
+      )) ++ lstCtx("function VLOOKUP", List(
+        (1, "=VLOOKUP(1, A1:A3, 1)", newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3))),
+        (2, "=VLOOKUP(2, A1:A3, 1)", newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3))),
+        (3, "=VLOOKUP(3, A1:A3, 1)", newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3))),
+        (4, "=VLOOKUP(1, A1:B3, 2)", newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3, "B1" -> 4))),
+        (3, "=VLOOKUP(3, B5, 1)",    newCtx(Map("B5" -> 3))),
+        (3, "=VLOOKUP(3, B5, 1.6)",  newCtx(Map("B5" -> 3))),
+        (3, "=VLOOKUP(A1, B5, 1)",   newCtx(Map("A1" -> 3, "B5" -> 3)))
+      )) ++ lstErrCtx("function VLOOKUP invalids", List(
+        (NA,           """=VLOOKUP(4, A1:A3, 1)""",   newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3))),
+        (NA,           """=VLOOKUP(4, A1:A3, 2)""",   newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3))),
+        (InvalidRef,   """=VLOOKUP(2, A1:A3, 2)""",   newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3))),
+        (InvalidValue, """=VLOOKUP(2, A1:A3, "A")""", newCtx(Map("A1" -> 1))),
+        (InvalidValue, """=VLOOKUP(2, 1, 1)""",       newCtx(Map("A1" -> 1)))
       )) ++ lst("function IF", List(
         (true, "=IF(TRUE)"),
         (false, "=IF(FALSE)"),
@@ -369,8 +386,6 @@ object EvaluatorTests {
         (false, "=NOT(1)")
       )) ++ lstCtx("NOT with empty", List(
         (true, "=NOT(B1)", (_ => VEmpty))
-      )) ++ lst("function POWER", List(
-        (16, "=POWER(2,4)")
       )) ++ lst("function UPPER", List(
         ("ABC", "=UPPER(\"abc\")"),
         ("ABC", "=UPPER(\"aBc\")"),

@@ -202,14 +202,18 @@ object Evaluator {
     fn match {
       case "SUM"     => reduce(ctx, applyToDoubles(_ + _), VDouble(0), desugarArgs(args))
       case "AVERAGE" => evalCallAverage(ctx, desugarArgs(args))
+      case "POWER"   => evalCallPower(ctx, args)
+
       case "ROWS"    => evalCallRows(args)
       case "COLUMNS" => evalCallColumns(args)
       case "COUNT"   => evalCallCount(ctx, desugarArgs(args))
+      case "VLOOKUP" => evalVLookUp(ctx, args)
+
       case "IF"      => evalCallIf(ctx, args)
       case "OR"      => evalCallOr(ctx, desugarArgs(args))
       case "AND"     => evalCallAnd(ctx, desugarArgs(args))
       case "NOT"     => evalCallNot(ctx, args)
-      case "POWER"   => evalCallPower(ctx, args)
+
       case "UPPER"   => evalCallUpper(ctx, args)
       case "LOWER"   => evalCallLower(ctx, args)
       case "LEN"     => evalCallLen(ctx, args)
@@ -217,8 +221,17 @@ object Evaluator {
       case _ => VErr(InvalidName)
     }
 
+  // Numeric functions
+
   def evalCallAverage(ctx: Ctx, args: List[Expr]) =
     evalIn(ctx, BinOp(Div(), Call("SUM", args), Call("COUNT", args)))
+
+  def evalCallPower(ctx: Ctx, args: List[Expr]) = args match {
+    case List(num, exp) => evalIn(ctx, BinOp(Expon(), num, exp))
+    case _ => throw new Exception("Wrong number of arguments")
+  }
+
+  // Cell functions
 
   def evalCallRows(args: List[Expr]) = args match {
     case List(Range(Cell(_, RowRef(r1, _)), Cell(_, RowRef(r2, _)))) => {
@@ -241,6 +254,38 @@ object Evaluator {
         case _ => 0
       })
       .fold(0)(_+_))
+
+  def evalVLookUp(ctx: Ctx, args: List[Expr]): Value = args match {
+    // value, array, index, exact
+    // default exact to FALSE, which is the only type we implement here.
+    case List(v, a, i)                => evalVLookUp(ctx, args :+ Const(VBool(false)))
+    case List(v, c: Cell, i, e)       => evalVLookUp(ctx, List(v, Range(c, c), i, e))
+    case List(v, Range(a1, a2), i, e) => {
+
+      val value = evalIn(ctx, v)
+      val (ACell((c1, r1))) = desugarCell(a1)
+      val (ACell((c2, r2))) = desugarCell(a2)
+
+      evalIn(ctx, i) match {
+        case VDouble(index) => {
+          val lookupCol = c1 + index.toInt - 1
+          val row = (r1 to r2) find { ri => value == ctx(ACell((c1, ri))) }
+          row match {
+            case Some(r) =>
+              if (lookupCol > c2) VErr(InvalidRef)
+              else ctx(ACell((lookupCol, r)))
+            case None => VErr(NA)
+          }
+        }
+        case _ => VErr(InvalidValue)
+      }
+
+    }
+    case List(v, a, i, e) => VErr(InvalidValue)
+    case _ => throw new Exception("Wrong number of arguments")
+  }
+
+  // Logical functions
 
   def evalCallIf(ctx: Ctx, args: List[Expr]) = (args match {
     // Normalize length of arguments to 3
@@ -278,10 +323,7 @@ object Evaluator {
     case _ => throw new Exception("Wrong number of arguments")
   }
 
-  def evalCallPower(ctx: Ctx, args: List[Expr]) = args match {
-    case List(num, exp) => evalIn(ctx, BinOp(Expon(), num, exp))
-    case _ => throw new Exception("Wrong number of arguments")
-  }
+  // String functions
 
   def evalWithString(f: String => Value)(ctx: Ctx, args: List[Expr]) = {
     args match {
