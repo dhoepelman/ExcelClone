@@ -31,11 +31,8 @@ object Filer {
 
   /** Convert sheet to CSV string */
   def sheetToCSV(sheet: Sheet) : String = {
-    val rowSize = sheet.values.maxBy{case ((r,c),_) => r}._1._1
-    val columnSize = sheet.values.maxBy{case ((r,c),_) => c}._1._2
-
-    (0 to rowSize).map(row => {
-      (0 to columnSize).map(column => sheet.valueAt((column, row))).map({
+    (0 to sheet.rows).map(row => {
+      (0 to sheet.cols).map(column => sheet.valueAt((column, row))).map({
         case Some(v) => escape(v.toString)
         case _ => ""
       }).foldLeft("")((fold, v) => fold + "\"" + v + "\"" + ",")
