@@ -1,6 +1,8 @@
 package scalaExcel.model
 
+import scalaExcel.model.{ModelMutations, Sheet}
 import scalafx.scene.paint.Color
+import rx.lang.scala.Observable
 import rx.lang.scala.subjects.BehaviorSubject
 import scalaExcel.model.Sorter.SheetSorter
 import scalaExcel.model.OperationHelpers._
@@ -34,20 +36,42 @@ class Model {
   def updateStyle(sheet: Sheet, pos : CellPos, f: Styles => Styles) =
     sheet.setCellStyle(pos, f(sheet.styles.getOrElse(pos, Styles.DEFAULT)))
 
+  /** Number of undo's and redo's that should be remembered */
+  val undoRedoBufferSize = 10
+
   // this combines the initial Sheet with all input mutations from the outside
   // world
-  val sheet = sheetMutations.scan(new Sheet())((sheet, action) => action match {
-    case SetFormula(pos, f) =>
-      val (s, updates) = sheet.setCell(pos, f)
-      updateSheet(s, updates, Set(pos))
-    case EmptyCell(pos) => updateSheet(sheet.deleteCell(pos))
-    case CopyCell(from, to) => updateSheet(sheet.copyCell(from, to))
-    case CutCell(from, to) => updateSheet(sheet.cutCell(from, to))
-    case SetColor(pos, c) => updateStyle(sheet, pos, s => s.setColor(c))
-    case SetBackground(pos, c) => updateStyle(sheet, pos, s => s.setBackground(c))
-    case SortColumn(x, asc) => sheet.sort(x, asc)
-    case Refresh => sheet
+  private val undoRedoSheet = sheetMutations.scan(new Sheet(), List[Sheet](), List[Sheet]())({
+    case ((sheet, undo, redo), action) =>
+      // Calculate new sheet
+      (action match {
+        case SetFormula(pos, f) =>
+          val (s, updates) = sheet.setCell(pos, f)
+          updateSheet(s, updates, Set(pos))
+        case EmptyCell(pos) => updateSheet(sheet.deleteCell(pos))
+        case CopyCell(from, to) => updateSheet(sheet.copyCell(from, to))
+        case CutCell(from, to) => updateSheet(sheet.cutCell(from, to))
+        case SetColor(pos, c) => updateStyle(sheet, pos, s => s.setColor(c))
+        case SetBackground(pos, c) => updateStyle(sheet, pos, s => s.setBackground(c))
+        case SortColumn(x, asc) => sheet.sort(x, asc)
+        case Undo => if (undo.nonEmpty) undo.head else sheet
+        case Redo => if (redo.nonEmpty) redo.head else sheet
+        case Refresh => sheet
+      },
+      // calculate new undo stack
+      action match {
+        case Undo => undo.tail
+        case _ => sheet :: undo.take(undoRedoBufferSize - 1)
+      },
+      // calculate new redo stack
+      action match {
+        case Redo => redo.tail
+        case Undo => sheet :: redo.take(undoRedoBufferSize - 1)
+        case _ => List()
+      })
   })
+
+  val sheet = undoRedoSheet.map(_._1)
 
   def refresh() = sheetMutations.onNext(Refresh)
 
@@ -79,4 +103,11 @@ class Model {
     sheetMutations.onNext(SortColumn(x, asc))
   }
 
+  def undo() = {
+    sheetMutations.onNext(Undo)
+  }
+
+  def redo() = {
+    sheetMutations.onNext(Redo)
+  }
 }
