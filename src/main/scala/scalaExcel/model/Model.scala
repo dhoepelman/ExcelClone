@@ -2,6 +2,7 @@ package scalaExcel.model
 
 import scalafx.scene.paint.Color
 import rx.lang.scala.subjects.BehaviorSubject
+import scalaExcel.model.Sorter.SheetSorter
 import scalaExcel.model.OperationHelpers._
 
 class Model {

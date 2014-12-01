@@ -40,7 +40,7 @@ object Sorter {
         .map {
           case ((x, y), cell) => {
             val p2 = (x, rowMutations.get(y).get)
-            (p2, Cell(p2, cellModifier(cell.AST)))
+            (p2, Cell(cellModifier(cell.AST)))
           }
         }
 
