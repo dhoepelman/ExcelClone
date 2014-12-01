@@ -337,7 +337,8 @@ object EvaluatorTests {
       )) ++ lstCtx("function MATCH", List(
         (1, "=MATCH(4, A1:A3)", newCtx(Map("A1" -> 4, "A2" -> 5, "A3" -> 6))),
         (2, "=MATCH(5, A1:A3)", newCtx(Map("A1" -> 4, "A2" -> 5, "A3" -> 6))),
-        (3, "=MATCH(6, A1:A3)", newCtx(Map("A1" -> 4, "A2" -> 5, "A3" -> 6)))
+        (3, "=MATCH(6, A1:A3)", newCtx(Map("A1" -> 4, "A2" -> 5, "A3" -> 6))),
+        (3, "=MATCH(6, C1:E1)", newCtx(Map("C1" -> 4, "D1" -> 5, "E1" -> 6)))
       )) ++ lstErrCtx("function MATCH invalids", List(
         (NA,           """=MATCH(4, A1:A3, 0)""", newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3))),
         (NA,           """=MATCH(1, A1:B3, 0)""", newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3))),
