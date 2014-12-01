@@ -72,34 +72,3 @@ class Model {
     sheetMutations.onNext(SetColor(x, y, c))
   }
 }
-
-object ModelExample extends App {
-  val model = new Model()
-
-  // Anything can subscribe to this stream of
-  model.sheet.subscribe(x => println(x.values))
-
-  // Or to just get the distinct values at cell (3, 1)
-  model.sheet
-    .map(_.valueAt(3, 1))
-    .filter(_.nonEmpty)
-    .map(_.get)
-    .distinctUntilChanged
-    .subscribe(x => println(s"value at (3,1) changed to $x"))
-
-  // Or use the implicit helper class and use the this:
-  model.sheet.filterCellValueAt(4, 1).subscribe(x => println(s"(4,1) value changed to $x"))
-
-  model.sheet
-    .map(s => s.styles)
-    .distinctUntilChanged
-    .subscribe(x => println(s"styles $x"))
-
-  // Input some changes
-  model.changeFormula(1, 1, "=C1")
-  model.changeFormula(2, 1, "=5")
-  model.changeFormula(3, 1, "=A1+B1")
-  model.changeFormula(4, 1, "=A1+A1")
-  model.changeFormula(1, 1, "=4+6")
-  model.changeFormula(2, 1, "=4+0")
-}
