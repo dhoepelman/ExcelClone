@@ -168,9 +168,9 @@ class ViewManager extends jfxf.Initializable {
     })
       .map(chooser => chooser.showSaveDialog(tableContainer.scene.window.getValue))
       .filter(_ != null)
-      .labelAlways(model.sheet)
+      .withLatest(model.sheet)
       .subscribe(fs => {
-          val (file, sheet) = fs
+          val (sheet, file) = fs
           Filer.saveCSV(file, sheet)
       })
 
@@ -311,18 +311,6 @@ class ViewManager extends jfxf.Initializable {
     )
 
     menuDelete = new MenuItem(menuDeleteDelegate)
-  }
-
-  /**
-   * Extension functions for Rx Observables
-   */
-  implicit class ExtendRx[T](ob: Observable[T]) {
-    /** Similar to combineLatest, but it emits iff this observable emits */
-    def labelAlways[L](la: Observable[L]) =
-      ob.timestamp
-        .combineLatest(la)
-        .distinctUntilChanged(_._1._1)
-        .map(x => (x._1._2, x._2))
   }
 
 
