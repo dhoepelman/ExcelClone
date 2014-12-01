@@ -4,23 +4,6 @@ import scalaExcel.formula._
 
 object Sorter {
 
-  def compare(a: Value, b: Value) = (a, b) match {
-    case (VDouble(d1), VDouble(d2)) => d1 < d2
-    case (VDouble(d), VString(s)) => true
-    case (VDouble(d), VBool(b)) => true
-    case (VDouble(d), VErr(e)) => true
-    case (VString(s1), VString(s2)) => s1.compareTo(s2) < 0
-    case (VString(s), VDouble(d)) => false
-    case (VString(s), VBool(b)) => true
-    case (VString(s), VErr(e)) => true
-    case (VBool(b1), VBool(b2)) => !b1 || b1 == b2 // false < true
-    case (VBool(b), VDouble(d)) => false
-    case (VBool(b), VString(s)) => false
-    case (VBool(b), VErr(e)) => true
-    case (VErr(e), _) => false
-    case _ => true
-  }
-
   implicit class SheetSorter(val sheet: Sheet) extends AnyVal {
 
     def sort(x: Int, ascending: Boolean = true): Sheet = {
@@ -30,12 +13,10 @@ object Sorter {
       type CellValue = (CellPos, Option[Value])
       def ascOrDescCompare(a: CellValue, b: CellValue) = (a, b) match {
         case ((_, Some(a)), (_, Some(b))) => {
-          val cmp = compare(a, b)
-          if (ascending) cmp else !cmp
+          (a.compare(b) * (if (ascending) 1 else -1)) < 0
         }
-        case ((_, Some(_)), (_, None)) => true
-        case ((_, None), (_, Some(_))) => false
-        case ((_, None), (_, None)) => false
+        case ((_, None), (_, _)) => false
+        case ((_, _), (_, None)) => true
       }
 
       // Get a map for row mutations. Map(0 -> 3), means row 0 becomes row 3

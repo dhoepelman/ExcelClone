@@ -5,29 +5,9 @@ import org.junit._
 
 import scalaExcel.formula._
 import scalaExcel.formula.Values.{toVal => tv}
-import scalaExcel.model.Sorter.{compare, SheetSorter}
+import scalaExcel.model.Sorter.SheetSorter
 
 class SorterTests {
-
-  @Test def testCompare() = {
-    // numbers should come first
-    assertTrue(compare(tv(1), tv(2)))
-    assertFalse(compare(tv(10), tv(2)))
-    assertTrue(compare(tv(1), tv("a")))
-    // then strings
-    assertTrue(compare(tv("a"), tv("ab")))
-    assertFalse(compare(tv("b"), tv("a")))
-    assertFalse(compare(tv(true), tv("ab")))
-    // and finally booleans
-    assertTrue(compare(tv(false), tv(true)))
-    assertTrue(compare(tv(false), tv(false)))
-    assertTrue(compare(tv(true), tv(true)))
-    assertTrue(compare(tv(false), tv(false)))
-    assertFalse(compare(tv(true), tv(false)))
-    // errors should come last
-    assertTrue(compare(tv("a"), VErr(InvalidValue)))
-    assertFalse(compare(VErr(InvalidValue), tv("a")))
-  }
 
   @Test def testDenseSingleColumnSort() = {
     val model = new Model()
