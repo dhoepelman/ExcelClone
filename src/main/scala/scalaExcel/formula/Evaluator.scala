@@ -23,7 +23,7 @@ object Evaluator {
     r match {
       case e: VErr => e
       case _ => args match {
-        case x :: xs => evalIfValidOperand(ctx, x, (v => reduce(ctx, f, f(r, v), xs)))
+        case x :: xs => evalIfValidOperand(ctx, x, v => reduce(ctx, f, f(r, v), xs))
         case _ => r
       }
     }
@@ -99,8 +99,8 @@ object Evaluator {
           ACell(c1, r1)
         else {
           val rs = List.range(r1, r2 + 1)
-          val cs = List.range(colToNum(c1), colToNum(c2) + 1)
-          ARange(for (r <- rs; c <- cs) yield ACell(numToCol(c), r))
+          val cs = List.range(c1, c2 + 1)
+          ARange(for (r <- rs; c <- cs) yield ACell((c,r)))
         }
   }
 
@@ -242,7 +242,7 @@ object Evaluator {
 
   def evalCallColumns(args: List[Expr]) = args match {
     case List(Range(Cell(ColRef(c1, _), _), Cell(ColRef(c2, _), _))) => {
-      VDouble(abs(colToNum(c2) - colToNum(c1)) + 1)
+      VDouble(abs(c2 - c1) + 1)
     }
     case _ => throw new Exception("Wrong number of arguments")
   }

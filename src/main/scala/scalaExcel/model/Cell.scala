@@ -15,14 +15,14 @@ sealed trait Cell {
   lazy val f : String = PPrinter.pprint(AST)
 
   /** Dependencies of this cell */
-  lazy val refs: List[(Int, Int)] = ReferenceFinder.findRefCells(AST).map(Cell.ACellToPos)
+  lazy val refs: List[CellPos] = ReferenceFinder.findRefCells(AST).map( _.pos )
 
   /** Get the current value of this cell */
-  def eval(deps: Map[(Int, Int), Value]): Value = Evaluator.eval(Ctx(deps), AST)
+  def eval(deps: Map[CellPos, Value]): Value = Evaluator.eval(Ctx(deps), AST)
 
   override def toString = '"' + f + '"'
 
-  protected def Ctx(values: Map[(Int, Int), Value])(c: ACell) = values get ((colToNum(c.c), c.r - 1)) match {
+  protected def Ctx(values: Map[CellPos, Value])(c: ACell) = values get c.pos match {
     case Some(v) => v
     case None => VDouble(0)//throw new IllegalArgumentException(s"Dependency (${c.c},${c.r}}) not found in map")
   }
@@ -35,9 +35,6 @@ object Cell {
   def apply(AST : Expr) : Cell = new ASTCell(AST)
 
   val parser = new Parser()
-
-  def posToACell(c: Int, r: Int) = ACell(numToCol(c), r + 1)
-  def ACellToPos(c: ACell) = (colToNum(c.c), c.r - 1)
 
   private object EmptyCell extends Cell {
     override lazy val f = ""

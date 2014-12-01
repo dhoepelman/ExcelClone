@@ -4,6 +4,7 @@ import org.junit.Assert._
 import org.junit._
 
 import scalaExcel.formula.Values.{toVal => tv}
+import scalaExcel.util.ColumnTranslator
 
 class ParserTests {
 
@@ -169,14 +170,14 @@ class ParserTests {
   @Test def precedenceComplex1() = test("= \"a\" & \"b\" <= -20%^3", "= (\"a\" & \"b\") <= (((-20)%)^3)")
 
 
-  private def cell(c: String, ca: Boolean, r: Int, ra: Boolean) = Cell(ColRef(c, ca), RowRef(r, ra))
+  private def cell(c: Int, ca: Boolean, r: Int, ra: Boolean) = Cell(ColRef(c, ca), RowRef(r, ra))
   @Test def singleref() =
     Map (
-      "=B5" -> cell("B", false, 5, false),
-      "=C$270" -> cell("C", false, 270, true),
-      "=$FF100" -> cell("FF", true, 100, false),
-      "=AZ$99" -> cell("AZ", false, 99, true),
-      "=$ABCDE$12345" -> cell("ABCDE", true, 12345, true)
+      "=B5" -> cell(1, false, 4, false),
+      "=C$270" -> cell(2, false, 269, true),
+      "=$FF100" -> cell(ColumnTranslator.colToNum("FF"), true, 99, false),
+      "=AZ$99" -> cell(51, false, 98, true),
+      "=$ABCDE$12345" -> cell(ColumnTranslator.colToNum("ABCDE"), true, 12344, true)
     ) foreach (kv => {
       test(kv._2, kv._1)
       test(kv._2, kv._1.toLowerCase)
@@ -185,22 +186,22 @@ class ParserTests {
   // A-5 is valid in Excel, and is for us if we enable defined names. E.g. A-5 => (A) - 5
   @Test def invalidrefs() = List("=$-A5", "=$+A5", "=$B+5", "=$B-5") foreach assertFail
 
-  private def range(c1: String, c1a: Boolean, r1: Int, r1a: Boolean, c2: String, c2a: Boolean, r2: Int, r2a: Boolean)
+  private def range(c1: Int, c1a: Boolean, r1: Int, r1a: Boolean, c2: Int, c2a: Boolean, r2: Int, r2a: Boolean)
     = Range(cell(c1, c1a, r1, r1a), cell(c2, c2a, r2, r2a))
 
   @Test def rangerefs() =
     Map (
-      "=A1:B2" -> range("A", false, 1, false, "B", false, 2, false),
-      "=F$6:$C10" -> range("F", false, 6, true, "C", true, 10, false)
+      "=A1:B2" -> range(0, false, 0, false, 1, false, 1, false),
+      "=F$6:$C10" -> range(5, false, 5, true, 2, true, 9, false)
     ) foreach (kv => {
       test(kv._2, kv._1)
     })
 
-  @Test def rowrange1() = test(RowRange(RowRef(1, false), RowRef(5, false)), "=1:5")
-  @Test def rowrange2() = test(RowRange(RowRef(5000, true), RowRef(10000, false)), "=$5000:10000")
-  @Test def colrange1() = test(ColRange(ColRef("A", false), ColRef("AZ", false)), "=A:AZ")
+  @Test def rowrange1() = test(RowRange(RowRef(0, false), RowRef(4, false)), "=1:5")
+  @Test def rowrange2() = test(RowRange(RowRef(4999, true), RowRef(9999, false)), "=$5000:10000")
+  @Test def colrange1() = test(ColRange(ColRef(0, false), ColRef(ColumnTranslator.colToNum("AZ"), false)), "=A:AZ")
 
-  @Test def callref1() = test(Call("SUM", List(cell("A", false, 1, false))), "=SUM(A1)")
+  @Test def callref1() = test(Call("SUM", List(cell(0, false, 0, false))), "=SUM(A1)")
 
   // The following formula's are from http://homepages.mcs.vuw.ac.nz/~elvis/db/Excel.shtml
   @Test def example01() {p parsing("=1")}

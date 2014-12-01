@@ -27,11 +27,11 @@ object DependencyModifier {
     }) _
 
   private def cellToPos(c: Cell): CellPos = c match {
-    case Cell(ColRef(c2, _), RowRef(r, _)) => (colToNum(c2), r-1)
+    case Cell(ColRef(c2, _), RowRef(r, _)) => (c2, r)
   }
 
   private def posToCell(p : CellPos, absc : Boolean, absr : Boolean) =
-    Cell(ColRef(numToCol(p._1), absc), RowRef(p._2+1, absr))
+    Cell(ColRef(p._1, absc), RowRef(p._2, absr))
 
   private def changeCellPos(c: Cell, newPos: CellPos) = c match {
     case Cell(ColRef(_, absc), RowRef(_, absr)) => posToCell(newPos, absc, absr)
@@ -52,7 +52,7 @@ object DependencyModifier {
       case Cell(c, r) => Cell(moveC(c), moveR(r))
     }
     def moveC(c: ColRef) = c match {
-      case ColRef(c2, abs) => if (abs) c else ColRef(numToCol(colToNum(c2) + dX), abs)
+      case ColRef(c2, abs) => if (abs) c else ColRef(c2 + dX, abs)
     }
     def moveR(r: RowRef) = r match {
       case RowRef(r2, abs) => if (abs) r else RowRef(r2 + dY, abs)
@@ -72,10 +72,10 @@ object DependencyModifier {
   private def checkValidRef(e : ParseRef) : Expr = {
     val error = Const(VErr(InvalidRef))
     e match {
-      case Cell(ColRef(c,_), RowRef(r, _)) => if(colToNum(c) < 0 || r < 0) error else e
+      case Cell(ColRef(c,_), RowRef(r, _)) => if(c < 0 || r < 0) error else e
       case Range(start, end) => if(checkValidRef(start) == error || checkValidRef(end) == error) error else e
       case RowRange(RowRef(r1,_), RowRef(r2,_)) => if(r1 < 0 || r2 < 0) error else e
-      case ColRange(ColRef(c1, _), ColRef(c2, _)) => if(colToNum(c1) < 0 || colToNum(c2) < 0) error else e
+      case ColRange(ColRef(c1, _), ColRef(c2, _)) => if(c1 < 0 || c2 < 0) error else e
       case SheetReference(f, e2) => if(checkValidRef(e2) == error) error else e
     }
   }

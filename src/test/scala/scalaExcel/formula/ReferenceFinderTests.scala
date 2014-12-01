@@ -15,10 +15,10 @@ class ReferenceFinderTests {
 
   def test(expect: List[String], f: String) = assertEquals(
     expect map (x => p parsing("=" + x) match {
-      case Cell(ColRef(c, _), RowRef(r, _)) => ACell(c, r)
+      case Cell(ColRef(c, _), RowRef(r, _)) => ACell((c, r))
       case _ => throw new IllegalArgumentException("Cell should parse to a cell")
     }),
-    findRefCells(p parsing(f))
+    findRefCells(p parsing f)
   )
 
   @Test def findBinOp1() = test(List("A1", "A2"), "=A1+A2")

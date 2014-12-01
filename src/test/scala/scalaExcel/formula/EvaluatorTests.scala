@@ -242,8 +242,8 @@ object EvaluatorTests {
       )) ++ lstErr("call SUM invalids", List(
         (InvalidValue, "=SUM(\"A\")")
       )) ++ lstCtx("cell reference", List(
-        (4, "=A1", Map(ACell("A", 1) -> VDouble(4))),
-        (8, "=A1*2", Map(ACell("A", 1) -> VDouble(4)))
+        (4, "=A1", Map(ACell((0, 0)) -> VDouble(4))),
+        (8, "=A1*2", Map(ACell((0, 0)) -> VDouble(4)))
       )) ++ lstCtx("a range of cells", List(
         (4, "=A1:A1", newCtx(Map("A1" -> 4))),
         (6, "=2+A1:A1", newCtx(Map("A1" -> 4))),
