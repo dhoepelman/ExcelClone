@@ -2,6 +2,7 @@ package scalaExcel.model
 
 import scalafx.scene.paint.Color
 import scalaExcel.formula._
+import scalaExcel.CellPos
 
 /**
  * Sheet is currently the entire immutable datamodel

@@ -1,6 +1,7 @@
 package scalaExcel.model
 
 import scalaExcel.formula._
+import scalaExcel.CellPos
 
 object Sorter {
 

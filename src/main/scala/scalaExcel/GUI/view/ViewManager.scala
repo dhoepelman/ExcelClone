@@ -13,7 +13,7 @@ import scalaExcel.GUI.data.LabeledDataTable
 import scalaExcel.GUI.data.LabeledDataTable.DataRow
 import scalaExcel.GUI.util.Filer
 import scalaExcel.GUI.view.ViewManager._
-import scalaExcel.model.{CellPos, Model, Styles}
+import scalaExcel.model.{Model, Styles}
 import scalaExcel.rx.operators.WithLatest._
 
 import scalafx.Includes._
@@ -21,6 +21,8 @@ import scalafx.scene.control._
 import scalafx.scene.input.{ClipboardContent, _}
 import scalafx.scene.layout.AnchorPane
 import scalafx.scene.paint.Color
+
+import scalaExcel.CellPos
 
 class ViewManager extends jfxf.Initializable {
 
