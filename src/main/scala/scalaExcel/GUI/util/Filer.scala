@@ -41,16 +41,6 @@ object Filer {
 //  }
 //
 
-  /** Escape commas */
-  def escapeCommas(s: String) : String =
-    s.replace(",", "/c")
-     .replace("/", "//")
-
-  /** Unescape commas */
-  def unescapeCommas(s: String) : String =
-    s.replace("/c", ",")
-     .replace("//", "/")
-
   /** Save sheet as CSV file */
   def saveCSV(file: java.io.File, sheet: Sheet) = {
     printToFile(file)(_ print sheetToCSV(sheet))

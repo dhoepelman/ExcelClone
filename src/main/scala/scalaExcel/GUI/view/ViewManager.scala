@@ -159,7 +159,6 @@ class ViewManager extends jfxf.Initializable {
       .map(chooser => chooser.showOpenDialog(tableContainer.scene.window.getValue))
       .filter(_ != null)
       .map(file => Filer.loadCSV(file))
-      .doOnEach(sheet => println(s"Loaded $sheet"))
       .subscribe(sheet => model.loadSheet(sheet))
   }
 
