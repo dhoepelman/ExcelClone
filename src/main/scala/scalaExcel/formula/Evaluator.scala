@@ -244,9 +244,12 @@ object Evaluator {
     case _ => throw new Exception("Wrong number of arguments")
   }
 
-  def evalCallRow = execForRangeArg((c1, c2) => VDouble(min(c1._2, c2._2) + 1)) _
-  def evalCallRows = execForRangeArg((c1, c2) => VDouble(abs(c2._2 - c1._2) + 1)) _
-  def evalCallColumn = execForRangeArg((c1, c2) => VDouble(min(c1._1, c2._1) + 1)) _
+  def evalCallRow     = execForRangeArg((c1, c2) => VDouble(min(c1._2, c2._2) + 1)) _
+
+  def evalCallRows    = execForRangeArg((c1, c2) => VDouble(abs(c2._2 - c1._2) + 1)) _
+
+  def evalCallColumn  = execForRangeArg((c1, c2) => VDouble(min(c1._1, c2._1) + 1)) _
+
   def evalCallColumns = execForRangeArg((c1, c2) => VDouble(abs(c2._1 - c1._1) + 1)) _
 
   def evalCallCount(ctx: Ctx, args: List[Expr]) =
