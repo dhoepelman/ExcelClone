@@ -1,108 +1,82 @@
 package scalaExcel.GUI.data
 
-import scalaExcel.formula.VEmpty
-import scalaExcel.model.{Styles, Model}
+import scalaExcel.model.Model
 import rx.lang.scala.Subject
-import rx.lang.scala.subjects.BehaviorSubject
 
 
 class DataManager(val model: Model) {
 
   println("DataManager initializing...")
 
-  // private val _windowActionStream = Subject[WindowActions]()
-  private val _windowMutationStream = BehaviorSubject[WindowMutations](RefreshWindow())
-  private val _tableMutationStream = BehaviorSubject[TableMutations](RefreshTable())
+  /**
+   * Streams
+   */
 
-  private val windowStream = _windowMutationStream.scan(LabeledDataTable.defaultDataWindow)((window, action) =>
+  val modelMutations = Subject[ModelMutations]()
+  val windowMutations = Subject[WindowMutations]()
+  val tableMutations = Subject[TableMutations]()
+
+  // this stream will emit the latest version of the window applied on the model
+  private val window = windowMutations.scan(LabeledDataTable.defaultDataWindow)((window, action) =>
     action match {
       case SlideWindowBy(offsets) => window.slideBy(offsets)
       case SlideWindowTo(bounds) => window.slideTo(bounds)
       case RefreshWindow() => window
     })
 
-  windowStream.subscribe(window => _tableMutationStream.onNext(new UpdateWindow(window)))
-
-/* this should be in ViewManagerObject
-  windowStream.subscribe(window => _windowActionStream.onNext(new NewWindow(window)))
-
-  _windowActionStream.scan(LabeledDataTable.defaultDataWindow)((window, action) =>
+  // this stream can be used to manipulate the model through the current window;
+  // it emits the current window on each manipulation
+  modelMutations.scan(LabeledDataTable.defaultDataWindow)((window, action) =>
     action match {
-      case NewWindow(newWindow) => newWindow
-      case ChangeCellExpression(index, expression) =>
+      case UpdateModelWindow(newWindow) => newWindow
+      case ChangeFormula(index, expression) =>
         val realIndex = window.windowToAbsolute(index)
-        // in the model, the indexes are swapped
-        model.changeFormula(realIndex._2, realIndex._1, expression)
+        model.changeFormula(realIndex, expression)
         window
       case ReorderColumns(permutations) =>
         val realPermutations = permutations.map({
           case (c1, c2) => (window.windowToAbsoluteColumn(c1), window.windowToAbsoluteColumn(c2))
         })
-        _tableMutationStream.onNext(new UpdateColumnOrder(realPermutations))
+        tableMutations.onNext(new UpdateColumnOrder(realPermutations))
         // TODO smth like  model.reorderColumns(realPermutations)
         window
-      case SortRows(sortColumn, sortAscending) =>
-        val realColumn = window.windowToAbsoluteColumn(sortColumn)
-        // TODO smth like model.sortRows(realColumn)
+      case SortColumn(column, ascending) =>
+        val realColumn = window.windowToAbsoluteColumn(column)
+        model.sortColumn(realColumn, ascending)
         window
-      case ChangeCellStyle(index, style) =>
+      case ChangeBackground(index, color) =>
         val realIndex = window.windowToAbsolute(index)
-        model.changeStyle(realIndex._1, realIndex._2, style)
+        model.changeBackground(realIndex, color)
         window
-    }).subscribe(_ => Unit)
-*/
-
-
-
-  model.sheet.combineLatest(windowStream)
-    .map({
-      case (sheet, window) =>
-        window.visibleIndexes.map(i => (
-          i.swap,
-          sheet.cells.get(i) match {
-            case Some(c) => c.f
-            case None => ""
-          },
-          sheet.valueAt(i).getOrElse(VEmpty),
-          sheet.styles.getOrElse(i, Styles.DEFAULT)
-        ))
+      case ChangeColor(index, color) =>
+        val realIndex = window.windowToAbsolute(index)
+        model.changeColor(realIndex, color)
+        window
     })
-    .subscribe(contents => _tableMutationStream.onNext(new UpdateContents(contents)))
+    // this stream needs a dummy subscriber in order to keep emitting
+    .subscribe(_ => Unit)
+
 
   /**
-   * A Rx stream of LabeledDataTables, that should be drawn on the screen
+   * Subscriptions
    */
-  val labeledDataTable = _tableMutationStream.scan(new LabeledDataTable(rebuild = true))((table, action) =>
+
+  // the table updates its contents on each modification of the sheet
+  model.sheet.subscribe(sheet => tableMutations.onNext(new UpdateContents(sheet)))
+  // the table uses the window to update its contents
+  window.subscribe(window => tableMutations.onNext(new UpdateWindow(window)))
+  // the model manipulation stream uses the window to translate indexes when posting to the model
+  window.subscribe(window => modelMutations.onNext(new UpdateModelWindow(window)))
+
+  /**
+   * An Rx stream of LabeledDataTables, that should be drawn on the screen
+   */
+  val labeledDataTable = tableMutations.scan(new LabeledDataTable(rebuild = true))((table, action) =>
     action match {
-      case UpdateContents(contents) => table.updateContents(contents)
-      case UpdateWindow(window) => table.updateWindow(window)
+      case UpdateContents(newSheet) => table.updateContents(newSheet)
+      case UpdateWindow(newWindow) => table.updateWindow(newWindow)
       case UpdateColumnOrder(permutations) => table.updateColumnOrder(permutations)
       case ResizeColumn(columnIndex, width) => table.resizeColumn(columnIndex, width)
       case RefreshTable() => table
     })
-/*
-  def tableScrolled(offsets: (Int, Int, Int, Int)) = {
-    _windowMutationStream.onNext(new SlideWindowBy(offsets))
-  }
-
-  def changeCellExpression(index: (Int, Int), expression: String) = {
-    println("Changing " + index + " to " + expression)
-    _windowActionStream.onNext(new ChangeCellExpression(index, expression))
-  }
-
-  def reorderColumns(permutations: Map[Int, Int]) =
-    _windowActionStream.onNext(new ReorderColumns(permutations))
-
-  def sortRows(sortColumn: Int, sortAscending: Boolean) =
-    _windowActionStream.onNext(new SortRows(sortColumn, sortAscending))
-
-  def refreshData() =
-    _tableMutationStream.onNext(new RefreshTable())
-
-  def changeCellStylist(index: (Int, Int), stylist: Styles) =
-    _windowActionStream.onNext(new ChangeCellStyle(index, stylist))
-
-  def resizeColumn(columnIndex: Int, width: Double) =
-    _tableMutationStream.onNext(new ResizeColumn(columnIndex, width))
-*/
 }

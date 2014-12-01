@@ -1,20 +1,20 @@
 package scalaExcel.GUI.data
 
 import scalaExcel.CellPos
-import scalaExcel.formula.{Value, numToCol}
+import scalaExcel.formula.{VEmpty, numToCol}
 import scalafx.collections.ObservableBuffer
 import scalafx.beans.property.ObjectProperty
 
-import scalaExcel.model.Styles
+import scalaExcel.model.{Sheet, Styles}
 import scalaExcel.util.DefaultProperties
 
 class LabeledDataTable(
-    _dataWindow: DataWindow = LabeledDataTable.defaultDataWindow,
-    _allHeaderWidths: List[Double] = LabeledDataTable.defaultHeaderWidths,
-    _cellContents: Iterable[(CellPos, String, Value, Styles)] = List(),
-    _sortColumn: Int = -1,
-    val sortAscending: Boolean = true,
-    val rebuild: Boolean) {
+                        _dataWindow: DataWindow = LabeledDataTable.defaultDataWindow,
+                        _allHeaderWidths: List[Double] = LabeledDataTable.defaultHeaderWidths,
+                        _sheet: Sheet = null,
+                        _sortColumn: Int = -1,
+                        val sortAscending: Boolean = true,
+                        val rebuild: Boolean) {
 
   def headers = LabeledDataTable.getHeaders(_dataWindow.visibleBounds)
 
@@ -22,32 +22,33 @@ class LabeledDataTable(
 
   def sortColumn = _dataWindow.absoluteToWindowColumn(_sortColumn)
 
-  private val translatedContents =
-    _cellContents
-      .map(content => (_dataWindow.absoluteToWindow(content._1), content._2, content._3, content._4))
-
-  private def contentsToCells(filter: ((CellPos, String, Value, Styles)) => Boolean) =
-    translatedContents
-      .filter(filter)
-      .foldLeft(Map[CellPos, DataCell]())({
-        case (cells, (index, formula, value, style)) =>
-          cells + (index -> DataCell.newEvaluated(formula, value, style))
+  val data =
+    LabeledDataTable.buildDataTable(
+      _dataWindow.rowCount,
+      _dataWindow.columnCount,
+      // function that builds a DataCell based on a window index
+      (index: CellPos) => {
+        if (_sheet == null)
+          // there is no data yet, only empty cells
+          DataCell.newEmpty()
+        else {
+          // translate window index to absolute index
+          val realIndex = _dataWindow.windowToAbsolute(index)
+          // build a DataCell with the contents of the sheet at that position
+          DataCell.newEvaluated(
+            _sheet.cells.get(realIndex) match {
+              case Some(c) => c.f
+              case None => ""
+            },
+            _sheet.valueAt(realIndex).getOrElse(VEmpty),
+            _sheet.styles.getOrElse(realIndex, Styles.DEFAULT))
+        }
       })
 
-  val data = {
-    // transform cell contents contained in window into DataCells
-    val _cells = contentsToCells(contents => _dataWindow.isInBounds(contents._1))
-    //build data table with the DataCells
-    LabeledDataTable.buildDataTable(_dataWindow.rowCount,
-      _dataWindow.columnCount,
-      _cells,
-      _dataWindow)
-  }
-
-  def updateContents(contents: Iterable[(CellPos, String, Value, Styles)]) =
+  def updateContents(sheet: Sheet) =
     new LabeledDataTable(_dataWindow,
       _allHeaderWidths,
-      contents,
+      sheet,
       _sortColumn,
       sortAscending,
       rebuild = false)
@@ -55,7 +56,7 @@ class LabeledDataTable(
   def updateWindow(dataWindow: DataWindow) = {
     new LabeledDataTable(dataWindow,
       _allHeaderWidths,
-      _cellContents,
+      _sheet,
       _sortColumn,
       sortAscending,
       rebuild = true)
@@ -68,7 +69,7 @@ class LabeledDataTable(
     }
     new LabeledDataTable(_dataWindow,
       newWidths,
-      _cellContents,
+      _sheet,
       _sortColumn,
       sortAscending,
       rebuild = true)
@@ -78,7 +79,7 @@ class LabeledDataTable(
     val realIndex = _dataWindow.windowToAbsoluteColumn(columnIndex)
     new LabeledDataTable(_dataWindow,
       _allHeaderWidths.take(realIndex) ++ List(width) ++ _allHeaderWidths.drop(realIndex + 1),
-      _cellContents,
+      _sheet,
       _sortColumn,
       sortAscending,
       rebuild = false)
@@ -92,12 +93,11 @@ object LabeledDataTable {
 
   def buildDataTable(rows: Int,
                      columns: Int,
-                     data: Map[CellPos, DataCell],
-                     dataWindow: DataWindow): DataTable = {
+                     dataGrabber: (CellPos) => DataCell): DataTable = {
     new DataTable() ++=
-      List.range(0, rows + 1).map(i => new DataRow() ++=
-        List.range(0, columns + 1).map(j =>
-          ObjectProperty(data.getOrElse((i, j), DataCell.newEmpty()))))
+      List.range(0, rows + 1).map(r => new DataRow() ++=
+        List.range(0, columns + 1).map(c =>
+          ObjectProperty(dataGrabber((c, r)))))
   }
 
   def getHeaders(bounds: (Int, Int, Int, Int)) =
