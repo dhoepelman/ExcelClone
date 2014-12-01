@@ -215,6 +215,8 @@ class ViewManager extends jfxf.Initializable {
 
   def initialize(url: URL, rb: java.util.ResourceBundle) {
 
+    println("ViewManager initializing...")
+
     //
     // Initialization of GUI object handles
     //
