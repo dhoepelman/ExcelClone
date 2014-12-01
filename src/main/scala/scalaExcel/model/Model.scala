@@ -64,8 +64,6 @@ class Model {
     sheetMutations.onNext(CutCell(from, to))
   }
 
-  def clear() = sheetMutations.onNext(Clear())
-
   def loadSheet(s: Sheet) : Unit = {
     sheetMutations.onNext(SetSheet(s))
   }

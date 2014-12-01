@@ -52,7 +52,7 @@ object Filer {
     val columnSize = sheet.values.maxBy{case ((r,c),_) => c}._1._2
 
     (0 to rowSize).map(row => {
-      (0 to columnSize).map(column => sheet.valueAt(column, row)).map({
+      (0 to columnSize).map(column => sheet.valueAt((column, row))).map({
         case Some(v) => v.toString
         case _ => ""
       }).foldRight("")((fold, v) => fold + "," + v)
@@ -65,7 +65,7 @@ object Filer {
       row.zipWithIndex.map { case (value, colIndex) => ((rowIndex, colIndex), value) }
     }
     indexed.foldLeft(new Sheet()){case (sheet, ((r, c), value)) =>
-      val (s, updates) = sheet.setCell(c, r, value)
+      val (s, updates) = sheet.setCell((c, r), value)
       s
     }
   }
