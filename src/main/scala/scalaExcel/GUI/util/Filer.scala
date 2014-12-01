@@ -16,6 +16,14 @@ import scalaExcel.model.Sheet
  */
 object Filer {
 
+  /** Escape for csv */
+  def escape(s: String): String =
+    s.replace("\"", "\"\"")
+
+  /** Unescape form csv */
+  def unescape(s: String): String =
+    s.replace("\"\"", "\"")
+
   /** Save sheet as CSV file */
   def saveCSV(file: java.io.File, sheet: Sheet) = {
     printToFile(file)(_ print sheetToCSV(sheet))
@@ -28,16 +36,16 @@ object Filer {
 
     (0 to rowSize).map(row => {
       (0 to columnSize).map(column => sheet.valueAt((column, row))).map({
-        case Some(v) => v.toString
+        case Some(v) => escape(v.toString)
         case _ => ""
-      }).foldRight("")((fold, v) => fold + "," + v)
-    }).foldRight("")((fold, row) => fold + "\n" + row)
+      }).foldLeft("")((fold, v) => fold + "\"" + v + "\"" + ",")
+    }).foldLeft("")((fold, row) => fold + row + "\n")
   }
 
   /** Covert CSV string to Sheet */
   def CSVToSheet(csv: Array[Array[String]]) : Sheet = {
     val indexed = csv.zipWithIndex.flatMap{case (row, rowIndex) =>
-      row.zipWithIndex.map { case (value, colIndex) => ((rowIndex, colIndex), value) }
+      row.zipWithIndex.map { case (value, colIndex) => ((rowIndex, colIndex), unescape(value)) }
     }
     indexed.foldLeft(new Sheet()){case (sheet, ((r, c), value)) =>
       val (s, updates) = sheet.setCell((c, r), value)
@@ -48,7 +56,7 @@ object Filer {
   /** Get the contents of a csv file */
   def loadCSV(file: java.io.File) : Sheet = {
     val linesOfTokens = Source.fromFile(file).getLines()
-      .map(line => line.split(",").toArray)
+      .map(line => line.split(",").map(_.stripPrefix("\"").stripSuffix("\"")).toArray)
       .toArray
     CSVToSheet(linesOfTokens)
   }
