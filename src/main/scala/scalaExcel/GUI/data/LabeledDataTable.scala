@@ -1,5 +1,6 @@
 package scalaExcel.GUI.data
 
+import scalaExcel.CellPos
 import scalaExcel.formula.numToCol
 import scalafx.collections.ObservableBuffer
 import scalafx.beans.property.ObjectProperty
@@ -9,7 +10,7 @@ import scalaExcel.util.DefaultProperties
 class LabeledDataTable(
     _dataWindow: DataWindow = LabeledDataTable.defaultDataWindow,
     _allHeaderWidths: List[Double] = LabeledDataTable.defaultHeaderWidths,
-    _cellContents: Iterable[((Int, Int), String, Any, Styles)] = List(),
+    _cellContents: Iterable[(CellPos, String, Any, Styles)] = List(),
     _sortColumn: Int = -1,
     val sortAscending: Boolean = true,
     val rebuild: Boolean) {
@@ -24,10 +25,10 @@ class LabeledDataTable(
     _cellContents
       .map(content => (_dataWindow.absoluteToWindow(content._1), content._2, content._3, content._4))
 
-  private def contentsToCells(filter: (((Int, Int), String, Any, Styles)) => Boolean) =
+  private def contentsToCells(filter: ((CellPos, String, Any, Styles)) => Boolean) =
     translatedContents
       .filter(filter)
-      .foldLeft(Map[(Int, Int), DataCell]())({
+      .foldLeft(Map[CellPos, DataCell]())({
         case (cells, (index, formula, value, style)) =>
           cells + (index -> DataCell.newEvaluated(formula, value, style))
       })
@@ -42,7 +43,7 @@ class LabeledDataTable(
       _dataWindow)
   }
 
-  def updateContents(contents: Iterable[((Int, Int), String, Any, Styles)]) =
+  def updateContents(contents: Iterable[(CellPos, String, Any, Styles)]) =
     new LabeledDataTable(_dataWindow,
       _allHeaderWidths,
       contents,
@@ -90,7 +91,7 @@ object LabeledDataTable {
 
   def buildDataTable(rows: Int,
                      columns: Int,
-                     data: Map[(Int, Int), DataCell],
+                     data: Map[CellPos, DataCell],
                      dataWindow: DataWindow): DataTable = {
     new DataTable() ++=
       List.range(0, rows + 1).map(i => new DataRow() ++=
