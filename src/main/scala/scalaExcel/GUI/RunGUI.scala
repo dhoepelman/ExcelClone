@@ -30,24 +30,28 @@ object RunGUI extends JFXApp {
   // Putting events from the GUI into the model
   // This should be the only place where that ever happens
 
+  // when the user somehow changes the cell
   vm.onCellEdit.subscribe { edit =>
-    model.changeFormula(edit._1, edit._2)
+      model.changeFormula(edit._1, edit._2)
   }
 
+  // when the background color of a cell is selected
   vm.onBackgroundChange.subscribe { edit =>
-    model.changeBackground(edit._1, edit._2)
+      model.changeBackground(edit._1, edit._2)
   }
 
+  // when the front color of a cell is selected
   vm.onColorChange.subscribe { edit =>
-    model.changeColor(edit._1, edit._2)
+      model.changeColor(edit._1, edit._2)
   }
 
+  // when a column is sorted
   vm.onColumnSort.subscribe { s =>
-    model.sortColumn(s._1, s._2)
+      model.sortColumn(s._1, s._2)
   }
 
-  // rerender table after data/resize/scroll changes
-  dm.labeledDataTable.subscribe(table => vm.dataChanged(table))
+  // re-render table after data/resize/scroll/sort changes
+  dm.labeledDataTable.subscribe(table => vm.buildTableView(table, model))
 
   stage = new PrimaryStage() {
     title = "Scala Excel"
