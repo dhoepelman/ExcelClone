@@ -43,6 +43,7 @@ class Model {
     case SetColor(x, y, c) => updateStyle(sheet, x, y, s => s.setColor(c))
     case SetBackground(x, y, c) => updateStyle(sheet, x, y, s => s.setBackground(c))
     case Refresh() => sheet
+    case SetSheet(s) => s
   })
 
   def refresh() = sheetMutations.onNext(Refresh())
@@ -57,6 +58,12 @@ class Model {
 
   def changeColor(x: Int, y: Int, c: Color): Unit = {
     sheetMutations.onNext(SetColor(x, y, c))
+  }
+
+  def clear() = sheetMutations.onNext(Clear())
+
+  def loadSheet(s: Sheet) : Unit = {
+    sheetMutations.onNext(SetSheet(s))
   }
 
 }
