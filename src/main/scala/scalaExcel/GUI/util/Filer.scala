@@ -56,7 +56,8 @@ object Filer {
   /** Get the contents of a csv file */
   def loadCSV(file: java.io.File) : Sheet = {
     val linesOfTokens = Source.fromFile(file).getLines()
-      .map(line => line.split(",").map(_.stripPrefix("\"").stripSuffix("\"")).toArray)
+      // http://stackoverflow.com/questions/769621/
+      .map(line => line.split(""",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))""").map(_.stripPrefix("\"").stripSuffix("\"")).toArray)
       .toArray
     CSVToSheet(linesOfTokens)
   }
@@ -66,7 +67,5 @@ object Filer {
     val p = new java.io.PrintWriter(f)
     try { op(p) } finally { p.close() }
   }
-
-
 
 }
