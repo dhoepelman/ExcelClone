@@ -71,8 +71,8 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
   }
 
   /** Set the style of a cell */
-  def setCellStyle(x: Int, y: Int, s: Styles) = {
-    new Sheet(cells, values, dependents, styles + ((x, y) -> s))
+  def setCellStyle(pos : CellPos, s: Styles) = {
+    new Sheet(cells, values, dependents, styles + (pos -> s))
   }
 
   /**
@@ -85,10 +85,7 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
   /** Get the cells that depend on this given cell */
   def dependentsOf(p: CellPos) : List[CellPos] = dependents getOrElse(p, List())
 
-  def valueAt(x: Int, y: Int) = values get ((x, y))
-
-  /** Get the Cell or return an empty cell */
-  def getCell(x : Int, y : Int) : Cell = getCell((x,y))
+  def valueAt(pos : CellPos) = values get pos
 
   /** Get the Cell or return an empty cell */
   def getCell(pos : CellPos) : Cell = cells getOrElse(pos, Cell())

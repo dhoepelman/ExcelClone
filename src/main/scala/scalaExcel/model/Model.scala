@@ -29,27 +29,27 @@ class Model {
     case (s, updates) => updateSheet(s, updates)
   }
 
-  def updateStyle(sheet: Sheet, x: Int, y: Int, f: Styles => Styles) =
-    sheet.setCellStyle(x, y, f(sheet.styles.getOrElse((x, y), Styles.DEFAULT)))
+  def updateStyle(sheet: Sheet, pos : CellPos, f: Styles => Styles) =
+    sheet.setCellStyle(pos, f(sheet.styles.getOrElse(pos, Styles.DEFAULT)))
 
   // this combines the initial Sheet with all input mutations from the outside
   // world
   val sheet = sheetMutations.scan(new Sheet())((sheet, action) => action match {
-    case SetFormula(x, y, f) =>
-      val (s, updates) = sheet.setCell((x,y), f)
-      updateSheet(s, updates, Set((x, y)))
-    case EmptyCell(x, y) => updateSheet(sheet.deleteCell((x,y)))
+    case SetFormula(pos, f) =>
+      val (s, updates) = sheet.setCell(pos, f)
+      updateSheet(s, updates, Set(pos))
+    case EmptyCell(pos) => updateSheet(sheet.deleteCell(pos))
     case CopyCell(from, to) => updateSheet(sheet.copyCell(from, to))
     case CutCell(from, to) => updateSheet(sheet.cutCell(from, to))
-    case SetColor(x, y, c) => updateStyle(sheet, x, y, s => s.setColor(c))
-    case SetBackground(x, y, c) => updateStyle(sheet, x, y, s => s.setBackground(c))
+    case SetColor(pos, c) => updateStyle(sheet, pos, s => s.setColor(c))
+    case SetBackground(pos, c) => updateStyle(sheet, pos, s => s.setBackground(c))
     case Refresh => sheet
   })
 
   def refresh() = sheetMutations.onNext(Refresh)
 
-  def emptyCell(x : Int, y : Int)  {
-    sheetMutations.onNext(EmptyCell(x,y))
+  def emptyCell(pos : CellPos)  {
+    sheetMutations.onNext(EmptyCell(pos))
   }
 
   def copyCell(from : CellPos, to : CellPos) {
@@ -60,15 +60,15 @@ class Model {
     sheetMutations.onNext(CutCell(from, to))
   }
 
-  def changeFormula(x: Int, y: Int, f: String) {
-    sheetMutations.onNext(SetFormula(x, y, f))
+  def changeFormula(pos : CellPos, f: String) {
+    sheetMutations.onNext(SetFormula(pos, f))
   }
 
-  def changeBackground(x: Int, y: Int, c: Color): Unit = {
-    sheetMutations.onNext(SetBackground(x, y, c))
+  def changeBackground(pos : CellPos, c: Color): Unit = {
+    sheetMutations.onNext(SetBackground(pos, c))
   }
 
-  def changeColor(x: Int, y: Int, c: Color): Unit = {
-    sheetMutations.onNext(SetColor(x, y, c))
+  def changeColor(pos : CellPos, c: Color): Unit = {
+    sheetMutations.onNext(SetColor(pos, c))
   }
 }

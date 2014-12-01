@@ -16,8 +16,8 @@ class ModelTests {
   @Test def changeFormula() = {
     val model = new Model()
     val cell = model.sheet
-      .filterCellValueAt(0, 0)
-    model.changeFormula(0, 0, "=1+1")
+      .filterCellValueAt((0, 0))
+    model.changeFormula((0, 0), "=1+1")
     assertEquals(VDouble(2), cell.take(1).toBlocking.last)
   }
 
@@ -25,12 +25,12 @@ class ModelTests {
     val model = new Model()
     var y: Value = null
     model.sheet
-      .filterCellValueAt(0, 2)
+      .filterCellValueAt((0, 2))
       .subscribe(x => y = x)
 
-    model.changeFormula(0, 0, "=1+1")
-    model.changeFormula(0, 1, "=A1 + 1")
-    model.changeFormula(0, 2, "=A2 * 2")
+    model.changeFormula((0, 0), "=1+1")
+    model.changeFormula((0, 1), "=A1 + 1")
+    model.changeFormula((0, 2), "=A2 * 2")
 
     assertEquals(VDouble(6), y)
   }
@@ -39,12 +39,12 @@ class ModelTests {
     val model = new Model()
     var y: Value = null
     model.sheet
-      .filterCellValueAt(0, 1)
+      .filterCellValueAt((0, 1))
       .subscribe(x => y = x)
 
-    model.changeFormula(0, 0, "=1+1")
-    model.changeFormula(0, 1, "=A1 + 1")
-    model.changeFormula(0, 0, "=9")
+    model.changeFormula((0, 0), "=1+1")
+    model.changeFormula((0, 1), "=A1 + 1")
+    model.changeFormula((0, 0), "=9")
 
     assertEquals(VDouble(10), y)
   }
@@ -53,12 +53,12 @@ class ModelTests {
     val model = new Model()
     var y: Value = null
     model.sheet
-      .filterCellValueAt(2, 0)
+      .filterCellValueAt((2, 0))
       .subscribe(x => y = x)
 
-    model.changeFormula(0, 0, "=C1")
-    model.changeFormula(1, 0, "=5")
-    model.changeFormula(2, 0, "=A1+B1")
+    model.changeFormula((0, 0), "=C1")
+    model.changeFormula((1, 0), "=5")
+    model.changeFormula((2, 0), "=A1+B1")
 
     assertEquals(VErr(CircularRef), y)
   }
@@ -67,12 +67,12 @@ class ModelTests {
     val model = new Model()
     var y: Value = null
     model.sheet
-      .filterCellValueAt(2, 0)
+      .filterCellValueAt((2, 0))
       .subscribe(x => y = x)
 
-    model.changeFormula(0, 0, "=B1")
-    model.changeFormula(1, 0, "=C1+1")
-    model.changeFormula(2, 0, "=A1+1")
+    model.changeFormula((0, 0), "=B1")
+    model.changeFormula((1, 0), "=C1+1")
+    model.changeFormula((2, 0), "=A1+1")
 
     assertEquals(VErr(CircularRef), y)
   }
@@ -81,13 +81,13 @@ class ModelTests {
     val model = new Model()
     var y: Value = null
     model.sheet
-      .filterCellValueAt(0, 0)
+      .filterCellValueAt((0, 0))
       .subscribe(x => y = x)
 
-    model.changeFormula(0, 0, "=5")
-    model.changeFormula(1, 0, "=A1+5")
-    model.changeFormula(2, 0, "=B1")
-    model.changeFormula(0, 0, "=B1")
+    model.changeFormula((0, 0), "=5")
+    model.changeFormula((1, 0), "=A1+5")
+    model.changeFormula((2, 0), "=B1")
+    model.changeFormula((0, 0), "=B1")
 
     assertEquals(VErr(CircularRef), y)
   }

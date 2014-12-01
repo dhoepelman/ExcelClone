@@ -74,9 +74,9 @@ class ViewManager extends jfxf.Initializable {
   // Exposed observers, so we can gather those events and put
   // them into the model
 
-  val onCellEdit = Subject[((Int, Int), String)]()
-  val onBackgroundChange = Subject[((Int, Int), Color)]()
-  val onColorChange = Subject[((Int, Int), Color)]()
+  val onCellEdit = Subject[(CellPos, String)]()
+  val onBackgroundChange = Subject[(CellPos, Color)]()
+  val onColorChange = Subject[(CellPos, Color)]()
 
   def buildTableView(labeledTable: LabeledDataTable, model: Model): Unit = {
 
@@ -173,7 +173,7 @@ class ViewManager extends jfxf.Initializable {
         o.onNext(Unit)
       }
     ))
-    deleteStream.subscribe( ps => ps foreach( p => model.emptyCell(p._1, p._2)) )
+    deleteStream.subscribe( ps => ps foreach( p => model.emptyCell(p)) )
 
     // TODO:  Yeah, so putting it in a variable first works. But when I put it directly in the subscribe it doesn't?...
     val clipboardHandler : ((List[CellPos], ClipboardAction)) => Unit = {case (ps,action) =>
@@ -204,7 +204,7 @@ class ViewManager extends jfxf.Initializable {
               case a => throw new IllegalArgumentException("Clipboard contained invalid copy-paste data {" + a.toString + "}")
             }
           else if(clipboard.hasString)
-            model.changeFormula(to._1, to._2, clipboard.getString)
+            model.changeFormula(to, clipboard.getString)
         }
       }
     }

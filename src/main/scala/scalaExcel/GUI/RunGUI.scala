@@ -32,15 +32,15 @@ object RunGUI extends JFXApp {
   // This should be the only place where that ever happens
 
   vm.onCellEdit.subscribe(edit => {
-    model.changeFormula(edit._1._1, edit._1._2, edit._2)
+    model.changeFormula(edit._1, edit._2)
   })
 
   vm.onBackgroundChange.subscribe(edit => {
-    model.changeBackground(edit._1._1, edit._1._2, edit._2)
+    model.changeBackground(edit._1, edit._2)
   })
 
   vm.onColorChange.subscribe(edit => {
-    model.changeColor(edit._1._1, edit._1._2, edit._2)
+    model.changeColor(edit._1, edit._2)
   })
 
   // rerender table after data/resize/scroll changes
