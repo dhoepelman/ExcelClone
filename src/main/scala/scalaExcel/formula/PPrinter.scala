@@ -62,6 +62,7 @@ object PPrinter {
     case VDouble(d) => if (d.isValidInt) d.toInt.toString else d.toString
     case VString(s) => "\"" + s + "\""
     case VErr(t) => t.expr
+    case VEmpty => ""
   }
 
   private def _getACellRow(cell: ACell) = cell.pos._2

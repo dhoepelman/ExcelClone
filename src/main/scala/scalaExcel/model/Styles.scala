@@ -3,10 +3,10 @@ package scalaExcel.model
 import scalafx.scene.paint.Color
 
 abstract class Alignment
-case class Left()   extends Alignment
-case class Center() extends Alignment
-case class Right()  extends Alignment
-case class Default() extends Alignment
+case object LeftAlign   extends Alignment
+case object CenterAlign extends Alignment
+case object RightAlign  extends Alignment
+case object NoAlign     extends Alignment
 
 class Styles (
     val background: Color,
@@ -38,5 +38,5 @@ class Styles (
 }
 
 object Styles {
-  val DEFAULT = new Styles(Color.WhiteSmoke, Color.Black, "", Default())
+  val DEFAULT = new Styles(Color.WhiteSmoke, Color.Black, "", NoAlign)
 }
