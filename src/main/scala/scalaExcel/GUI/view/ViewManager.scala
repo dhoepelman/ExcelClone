@@ -13,7 +13,7 @@ import scalaExcel.GUI.data.LabeledDataTable
 import scalaExcel.GUI.data.LabeledDataTable.DataRow
 import scalaExcel.GUI.util.Filer
 import scalaExcel.GUI.view.ViewManager._
-import scalaExcel.model.{Model, Styles}
+import scalaExcel.model.{Sheet, Model, Styles}
 import scalaExcel.rx.operators.WithLatest._
 
 import scalafx.Includes._
@@ -187,7 +187,7 @@ class ViewManager extends jfxf.Initializable {
     deleteStream.subscribe( ps => ps foreach( p => model.emptyCell(p)) )
 
     // TODO:  Yeah, so putting it in a variable first works. But when I put it directly in the subscribe it doesn't?...
-    val clipboardHandler : ((List[CellPos], ClipboardAction)) => Unit = {case (ps,action) =>
+    val clipboardHandler : ((Sheet, List[CellPos], ClipboardAction)) => Unit = {case (s, ps,action) =>
       // Ignore if no cells are selected
       if(ps.isEmpty)
         return
@@ -198,8 +198,7 @@ class ViewManager extends jfxf.Initializable {
       action match {
         case Cut | Copy => {
           contents.put(copyPasteFormat, (action, ps.head))
-          // TODO: Place the cell value as a string on the clipboard
-          contents.putString("We lied! Copy pasting the cell value isn't actually implemented")
+          contents.putString(s.valueAt(ps.head).get.toString)
           clipboard.setContent(contents)
         }
         case Paste => {
@@ -219,7 +218,11 @@ class ViewManager extends jfxf.Initializable {
         }
       }
     }
-    streamTable.withSelectedCells(clipboardStream).subscribe(clipboardHandler)
+    streamTable
+      .withSelectedCells(clipboardStream)
+      .withLatest(model.sheet)
+      .map({ case (s, (ps, a)) => (s,ps,a) })
+      .subscribe(clipboardHandler)
 
     onSortButtonStream
       .withLatest(singleSelectedCell)
