@@ -2,6 +2,8 @@ package scalaExcel.model
 
 import rx.lang.scala.Observable
 
+import scalaExcel.CellPos
+
 object OperationHelpers {
 
   // Shortcuts, to quickly get values from the sheet observable
@@ -9,7 +11,7 @@ object OperationHelpers {
     def filterCellValueAt(pos : CellPos) =
       sheet
         .map(_.valueAt(pos))
-        .filter(!_.isEmpty)
+        .filter(_.nonEmpty)
         .map(_.get)
         .distinctUntilChanged
   }

@@ -4,6 +4,7 @@ import scalafx.scene.paint.Color
 import rx.lang.scala.subjects.BehaviorSubject
 import scalaExcel.model.Sorter.SheetSorter
 import scalaExcel.model.OperationHelpers._
+import scalaExcel.CellPos
 
 class Model {
   /** This is a stream of inputs from 'the world' that will effect the state of the sheet model */

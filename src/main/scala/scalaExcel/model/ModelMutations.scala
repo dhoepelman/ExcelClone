@@ -1,6 +1,7 @@
 package scalaExcel.model
 
 import scalafx.scene.paint.Color
+import scalaExcel.CellPos
 
 /**
  * Types of inputs to the data model
