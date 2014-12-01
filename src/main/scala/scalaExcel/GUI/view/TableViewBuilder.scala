@@ -9,7 +9,6 @@ import rx.lang.scala.{Observable, Subject}
 import scalaExcel.CellPos
 import scalaExcel.GUI.data.LabeledDataTable.DataRow
 import scalaExcel.GUI.data.{DataCell, LabeledDataTable}
-import scalaExcel.model.CellPos
 import scalaExcel.util.DefaultProperties
 import scalaExcel.rx.operators.WithLatest._
 

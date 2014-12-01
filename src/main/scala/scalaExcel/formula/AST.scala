@@ -1,6 +1,6 @@
 package scalaExcel.formula
 
-import scalaExcel.model.CellPos
+import scalaExcel.CellPos
 
 sealed trait Expr
 
