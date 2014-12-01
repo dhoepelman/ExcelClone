@@ -12,13 +12,13 @@ class Model {
    * function to propagate updates to dependent cells
    * @param alreadyUpdated Set of cells that were already updated, to detect cycles
    */
-  def updateSheet(s: Sheet, updates: List[(Int,Int)], alreadyUpdated: Set[(Int, Int)] = Set()): Sheet = {
+  def updateSheet(s: Sheet, updates: List[CellPos], alreadyUpdated: Set[CellPos] = Set()): Sheet = {
     updates.foldLeft(s)((s, u) => {
       if (alreadyUpdated contains u)
         // u was already updated, so this means there's a circular reference
-        s.setToCircular(u._1, u._2)
+        s.setToCircular(u)
       else
-        s.updateCell(u._1, u._2) match {
+        s.updateCell(u) match {
           case (newSheet, List()) => newSheet
           case (newSheet, newUpdates) => updateSheet(newSheet, newUpdates, alreadyUpdated + u)
         }
@@ -36,7 +36,7 @@ class Model {
   // world
   val sheet = sheetMutations.scan(new Sheet())((sheet, action) => action match {
     case SetFormula(x, y, f) =>
-      val (s, updates) = sheet.setCell(x, y, f)
+      val (s, updates) = sheet.setCell((x,y), f)
       updateSheet(s, updates, Set((x, y)))
     case EmptyCell(x, y) => updateSheet(sheet.deleteCell((x,y)))
     case CopyCell(from, to) => updateSheet(sheet.copyCell(from, to))

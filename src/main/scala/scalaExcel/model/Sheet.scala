@@ -15,25 +15,19 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
             val styles: Map[CellPos, Styles] = Map()) {
 
   /**
-   * Set the cell at (x,y) to some formula f
-   * @return the new sheet, and a list of cells that need to be recalculated
-   */
-  def setCell(x: Int, y: Int, f: String) : (Sheet, List[CellPos]) = setCell((x,y), f)
-
-  /**
    * Set the cell at pos to some formula f
    * @return the new sheet, and a list of cells that need to be recalculated
    */
   def setCell(pos : CellPos, f : String) : (Sheet, List[CellPos]) = {
-    val newCell = Cell(pos, f)
+    val newCell = Cell(f)
     setCell(pos, newCell)
   }
 
   private def setCell(pos: CellPos, newCell : Cell) = {
-    val newCells = cells + (newCell.position -> newCell)
-    val newValues = calcNewValue(newCell)
-    val newDependents = calcNewDependents(newCell)
-    (new Sheet(newCells, newValues, newDependents, styles), dependentsOf(newCell))
+    val newCells = cells + (pos -> newCell)
+    val newValues = calcNewValue(pos, newCell)
+    val newDependents = calcNewDependents(pos, newCell)
+    (new Sheet(newCells, newValues, newDependents, styles), dependentsOf(pos))
   }
 
   def deleteCell(p : CellPos) = {
@@ -44,8 +38,8 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
    * Copy a cell and change its dependencies relative to the new position
    */
   def copyCell(from: CellPos, to: CellPos) = {
-    val cell = Cell(to, DependencyModifier.moveDependencies(from, to)(getCell(from).AST))
-    (new Sheet(cells + (to -> cell), calcNewValue(cell), calcNewDependents(cell), styles), dependentsOf(cell))
+    val cell = Cell(DependencyModifier.moveDependencies(from, to)(getCell(from).AST))
+    (new Sheet(cells + (to -> cell), calcNewValue(to, cell), calcNewDependents(to, cell), styles), dependentsOf(to))
   }
 
   /**
@@ -55,11 +49,11 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
     val dependents = dependentsOf(from)
     val toUpdate = dependents ++ dependentsOf(to)
 
-    val (tempSheet, _) = setCell(to, Cell(to, getCell(from)))
+    val (tempSheet, _) = setCell(to, getCell(from))
 
     // Change all the dependent cells to point to the new cell
     val tempSheet2 = dependents.foldLeft(tempSheet){(s, pos) =>
-      s.setCell(pos, Cell(pos, DependencyModifier.changeDependency(from, to)(s.getCell(pos).AST)))._1
+      s.setCell(pos, Cell(DependencyModifier.changeDependency(from, to)(s.getCell(pos).AST)))._1
     }
 
     // Delete the original cell
@@ -72,11 +66,8 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
    * recalculate the value of a cell
    * @return a new sheet which includes the new value, and a list of cells that also need to be updated
    */
-  def updateCell(x: Int, y: Int) = {
-    cells get ((x, y)) match {
-      case Some(c) => (new Sheet(cells, calcNewValue(c), dependents, styles), dependentsOf(c))
-      case None => (this, List[(Int, Int)]())
-    }
+  def updateCell(pos : CellPos) = {
+    (new Sheet(cells, calcNewValue(pos, getCell(pos)), dependents, styles), dependentsOf(pos))
   }
 
   /** Set the style of a cell */
@@ -87,12 +78,11 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
   /**
    * Set a cell to the circular reference error
    */
-  def setToCircular(x: Int, y: Int) = {
-    new Sheet(cells, values + ((x,y) -> VErr(CircularRef)), dependents)
+  def setToCircular(pos : CellPos) = {
+    new Sheet(cells, values + (pos -> VErr(CircularRef)), dependents)
   }
 
   /** Get the cells that depend on this given cell */
-  def dependentsOf(c: Cell) : List[CellPos] = dependentsOf(c.position)
   def dependentsOf(p: CellPos) : List[CellPos] = dependents getOrElse(p, List())
 
   def valueAt(x: Int, y: Int) = values get ((x, y))
@@ -101,15 +91,15 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
   def getCell(x : Int, y : Int) : Cell = getCell((x,y))
 
   /** Get the Cell or return an empty cell */
-  def getCell(pos : CellPos) : Cell = cells getOrElse(pos, Cell(pos))
+  def getCell(pos : CellPos) : Cell = cells getOrElse(pos, Cell())
 
-  private def calcNewValue(c: Cell) = {
+  private def calcNewValue(pos: CellPos, c: Cell) = {
     val value = c.eval(values)
-    values + (c.position -> value)
+    values + (pos -> value)
   }
 
-  private def calcNewDependents(c: Cell) = {
-    val oldCell = getCell(c.position)
+  private def calcNewDependents(pos: CellPos, c: Cell) = {
+    val oldCell = getCell(pos)
     val oldDeps = oldCell.refs
 
     val r = c.refs
@@ -117,13 +107,13 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
     val addDeps = r diff oldDeps
 
     val newDepsA = rmvDeps.foldLeft(dependents)((refsMap, ref) => refsMap get ref match {
-      case Some(l) => refsMap + (ref -> (l diff List(c.position)))
+      case Some(l) => refsMap + (ref -> (l diff List(pos)))
       case None => refsMap
     })
 
     addDeps.foldLeft(newDepsA)((refsMap, ref) => refsMap get ref match {
-      case Some(l) => refsMap + (ref -> (l :+ c.position))
-      case None => refsMap + (ref -> List(c.position))
+      case Some(l) => refsMap + (ref -> (l :+ pos))
+      case None => refsMap + (ref -> List(pos))
     })
   }
 
