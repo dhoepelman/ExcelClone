@@ -340,6 +340,7 @@ object EvaluatorTests {
         (3, "=MATCH(6, A1:A3)", newCtx(Map("A1" -> 4, "A2" -> 5, "A3" -> 6)))
       )) ++ lstErrCtx("function MATCH invalids", List(
         (NA,           """=MATCH(4, A1:A3, 0)""", newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3))),
+        (NA,           """=MATCH(1, A1:B3, 0)""", newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3))),
         (InvalidValue, """=MATCH(1, "A", 0)""",   newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3)))
       )) ++ lstCtx("function VLOOKUP", List(
         (1, "=VLOOKUP(1, A1:A3, 1)", newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3))),

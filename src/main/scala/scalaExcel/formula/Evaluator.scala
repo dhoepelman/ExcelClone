@@ -265,13 +265,16 @@ object Evaluator {
     // Type -1: smallest value <= v
     case List(v, a) => evalCallMatch(ctx, List(v, a, Const(VDouble(0))))
     case List(v, Range(a1, a2), t) => {
-      val value = evalIn(ctx, v)
       val (ACell((c1, r1))) = desugarCell(a1)
       val (ACell((c2, r2))) = desugarCell(a2)
-      val row = (r1 to r2) find { ri => value == ctx(ACell((c1, ri))) }
-      row match {
-        case Some(r) => VDouble(r + 1)
-        case None => VErr(NA)
+      if (c1 != c2) VErr(NA)
+      else {
+        val value = evalIn(ctx, v)
+        val row = (r1 to r2) find { ri => value == ctx(ACell((c1, ri))) }
+        row match {
+          case Some(r) => VDouble(r + 1)
+          case None => VErr(NA)
+        }
       }
     }
     case List(v, a, t) => VErr(InvalidValue)
