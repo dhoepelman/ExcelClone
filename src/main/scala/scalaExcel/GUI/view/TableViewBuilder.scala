@@ -6,9 +6,9 @@ import javafx.scene.{control => jfxc}
 
 import rx.lang.scala.{Observable, Subject}
 
+import scalaExcel.CellPos
 import scalaExcel.GUI.data.LabeledDataTable.DataRow
 import scalaExcel.GUI.data.{DataCell, LabeledDataTable}
-import scalaExcel.model.CellPos
 import scalaExcel.util.DefaultProperties
 import scalaExcel.rx.operators.WithLatest._
 
@@ -17,7 +17,7 @@ import scalafx.beans.property.ObjectProperty
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.control._
 
-class DataCellColumn(onCellEdit: (((Int, Int), String)) => Unit,
+class DataCellColumn(onCellEdit: ((CellPos, String)) => Unit,
                      onColResize: ((Int, Double)) => Unit,
                      colIndex: Int,
                      header: String,
@@ -82,7 +82,7 @@ class StreamingTable(labeledTable: LabeledDataTable) {
   selectionModel.setCellSelectionEnabled(true)
   selectionModel.setSelectionMode(SelectionMode.MULTIPLE)
 
-  val onSelection = Observable[List[(Int, Int)]](o => {
+  val onSelection = Observable[List[CellPos]](o => {
     selectionModel.getSelectedCells.onChange((source, _) => {
       // first column is -1, because it's reserved for row numbers
       val cells = source
@@ -111,7 +111,7 @@ class StreamingTable(labeledTable: LabeledDataTable) {
     })
   })
 
-  val onCellEdit = Subject[((Int, Int), String)]()
+  val onCellEdit = Subject[(CellPos, String)]()
 
   val onColResize = Subject[(Int, Double)]()
 

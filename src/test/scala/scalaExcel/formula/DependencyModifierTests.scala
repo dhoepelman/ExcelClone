@@ -8,7 +8,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
 
-import scalaExcel.model.CellPos
+import scalaExcel.CellPos
 import scalaExcel.formula.DependencyModifier.{changeDependency, moveDependencies, changeDependencyRows}
 import scalaExcel.formula.PPrinter.pprint
 

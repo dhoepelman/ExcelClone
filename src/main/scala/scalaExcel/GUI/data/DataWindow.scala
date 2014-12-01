@@ -1,9 +1,12 @@
 package scalaExcel.GUI.data
 
-class DataWindow(val maxBounds: (Int, Int, Int, Int),
-                 val visibleBounds: (Int, Int, Int, Int)) {
+import scalaExcel.CellPos
+import scalaExcel.GUI.data.DataWindow._
 
-  def addToVisibleBound(f: ((Int, Int, Int, Int)) => Int, add: (Int, Int) => Int)(x: Int) = add(x, f(visibleBounds))
+class DataWindow(val maxBounds: (MinX, MaxX, MinY, MaxY),
+                 val visibleBounds: (MinX, MaxX, MinY, MaxY)) {
+
+  def addToVisibleBound(f: (Bounds) => Int, add: (Int, Int) => Int)(x: Int) = add(x, f(visibleBounds))
 
   def windowToAbsoluteColumn = addToVisibleBound(_._3, _ + _) _
   def absoluteToWindowColumn = addToVisibleBound(_._3, _ - _) _
@@ -16,7 +19,7 @@ class DataWindow(val maxBounds: (Int, Int, Int, Int),
   def absoluteToWindow(index: (Int, Int)): (Int, Int) =
     (absoluteToWindowRow(index._1), absoluteToWindowColumn(index._2))
 
-  def isInBounds(index: (Int, Int)) = {
+  def isInBounds(index: CellPos) = {
     if (index._1 >= visibleBounds._1 && index._1 < visibleBounds._2 &&
         index._2 >= visibleBounds._3 && index._2 < visibleBounds._4)
       true
@@ -44,4 +47,13 @@ class DataWindow(val maxBounds: (Int, Int, Int, Int),
     List.range(visibleBounds._1, visibleBounds._2).flatMap(c =>
       List.range(visibleBounds._3, visibleBounds._4).map(r => (c, r)))
 
+}
+
+object DataWindow {
+  type MinX = Int
+  type MaxX = Int
+  type MinY = Int
+  type MaxY = Int
+
+  type Bounds = (MinX, MaxX, MinY, MaxY)
 }

@@ -9,7 +9,7 @@ object OperationHelpers {
     def filterCellValueAt(pos : CellPos) =
       sheet
         .map(_.valueAt(pos))
-        .filter(!_.isEmpty)
+        .filter(_.nonEmpty)
         .map(_.get)
         .distinctUntilChanged
   }
