@@ -159,7 +159,8 @@ class ViewManager extends jfxf.Initializable {
       .map(chooser => chooser.showOpenDialog(tableContainer.scene.window.getValue))
       .filter(_ != null)
       .map(file => Filer.loadCSV(file))
-      .subscribe(data => ??? /* DataManager.populateDataModel(data) */)
+      .doOnEach(sheet => println(s"Loaded $sheet"))
+      .subscribe(sheet => model.loadSheet(sheet))
   }
 
   def initialize(url: URL, rb: java.util.ResourceBundle) {
