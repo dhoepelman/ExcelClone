@@ -62,7 +62,7 @@ class DataManager(val model: Model) {
             case Some(c) => c.f
             case None => ""
           },
-          sheet.valueAt(i._1, i._2).getOrElse(null),
+          sheet.valueAt((i._1, i._2)).getOrElse(null),
           sheet.styles.getOrElse(i, Styles.DEFAULT)
         ))
     })
