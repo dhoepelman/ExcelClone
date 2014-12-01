@@ -2,7 +2,7 @@
 package scalaExcel.formula
 
 import scalaExcel.CellPos
-import math.{min, pow, abs}
+import math.{min, max, pow, abs}
 
 object Evaluator {
 
@@ -272,9 +272,12 @@ object Evaluator {
       val (ACell((c1, r1))) = desugarCell(a1)
       val (ACell((c2, r2))) = desugarCell(a2)
 
+      val (c1_, c2_) = (min(c1, c2), max(c1, c2))
+      val (r1_, r2_) = (min(r1, r2), max(r1, r2))
+
       val positions =
-        if (r1 == r2) (c1 to c2) map {(_, r1)}
-        else if (c1 == c2) (r1 to r2) map {(c1, _)}
+        if (r1_ == r2_) (c1_ to c2_) map {(_, r1_)}
+        else if (c1_ == c2_) (r1_ to r2_) map {(c1_, _)}
         else List()
 
       val value = evalIn(ctx, v)
