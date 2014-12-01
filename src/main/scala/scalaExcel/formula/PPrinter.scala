@@ -1,7 +1,5 @@
 package scalaExcel.formula
 
-import scalaExcel.util.ColumnTranslator
-
 /**
  * Pretty prints the AST
  */
@@ -30,7 +28,7 @@ object PPrinter {
     case Call(f, args) => f + "(" + args.tail.foldLeft(print(args.head))((acc,arg) => acc + "," + print(arg)) + ")"
     case Group(e) => "(" + print(e) + ")"
     case Cell(c, r) => print(c) + print(r)
-    case ACell(pos) => "$" + ColumnTranslator.numToCol(pos._1) + "$" + (pos._2+1)
+    case ACell(pos) => "$" + numToCol(pos._1) + "$" + (pos._2+1)
     case ARange(l) => print(l)
     case Range(start, end) => print(start) + ":" + print(end)
     case RowRange(start, end) => print(start) + ":" + print(end)
@@ -40,7 +38,7 @@ object PPrinter {
   }
 
   private def print(ref: RowRef) = $(ref.absolute) + (ref.referent+1)
-  private def print(ref: ColRef) = $(ref.absolute) + ColumnTranslator.numToCol(ref.referent)
+  private def print(ref: ColRef) = $(ref.absolute) + numToCol(ref.referent)
   private def $(b: Boolean) = if (b) "$" else ""
 
   private def print(op: Op) = op match {

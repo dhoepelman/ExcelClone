@@ -1,9 +1,10 @@
 package scalaExcel.GUI.data
 
+import scalaExcel.formula.numToCol
 import scalafx.collections.ObservableBuffer
 import scalafx.beans.property.ObjectProperty
 import scalaExcel.model.Styles
-import scalaExcel.util.{ColumnTranslator, DefaultProperties}
+import scalaExcel.util.DefaultProperties
 
 class LabeledDataTable(
     _dataWindow: DataWindow = LabeledDataTable.defaultDataWindow,
@@ -98,7 +99,7 @@ object LabeledDataTable {
   }
 
   def getHeaders(bounds: (Int, Int, Int, Int)) =
-    List.range(bounds._3, bounds._4) map ColumnTranslator.numToCol
+    List.range(bounds._3, bounds._4) map numToCol
 
   val defaultDataWindow = new DataWindow(
     (0, DefaultProperties.GRID_SIZE._1, 0, DefaultProperties.GRID_SIZE._2),

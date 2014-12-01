@@ -4,7 +4,6 @@ import org.junit.Assert._
 import org.junit._
 
 import scalaExcel.formula.Values.{toVal => tv}
-import scalaExcel.util.ColumnTranslator
 
 class ParserTests {
 
@@ -175,9 +174,9 @@ class ParserTests {
     Map (
       "=B5" -> cell(1, false, 4, false),
       "=C$270" -> cell(2, false, 269, true),
-      "=$FF100" -> cell(ColumnTranslator.colToNum("FF"), true, 99, false),
+      "=$FF100" -> cell(colToNum("FF"), true, 99, false),
       "=AZ$99" -> cell(51, false, 98, true),
-      "=$ABCDE$12345" -> cell(ColumnTranslator.colToNum("ABCDE"), true, 12344, true)
+      "=$ABCDE$12345" -> cell(colToNum("ABCDE"), true, 12344, true)
     ) foreach (kv => {
       test(kv._2, kv._1)
       test(kv._2, kv._1.toLowerCase)
@@ -199,7 +198,7 @@ class ParserTests {
 
   @Test def rowrange1() = test(RowRange(RowRef(0, false), RowRef(4, false)), "=1:5")
   @Test def rowrange2() = test(RowRange(RowRef(4999, true), RowRef(9999, false)), "=$5000:10000")
-  @Test def colrange1() = test(ColRange(ColRef(0, false), ColRef(ColumnTranslator.colToNum("AZ"), false)), "=A:AZ")
+  @Test def colrange1() = test(ColRange(ColRef(0, false), ColRef(colToNum("AZ"), false)), "=A:AZ")
 
   @Test def callref1() = test(Call("SUM", List(cell(0, false, 0, false))), "=SUM(A1)")
 

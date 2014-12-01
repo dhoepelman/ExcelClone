@@ -1,7 +1,6 @@
 package scalaExcel.formula
 
 import scala.util.parsing.combinator._
-import scalaExcel.util.ColumnTranslator
 
 /**
  * Excel LL grammar based on https://github.com/whatupdave/CilociFormulaEngine/blob/master/Excel.grammar
@@ -146,7 +145,7 @@ class Parser extends RegexParsers {
     case a ~ r => RowRef(r.toInt - 1, a.isDefined)
   }
   def ColRef_      : Parser[ColRef] = "$".? ~ """(?i)[a-z]+""".r ^^ {
-    case a ~ c => ColRef(ColumnTranslator.colToNum(c), a.isDefined)
+    case a ~ c => ColRef(colToNum(c), a.isDefined)
   }
 
   // TODO: Remove the ":" from the transformation by using <~ or ~>

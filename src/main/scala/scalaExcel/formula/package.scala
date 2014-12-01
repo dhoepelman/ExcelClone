@@ -1,6 +1,6 @@
-package scalaExcel.util
+package scalaExcel
 
-object ColumnTranslator {
+package object formula {
   /**
    * Converts a column string to corresponding number
    * @example A => 0, B => 1, AA => 26
