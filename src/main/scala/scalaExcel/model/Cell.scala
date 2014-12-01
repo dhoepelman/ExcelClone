@@ -8,9 +8,6 @@ import scalaExcel.util.ColumnTranslator.{numToCol, colToNum}
 // the formula. This implements a dummy parser/executor
 sealed trait Cell {
 
-  /** Cell position */
-  def position : CellPos
-
   /** Cell AST */
   lazy val AST : Expr = Cell.parser.parsing(f)
 
@@ -33,31 +30,24 @@ sealed trait Cell {
 }
 
 object Cell {
-  def apply(pos : CellPos) : Cell = new EmptyCell(pos)
-  def apply(x : Int, y : Int, f : String) : Cell = new FormulaCell((x,y), f)
-  def apply(pos : CellPos, f : String) : Cell = new FormulaCell(pos, f)
-  def apply(pos : CellPos, AST : Expr) : Cell = new ASTCell(pos, AST)
-  def apply(pos : CellPos, original : Cell) : Cell = new CopyCell(pos, original.AST, original.f, original.refs)
+  def apply() : Cell = EmptyCell
+  def apply(f : String) : Cell = new FormulaCell(f)
+  def apply(AST : Expr) : Cell = new ASTCell(AST)
 
   val parser = new Parser()
 
   def posToACell(c: Int, r: Int) = ACell(numToCol(c), r + 1)
   def ACellToPos(c: ACell) = (colToNum(c.c), c.r - 1)
 
-  private class EmptyCell(val position : CellPos) extends Cell {
+  private object EmptyCell extends Cell {
     override lazy val f = ""
     override lazy val AST = Const(VString(""))
     override lazy val refs = List()
   }
-  private class ASTCell(val position : CellPos, val AST_ : Expr) extends Cell {
+  private class ASTCell(val AST_ : Expr) extends Cell {
     override lazy val AST = AST_
   }
-  private class FormulaCell(val position : CellPos, val f_ : String) extends Cell {
+  private class FormulaCell(val f_ : String) extends Cell {
     override lazy val f = f_
-  }
-  private class CopyCell(val position : CellPos, val AST_ : Expr, val f_ : String, val refs_ : List[CellPos]) extends Cell {
-    override lazy val f = f_
-    override lazy val AST = AST_
-    override lazy val refs = refs_
   }
 }

@@ -8,11 +8,14 @@ import javafx.{event => jfxe, fxml => jfxf}
 import rx.lang.scala._
 
 import scala.language.reflectiveCalls
+
 import scalaExcel.GUI.data.LabeledDataTable
 import scalaExcel.GUI.data.LabeledDataTable.DataRow
 import scalaExcel.GUI.util.Filer
 import scalaExcel.GUI.view.ViewManager._
 import scalaExcel.model.{CellPos, Model, Styles}
+import scalaExcel.rx.operators.WithLatest._
+
 import scalafx.Includes._
 import scalafx.scene.control._
 import scalafx.scene.input.{ClipboardContent, _}
@@ -27,37 +30,43 @@ class ViewManager extends jfxf.Initializable {
   @jfxf.FXML private var tableContainerDelegate: jfxsl.AnchorPane = _
   private var tableContainer: AnchorPane = _
 
-  @jfxf.FXML private var formulaEditorDelegate: javafx.scene.control.TextField = _
+  @jfxf.FXML private var formulaEditorDelegate: jfxsc.TextField = _
   private var formulaEditor: TextField = _
   private var formulaEditorStream: Observable[String] = _
 
-  @jfxf.FXML private var backgroundColorPickerDelegate: javafx.scene.control.ColorPicker = _
-  private var backgroundColorPicker: scalafx.scene.control.ColorPicker = _
+  @jfxf.FXML private var backgroundColorPickerDelegate: jfxsc.ColorPicker = _
+  private var backgroundColorPicker: jfxsc.ColorPicker = _
   private var backgroundColorStream: Observable[Color] = _
 
-  @jfxf.FXML private var fontColorPickerDelegate: javafx.scene.control.ColorPicker = _
-  private var fontColorPicker: scalafx.scene.control.ColorPicker = _
+  @jfxf.FXML private var fontColorPickerDelegate: jfxsc.ColorPicker = _
+  private var fontColorPicker: jfxsc.ColorPicker = _
   private var fontColorStream: Observable[Color] = _
 
-  @jfxf.FXML private var menuLoadDelegate: javafx.scene.control.MenuItem = _
-  private var menuLoad: scalafx.scene.control.MenuItem = _
+  @jfxf.FXML private var menuLoadDelegate: jfxsc.MenuItem = _
+  private var menuLoad: jfxsc.MenuItem = _
   private var loadStream: Observable[String] = _
 
-  @jfxf.FXML private var menuSaveDelegate: javafx.scene.control.MenuItem = _
-  private var menuSave: scalafx.scene.control.MenuItem = _
+  @jfxf.FXML private var menuSaveDelegate: jfxsc.MenuItem = _
+  private var menuSave: jfxsc.MenuItem = _
   private var saveStream: Observable[String] = _
 
-  @jfxf.FXML private var menuCutDelegate: javafx.scene.control.MenuItem = _
-  private var menuCut: scalafx.scene.control.MenuItem = _
-  @jfxf.FXML private var menuCopyDelegate: javafx.scene.control.MenuItem = _
-  private var menuCopy: scalafx.scene.control.MenuItem = _
-  @jfxf.FXML private var menuPasteDelegate: javafx.scene.control.MenuItem = _
-  private var menuPaste: scalafx.scene.control.MenuItem = _
+  @jfxf.FXML private var menuCutDelegate: jfxsc.MenuItem = _
+  private var menuCut: jfxsc.MenuItem = _
+  @jfxf.FXML private var menuCopyDelegate: jfxsc.MenuItem = _
+  private var menuCopy: jfxsc.MenuItem = _
+  @jfxf.FXML private var menuPasteDelegate: jfxsc.MenuItem = _
+  private var menuPaste: jfxsc.MenuItem = _
   private var clipboardStream: Observable[ClipboardAction] = _
 
-  @jfxf.FXML private var menuDeleteDelegate: javafx.scene.control.MenuItem = _
-  private var menuDelete: scalafx.scene.control.MenuItem = _
-  private var deleteStream : Observable[List[CellPos]] = _
+  @jfxf.FXML private var menuDeleteDelegate: jfxsc.MenuItem = _
+  private var menuDelete: jfxsc.MenuItem = _
+  private var deleteStream: Observable[List[CellPos]] = _
+
+  @jfxf.FXML private var sortUpDelegate: jfxsc.Button = _
+  private var sortUp: jfxsc.Button = _
+  @jfxf.FXML private var sortDownDelegate: jfxsc.Button = _
+  private var sortDown: jfxsc.Button = _
+  private var onSortButtonStream: Observable[Boolean] = _
 
   @jfxf.FXML
   private var testButtonDelegate: jfxsc.Button = _
@@ -74,9 +83,10 @@ class ViewManager extends jfxf.Initializable {
   // Exposed observers, so we can gather those events and put
   // them into the model
 
-  val onCellEdit = Subject[((Int, Int), String)]()
-  val onBackgroundChange = Subject[((Int, Int), Color)]()
-  val onColorChange = Subject[((Int, Int), Color)]()
+  val onCellEdit = Subject[(CellPos, String)]()
+  val onBackgroundChange = Subject[(CellPos, Color)]()
+  val onColorChange = Subject[(CellPos, Color)]()
+  val onColumnSort = Subject[(Int, Boolean)]()
 
   def buildTableView(labeledTable: LabeledDataTable, model: Model): Unit = {
 
@@ -97,7 +107,6 @@ class ViewManager extends jfxf.Initializable {
     tableContainer.content = List(table)
 
     // streamTable.onRightClick.subscribe(_ => println("right click"))
-    // streamTable.onSort.subscribe(_ => println("right click"))
 
     // forward edits
     streamTable.onCellEdit.subscribe(x => onCellEdit.onNext(x))
@@ -173,7 +182,7 @@ class ViewManager extends jfxf.Initializable {
         o.onNext(Unit)
       }
     ))
-    deleteStream.subscribe( ps => ps foreach( p => model.emptyCell(p._1, p._2)) )
+    deleteStream.subscribe( ps => ps foreach( p => model.emptyCell(p)) )
 
     // TODO:  Yeah, so putting it in a variable first works. But when I put it directly in the subscribe it doesn't?...
     val clipboardHandler : ((List[CellPos], ClipboardAction)) => Unit = {case (ps,action) =>
@@ -204,11 +213,17 @@ class ViewManager extends jfxf.Initializable {
               case a => throw new IllegalArgumentException("Clipboard contained invalid copy-paste data {" + a.toString + "}")
             }
           else if(clipboard.hasString)
-            model.changeFormula(to._1, to._2, clipboard.getString)
+            model.changeFormula(to, clipboard.getString)
         }
       }
     }
     streamTable.withSelectedCells(clipboardStream).subscribe(clipboardHandler)
+
+    onSortButtonStream
+      .withLatest(singleSelectedCell)
+      .subscribe { s => s match {
+        case ((x, y), asc) => onColumnSort.onNext((x, asc))
+      }}
   }
 
   val copyPasteFormat = new DataFormat("x-excelClone/cutcopy")
@@ -235,6 +250,17 @@ class ViewManager extends jfxf.Initializable {
     fontColorStream = Observable[Color](o => {
       fontColorPicker.onAction = handle {
         o.onNext(fontColorPicker.value.value)
+      }
+    })
+
+    sortUp = new Button(sortUpDelegate)
+    sortDown = new Button(sortDownDelegate)
+    onSortButtonStream = Observable[Boolean](o => {
+      sortUp.onAction = handle {
+        o.onNext(true)
+      }
+      sortDown.onAction = handle {
+        o.onNext(false)
       }
     })
 
