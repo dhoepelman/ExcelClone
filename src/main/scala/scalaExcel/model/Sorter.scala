@@ -54,7 +54,6 @@ object Sorter {
       val cellModifier = DependencyModifier.changeDependencyRows(rowMutations)
 
       // reposition all the cells
-      // TODO: Update the references in the formulas, for example: A1 => A10
       val cells =
         sheet.cells
         .map {
