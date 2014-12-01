@@ -56,7 +56,7 @@ object Filer {
   /** Get the contents of a csv file */
   def loadCSV(file: java.io.File) : Sheet = {
     val linesOfTokens = Source.fromFile(file).getLines()
-      // http://stackoverflow.com/questions/769621/
+      // http://stackoverflow.com/a/769713/661190
       .map(line => line.split(""",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))""").map(_.stripPrefix("\"").stripSuffix("\"")).toArray)
       .toArray
     CSVToSheet(linesOfTokens)
