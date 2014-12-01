@@ -31,17 +31,21 @@ object RunGUI extends JFXApp {
   // Putting events from the GUI into the model
   // This should be the only place where that ever happens
 
-  vm.onCellEdit.subscribe(edit => {
+  vm.onCellEdit.subscribe( edit => {
     model.changeFormula(edit._1, edit._2)
   })
 
-  vm.onBackgroundChange.subscribe(edit => {
+  vm.onBackgroundChange.subscribe( edit => {
     model.changeBackground(edit._1, edit._2)
   })
 
-  vm.onColorChange.subscribe(edit => {
+  vm.onColorChange.subscribe( edit => {
     model.changeColor(edit._1, edit._2)
   })
+
+  vm.onColumnSort.subscribe { s =>
+    model.sortColumn(s._1, s._2)
+  }
 
   // rerender table after data/resize/scroll changes
   dm.labeledDataTable.subscribe(table => vm.dataChanged(table))

@@ -16,6 +16,8 @@ class ViewManagerObject(
   val onBackgroundChange = controller.onBackgroundChange
   /** When the front color of a cell is selected */
   val onColorChange = controller.onColorChange
+  /** on sorting a column */
+  val onColumnSort = controller.onColumnSort
 
   def dataChanged(labeledTable: LabeledDataTable) =
     controller.buildTableView(labeledTable, model)

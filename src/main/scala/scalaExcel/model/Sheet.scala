@@ -14,6 +14,13 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
             val dependents: Map[CellPos, List[CellPos]] = Map(),
             val styles: Map[CellPos, Styles] = Map()) {
 
+  /** Get the number of rows in the sheet */
+  lazy val rows = if (cells.isEmpty) 0 else cells.keys.maxBy(_._2)._2 + 1
+  /** Get the number of columns in the sheet */
+  lazy val cols = if (cells.isEmpty) 0 else cells.keys.maxBy(_._1)._1 + 1
+  /** Get a tuple of columns and rows in the sheet */
+  lazy val size = (cols, rows)
+
   /**
    * Set the cell at pos to some formula f
    * @return the new sheet, and a list of cells that need to be recalculated

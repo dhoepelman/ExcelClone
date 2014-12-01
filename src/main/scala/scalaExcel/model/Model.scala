@@ -43,6 +43,7 @@ class Model {
     case CutCell(from, to) => updateSheet(sheet.cutCell(from, to))
     case SetColor(pos, c) => updateStyle(sheet, pos, s => s.setColor(c))
     case SetBackground(pos, c) => updateStyle(sheet, pos, s => s.setBackground(c))
+    case SortColumn(x, asc) => sheet.sort(x, asc)
     case Refresh => sheet
   })
 
@@ -71,4 +72,9 @@ class Model {
   def changeColor(pos : CellPos, c: Color): Unit = {
     sheetMutations.onNext(SetColor(pos, c))
   }
+
+  def sortColumn(x: Int, asc: Boolean) = {
+    sheetMutations.onNext(SortColumn(x, asc))
+  }
+
 }
