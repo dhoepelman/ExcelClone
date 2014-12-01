@@ -65,7 +65,7 @@ object Sorter {
       val styles =
         sheet.styles
         .map {
-          case ((x, y), s) => ((x, rowMutations.get(y).get), s)
+          case ((x, y), s) => ((x, rowMutations.get(y).getOrElse(y)), s)
         }
 
       new Sheet(cells, values, dependents, styles)
