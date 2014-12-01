@@ -46,8 +46,9 @@
     -fx-background-color: #699999;
 }
 
-.button-bar .button-box > .label {
+.button-bar .button-box Label {
     -fx-font-weight: bold;
+    -fx-text-align: center;
 }
 
 
