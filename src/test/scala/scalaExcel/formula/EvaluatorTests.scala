@@ -50,6 +50,12 @@ object EvaluatorTests {
     }, tv(x._2))
   })
 
+  val sparseCtx: Ctx = (c => {
+    val (ACell((x, y))) = c
+    if (y == 0 || y == 3 || y == 5) VDouble(3)
+    else VEmpty
+  })
+
   @Parameters(name= "{0}: <{1}> : <{2}>")
   def data: ju.Collection[Array[jl.Object]] = {
     val list = new ju.ArrayList[Array[jl.Object]]()
@@ -307,10 +313,13 @@ object EvaluatorTests {
         (4, "=COLUMNS(E14:B5)")
       )) ++ lst("function COUNT", List(
         (3, "=COUNT(TRUE, 1/0, 1, \"abc\", 10, 0)")
+      )) ++ lstCtx("function COUNT", List(
+        (2, "=COUNT(A1:A5)", sparseCtx)
       )) ++ lstCtx("function AVG", List(
         (5, "=AVERAGE(A1:A2)", newCtx(Map("A1" -> 3, "A2" -> 7))),
         (2.5, "=AVERAGE(3, 1, 4, 2)", ectx),
-        (5, "=AVERAGE(5, A1:A2)", newCtx(Map("A1" -> 3, "A2" -> 7)))
+        (5, "=AVERAGE(5, A1:A2)", newCtx(Map("A1" -> 3, "A2" -> 7))),
+        (3, "=AVERAGE(A1:A5)", sparseCtx)
       )) ++ lst("function IF", List(
         (true, "=IF(TRUE)"),
         (false, "=IF(FALSE)"),
