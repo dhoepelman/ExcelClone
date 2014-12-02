@@ -22,28 +22,32 @@ class LabeledDataTable(
 
   def sortColumn = _dataWindow.absoluteToWindowColumn(_sortColumn)
 
+  def toSheetIndex = _dataWindow.windowToAbsolute _
+  def toTableIndex = _dataWindow.absoluteToWindow _
+
+  def dataCellFromSheet(index: CellPos) = {
+    // function that builds a DataCell based on a window index
+    if (_sheet == null)
+    // there is no data yet, only empty cells
+      DataCell.newEmpty()
+    else
+    // build a DataCell with the contents of the sheet at that position
+      DataCell.newEvaluated(
+        _sheet.cells.get(index) match {
+          case Some(c) => c.f
+          case None => ""
+        },
+        _sheet.valueAt(index).getOrElse(VEmpty),
+        _sheet.styles.getOrElse(index, Styles.DEFAULT))
+  }
+
+  def dataCellFromWindow(index: CellPos) =  dataCellFromSheet(toSheetIndex(index))
+
   val data =
     LabeledDataTable.buildDataTable(
       _dataWindow.rowCount,
       _dataWindow.columnCount,
-      // function that builds a DataCell based on a window index
-      (index: CellPos) => {
-        if (_sheet == null)
-          // there is no data yet, only empty cells
-          DataCell.newEmpty()
-        else {
-          // translate window index to absolute index
-          val realIndex = _dataWindow.windowToAbsolute(index)
-          // build a DataCell with the contents of the sheet at that position
-          DataCell.newEvaluated(
-            _sheet.cells.get(realIndex) match {
-              case Some(c) => c.f
-              case None => ""
-            },
-            _sheet.valueAt(realIndex).getOrElse(VEmpty),
-            _sheet.styles.getOrElse(realIndex, Styles.DEFAULT))
-        }
-      })
+      dataCellFromWindow)
 
   def updateContents(sheet: Sheet) =
     new LabeledDataTable(_dataWindow,

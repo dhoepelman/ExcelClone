@@ -8,8 +8,11 @@ import java.io.IOException
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.scene.Scene
 import scalaExcel.GUI.view.ViewManager
-import scalaExcel.GUI.data.DataManager
+import scalaExcel.GUI.data._
 import scalaExcel.model.Model
+import scalaExcel.GUI.data.ChangeFormula
+import scalaExcel.GUI.data.ChangeBackground
+import scalaExcel.GUI.data.ChangeColor
 
 object RunGUI extends JFXApp {
 
@@ -32,26 +35,44 @@ object RunGUI extends JFXApp {
 
   // when the user somehow changes the cell
   vm.onCellEdit.subscribe { edit =>
-      model.changeFormula(edit._1, edit._2)
+    model.changeFormula(edit._1, edit._2)
   }
 
   // when the background color of a cell is selected
   vm.onBackgroundChange.subscribe { edit =>
-      model.changeBackground(edit._1, edit._2)
+    model.changeBackground(edit._1, edit._2)
   }
 
   // when the front color of a cell is selected
   vm.onColorChange.subscribe { edit =>
-      model.changeColor(edit._1, edit._2)
+    model.changeColor(edit._1, edit._2)
   }
 
   // when a column is sorted
   vm.onColumnSort.subscribe { s =>
-      model.sortColumn(s._1, s._2)
+    model.sortColumn(s._1, s._2)
+  }
+
+  // when a cell is emptied
+  vm.onCellEmpty.subscribe { pos =>
+    model.emptyCell(pos)
+  }
+
+  // when a cell is copied
+  vm.onCellCopy.subscribe { exchange =>
+    model.copyCell(exchange._1, exchange._2)
+  }
+
+  // when a cell is cut
+  vm.onCellCut.subscribe { exchange =>
+    model.cutCell(exchange._1, exchange._2)
   }
 
   // re-render table after data/resize/scroll/sort changes
-  dm.labeledDataTable.subscribe(table => vm.buildTableView(table, model))
+  dm.labeledDataTable.subscribe(table => vm.onDataChanged.onNext(table))
+
+  // start streaming
+  dm.windowMutations.onNext(new RefreshWindow())
 
   stage = new PrimaryStage() {
     title = "Scala Excel"

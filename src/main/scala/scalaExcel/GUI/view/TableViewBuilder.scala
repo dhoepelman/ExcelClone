@@ -93,7 +93,7 @@ class StreamingTable(labeledTable: LabeledDataTable) {
         }
       o.onNext(cells)
     })
-  })
+  }).map(_ map labeledTable.toSheetIndex)
 
   val onColumnReorder = Observable[Map[Int, Int]](o => {
     table.columns.onChange((cols, changes) => {
@@ -124,40 +124,21 @@ class StreamingTable(labeledTable: LabeledDataTable) {
   })
 
   val onRightClick = onClick
-    .filter(event => {
-    (event.getButton.compareTo(MouseButton.SECONDARY) == 0)
-  })
+    .filter(_.getButton.compareTo(MouseButton.SECONDARY) == 0)
 
-  private def buildColumns(
-                            headers: List[String],
+  private def buildColumns(headers: List[String],
                             widths: List[Double]): TableColumns = {
-
     headers.view
       .zip(widths)
       .foldLeft(new TableColumns())((cols, data) => {
       cols += new DataCellColumn(
-        (onCellEdit.onNext(_)),
-        (onColResize.onNext(_)),
+        onCellEdit.onNext,
+        onColResize.onNext,
         cols.length,
         data._1,
         data._2)
     })
   }
-
-  /** Observable of selected cells in the table */
-  val selectedCellStream = Observable[List[CellPos]]({ o =>
-    table.selectionModel.value.getSelectedCells.onChange({ (poss, _) => o.onNext(poss.toList map ({
-      pos => (pos.getColumn - 1, pos.getRow)
-    }))
-    })
-  })
-
-  /** Combine an observable with the current selected cells in the table */
-  def withSelectedCells[T](o: Observable[T]): Observable[(List[CellPos], T)] = o.withLatest(selectedCellStream)
-
-  // Grumble grumble JVM type erasure can't overload on Observable[Unit] and Observable[T] grumble grumble
-  def withSelectedCellsOnly(o: Observable[Any]): Observable[List[CellPos]] = withSelectedCells(o).map({ case (ps,_) => ps })
-
 }
 
 object TableViewBuilder {
