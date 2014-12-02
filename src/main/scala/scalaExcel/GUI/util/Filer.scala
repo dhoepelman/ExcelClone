@@ -26,8 +26,9 @@ object Filer {
   def unescape(s: String): String =
     s.replace("\"\"", "\"")
 
-  /** A very basis formatter */
+  /** A very basic formatter */
   def dummyFormat(value: Value) : String = {
+    //TODO remove function when formatter is available
     value match {
       case VDouble(v) => v.toString
       case VString(v) => v.toString
