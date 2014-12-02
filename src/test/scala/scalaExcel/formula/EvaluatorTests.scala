@@ -40,6 +40,9 @@ object EvaluatorTests {
   def lstErr(name: String, l: List[Tuple2[ErrType, String]]): List[TestTuple] =
     l map (x => (name, VErr(x._1), x._2, ectx))
 
+  def lstErrCtx(name: String, l: List[Tuple3[ErrType, String, Ctx]]): List[TestTuple] =
+    l map (x => (name, VErr(x._1), x._2, x._3))
+
   def newCtx(values: Map[String, Any]) = values map (x => {
     (p parsing("=" + x._1) match {
       case c: Cell => desugarCell(c)
@@ -71,6 +74,9 @@ object EvaluatorTests {
         (false, "=\"a\" = TRUE"),
         (false, "=1 = TRUE"),
         (false, "=TRUE = 1")
+      )) ++ lstCtx("binop =", List(
+        (false, "=1 = A20", (_ => VEmpty)),
+        (true,  "=A20 = 0", (_ => VEmpty))
       )) ++ lst("binop <>", List(
         (!true, "=TRUE <> TRUE"),
         (!false, "=FALSE <> TRUE"),
@@ -84,6 +90,9 @@ object EvaluatorTests {
         (!false, "=\"a\" <> TRUE"),
         (!false, "=1 <> TRUE"),
         (true, "= TRUE <> 1")
+      )) ++ lstCtx("binop <>", List(
+        (true, "=1 <> A20", (_ => VEmpty)),
+        (false,  "=A20 <> 0", (_ => VEmpty))
       )) ++ lst("binop >", List(
         (true,  "=2>1"),
         (false, "=1>1"),
@@ -100,6 +109,9 @@ object EvaluatorTests {
         (true,  "=\"b\">\"a\""),
         (false, "=\"a\">\"b\""),
         (false, "=\"b\">\"b\"")
+      )) ++ lstCtx("binop >", List(
+        (true, "=1 > A20", (_ => VEmpty)),
+        (false,  "=A20 > 1", (_ => VEmpty))
       )) ++ lst("binop <", List(
         (false,  "=2<1"),
         (false, "=1<1"),
@@ -118,6 +130,9 @@ object EvaluatorTests {
         (false, "=\"b\"<\"a\""),
         (true,  "=\"a\"<\"b\""),
         (false, "=\"b\"<\"b\"")
+      )) ++ lstCtx("binop <", List(
+        (false, "=1 < A20", (_ => VEmpty)),
+        (true,  "=A20 < 1", (_ => VEmpty))
       )) ++ lst("binop >=", List(
         (true,  "=2>=1"),
         (true,  "=1>=1"),
@@ -134,6 +149,9 @@ object EvaluatorTests {
         (true,  "=\"b\">=\"a\""),
         (false, "=\"a\">=\"b\""),
         (true,  "=\"b\">=\"b\"")
+      )) ++ lstCtx("binop >=", List(
+        (true, "=1 >= A20", (_ => VEmpty)),
+        (false,  "=A20 >= 1", (_ => VEmpty))
       )) ++ lst("binop <=", List(
         (false, "=2<=1"),
         (true,  "=1<=1"),
@@ -152,6 +170,9 @@ object EvaluatorTests {
         (false, "=\"b\"<=\"a\""),
         (true,  "=\"a\"<=\"b\""),
         (true,  "=\"b\"<=\"b\"")
+      )) ++ lstCtx("binop <=", List(
+        (false, "=1 <= A20", (_ => VEmpty)),
+        (true,  "=A20 <= 1", (_ => VEmpty))
       )) ++ lst("binop & concat", List(
         ("abc", "=\"ab\"& \"c\""),
         ("ab1", "=\"ab\"& 1"),
@@ -159,12 +180,18 @@ object EvaluatorTests {
         ("TRUEab", "=TRUE & \"ab\""),
         ("12", "=1 & 2"),
         ("TRUEFALSE", "=TRUE & FALSE")
+      )) ++ lstCtx("binop & concat", List(
+        ("ab", "=\"ab\" & A20", (_ => VEmpty)),
+        ("ab", "=A20 & \"ab\"", (_ => VEmpty))
       )) ++ lst("binop + add", List(
         (5, "=2 + 3"),
         (2.4, "=1.4 + 1"),
         (-10, "=-20 + 10"),
         (-30, "=-20 + -10"),
         (5, "=4 + TRUE")
+      )) ++ lstCtx("binop + add", List(
+        (1, "=1 + A20", (_ => VEmpty)),
+        (2,  "=A20 + 2", (_ => VEmpty))
       )) ++ lstErr("binop + errors", List(
         (InvalidValue, "=2 + \"a\"")
       )) ++ lst("binop - minus", List(
@@ -174,6 +201,9 @@ object EvaluatorTests {
         (-10, "=-20 - -10"),
         (1, "=2 - TRUE"),
         (-2, "=FALSE - 2")
+      )) ++ lstCtx("binop - minus", List(
+        (1, "=1 - A20", (_ => VEmpty)),
+        (-2,  "=A20 - 2", (_ => VEmpty))
       )) ++ lstErr("binop - errors", List(
         (InvalidValue, "=2 - \"a\"")
       )) ++ lst("binop * multiply", List(
@@ -181,6 +211,9 @@ object EvaluatorTests {
         (5, "=2.5 * 2"),
         (4, "=4 * TRUE"),
         (0, "=FALSE * 3")
+      )) ++ lstCtx("binop * multiply", List(
+        (0, "=1 * A20", (_ => VEmpty)),
+        (0,  "=A20 * 2", (_ => VEmpty))
       )) ++ lstErr("binop * errors", List(
         (InvalidValue, "=2 * \"a\"")
       )) ++ lst("binop / divide", List(
@@ -188,11 +221,15 @@ object EvaluatorTests {
         (2.5, "=10 / 4"),
         (0, "=0 / 1"),
         (2, "=2 / TRUE")
+      )) ++ lstCtx("binop * multiply", List(
+        (0,  "=A20 / 2", (_ => VEmpty))
       )) ++ lstErr("binop / errors", List(
         (DivBy0, "=1 / 0"),
         (DivBy0, "=1 / FALSE"),
         (InvalidValue, "=2 / \"a\"")
-      )) ++ lst("binop / divide", (
+      )) ++ lstErrCtx("binop / divide", List(
+        (DivBy0,  "=2 / A20", (_ => VEmpty))
+      )) ++ lst("binop ^ power", (
         (Map[Double,List[Double]](
           -2.0 -> List(-2, -1, 0, 1, 2),
           -0.5 -> List(-2, -1, 0, 1, 2),
@@ -230,6 +267,10 @@ object EvaluatorTests {
         (0.0025, "=25%%"),
         (0.01, "=TRUE%"),
         (0, "=FALSE%")
+      )) ++ lstCtx("binop * multiply", List(
+        (0, "=A20%", (_ => VEmpty)),
+        (0, "=-A20", (_ => VEmpty)),
+        (0,  "=+A20", (_ => VEmpty))
       )) ++ lstErr("unop", List(
         (InvalidValue, "=-\"A\""),
         (InvalidValue, "=\"A\"%")

@@ -35,6 +35,7 @@ object Evaluator {
   def applyToDouble(f: (Double => Double))(v: Value): Value = v match {
     case VDouble(d) => VDouble(f(d))
     case VBool(b)   => applyToDouble(f)(boolToVDouble(b))
+    case VEmpty     => VDouble(f(0))
     case _          => VErr(InvalidValue)
   }
 
@@ -43,6 +44,8 @@ object Evaluator {
     case (VDouble(l), VDouble(r)) => VDouble(f(l, r))
     case (VBool(b), v)            => applyToDoubles(f)(boolToVDouble(b), v)
     case (v, VBool(b))            => applyToDoubles(f)(v, boolToVDouble(b))
+    case (VEmpty, v)              => applyToDoubles(f)(VDouble(0), v)
+    case (v, VEmpty)              => applyToDoubles(f)(v, VDouble(0))
     case es => pickError(es, InvalidValue)
   }
 
@@ -107,7 +110,10 @@ object Evaluator {
   def eval(ctx: Ctx, e: Expr) =
     desugar(e) match {
       case ARange(_) => VErr(InvalidValue)
-      case x => evalIn_(ctx, x)
+      case x => evalIn_(ctx, x) match {
+        case VEmpty => VDouble(0)
+        case v => v
+      }
     }
 
   // internal eval with desugaring
@@ -152,18 +158,26 @@ object Evaluator {
     case (VDouble(d), v) => concat(VString(doubleToString(d)), v)
     case (v, VBool(b))   => concat(v, VString(boolToString(b)))
     case (VBool(b), v)   => concat(VString(boolToString(b)), v)
+    case (v, VEmpty)     => concat(v, VString(""))
+    case (VEmpty, v)     => concat(VString(""), v)
     case (VString(s1), VString(s2)) => VString(s1 + s2)
     case es => pickError(es, NA)
   }
 
-  def boolEq(lhs: Value, rhs: Value) = (lhs, rhs) match {
+  private def emptiesToZeros(vv: ((Value, Value))) = vv match {
+    case (VEmpty, v) => (VDouble(0), v)
+    case (v, VEmpty) => (v, VDouble(0))
+    case _ => vv
+  }
+
+  def boolEq(lhs: Value, rhs: Value) = emptiesToZeros((lhs, rhs)) match {
     case (VBool(l), VBool(r))     => VBool(l == r)
     case (VDouble(l), VDouble(r)) => VBool(l == r)
     case (VString(l), VString(r)) => VBool(l == r)
     case _ => VBool(false)
   }
 
-  def boolGt(lhs: Value, rhs: Value) = (lhs, rhs) match {
+  def boolGt(lhs: Value, rhs: Value) = emptiesToZeros((lhs, rhs)) match {
     case (VBool(l), VBool(r))     => VBool(l > r)
     case (VDouble(l), VDouble(r)) => VBool(l > r)
     case (VString(l), VString(r)) => VBool(l > r)
@@ -171,7 +185,7 @@ object Evaluator {
     case _ => VBool(false)
   }
 
-  def boolLt(lhs: Value, rhs: Value) = (lhs, rhs) match {
+  def boolLt(lhs: Value, rhs: Value) = emptiesToZeros((lhs, rhs)) match {
     case (VBool(l), VBool(r))     => VBool(l < r)
     case (VDouble(l), VDouble(r)) => VBool(l < r)
     case (VString(l), VString(r)) => VBool(l < r)
