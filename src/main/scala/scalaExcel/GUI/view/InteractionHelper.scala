@@ -1,6 +1,6 @@
 package scalaExcel.GUI.view
 
-import _root_.rx.lang.scala.Observable
+import _root_.rx.lang.scala.{Subject, Observable}
 import scalafx.Includes._
 import scalafx.scene.paint.Color
 import scalaExcel._
@@ -8,6 +8,8 @@ import scalaExcel.GUI.data.DataCell
 import scalafx.scene.input.{DataFormat, ClipboardContent, Clipboard}
 import scalaExcel.GUI.util.Filer
 import scalaExcel.rx.operators.WithLatest._
+import scalafx.scene.control.ScrollBar
+import javafx.scene.{control => jfxsc}
 
 object InteractionHelper {
 
@@ -15,6 +17,32 @@ object InteractionHelper {
   case object Cut extends ClipboardAction
   case object Copy extends ClipboardAction
   case object Paste extends ClipboardAction
+
+  /**
+   * ScrollBar extension capable of emitting whole value changes
+   * and cancelling emission on request
+   */
+  class WatchableScrollBar(delegate: jfxsc.ScrollBar,
+                           maxValue: Int,
+                           currentValue: Int,
+                           valueListener: (Int) => Unit) extends ScrollBar(delegate) {
+    max = maxValue
+    value = currentValue
+    blockIncrement = 5
+    visibleAmount = if (maxValue == 1) 0.5 else 1
+
+    val subscription = Observable[Int](o => {
+        value.onChange {
+          (_, _, newValue) =>
+            if(!o.isUnsubscribed)
+              o.onNext(newValue.doubleValue.round.toInt)
+        }
+    })
+    .distinctUntilChanged
+    .subscribe(v => if(v != currentValue) valueListener(v))
+
+    def unWatch() = subscription.unsubscribe()
+  }
 
   /**
    * Initializes all GUI interaction streams

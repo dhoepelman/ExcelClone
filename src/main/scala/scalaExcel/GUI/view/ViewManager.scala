@@ -25,43 +25,44 @@ import scalaExcel.GUI.data.UpdateColumnOrder
 import scalaExcel.GUI.data.UpdateContents
 import scalaExcel.GUI.data.SlideWindowBy
 import scalaExcel.model.Sheet
+import scalaExcel.GUI.view.InteractionHelper.WatchableScrollBar
 
 class ViewManager extends jfxf.Initializable {
 
-   var table: TableView[DataRow] = _
+  var table: TableView[DataRow] = _
 
   @jfxf.FXML private var tableContainerDelegate: jfxsl.AnchorPane = _
-   var tableContainer: AnchorPane = _
+  var tableContainer: AnchorPane = _
 
   @jfxf.FXML private var formulaEditorDelegate: jfxsc.TextField = _
-   var formulaEditor: TextField = _
+  var formulaEditor: TextField = _
 
   @jfxf.FXML private var backgroundColorPickerDelegate: jfxsc.ColorPicker = _
-   var backgroundColorPicker: jfxsc.ColorPicker = _
+  var backgroundColorPicker: jfxsc.ColorPicker = _
 
   @jfxf.FXML private var fontColorPickerDelegate: jfxsc.ColorPicker = _
-   var fontColorPicker: ColorPicker = _
+  var fontColorPicker: ColorPicker = _
 
   @jfxf.FXML private var menuLoadDelegate: jfxsc.MenuItem = _
-   var menuLoad: MenuItem = _
+  var menuLoad: MenuItem = _
 
   @jfxf.FXML private var menuSaveDelegate: jfxsc.MenuItem = _
-   var menuSave: MenuItem = _
+  var menuSave: MenuItem = _
 
   @jfxf.FXML private var menuCutDelegate: jfxsc.MenuItem = _
-   var menuCut: MenuItem = _
+  var menuCut: MenuItem = _
   @jfxf.FXML private var menuCopyDelegate: jfxsc.MenuItem = _
-   var menuCopy: MenuItem = _
+  var menuCopy: MenuItem = _
   @jfxf.FXML private var menuPasteDelegate: jfxsc.MenuItem = _
-   var menuPaste: MenuItem = _
+  var menuPaste: MenuItem = _
 
   @jfxf.FXML private var menuDeleteDelegate: jfxsc.MenuItem = _
-   var menuDelete: MenuItem = _
+  var menuDelete: MenuItem = _
 
   @jfxf.FXML private var sortUpDelegate: jfxsc.Button = _
-   var sortUp: Button = _
+  var sortUp: Button = _
   @jfxf.FXML private var sortDownDelegate: jfxsc.Button = _
-   var sortDown: Button = _
+  var sortDown: Button = _
 
   @jfxf.FXML
   private var testButtonDelegate: jfxsc.Button = _
@@ -71,15 +72,10 @@ class ViewManager extends jfxf.Initializable {
   private var newColumnButton: Button = _
   @jfxf.FXML private var newRowDelegate: jfxsc.Button = _
   private var newRowButton: Button = _
-  @jfxf.FXML private var scrollLeftDelegate: jfxsc.Button = _
-  private var scrollLeftButton: Button = _
-  @jfxf.FXML private var scrollRightDelegate: jfxsc.Button = _
-  private var scrollRightButton: Button = _
-
-  @jfxf.FXML private var scrollUpDelegate: jfxsc.Button = _
-  private var scrollUpButton: Button = _
-  @jfxf.FXML private var scrollDownDelegate: jfxsc.Button = _
-  private var scrollDownButton: Button = _
+  @jfxf.FXML private var horizontalScrollDelegate: jfxsc.ScrollBar = _
+  private var horizontalScroll: WatchableScrollBar = _
+  @jfxf.FXML private var verticalScrollDelegate: jfxsc.ScrollBar = _
+  private var verticalScroll: WatchableScrollBar = _
 
   val fileChooser = new javafx.stage.FileChooser
   fileChooser.getExtensionFilters.add(new ExtensionFilter("Comma separated values", "*.csv"))
@@ -94,7 +90,6 @@ class ViewManager extends jfxf.Initializable {
   val onCellEmpty = Subject[CellPos]()
   val onCellCut = Subject[(CellPos, CellPos)]()
   val onCellCopy = Subject[(CellPos, CellPos)]()
-
 
   /**
    * Rx stream of changes to the visible table
@@ -150,26 +145,11 @@ class ViewManager extends jfxf.Initializable {
    */
   def buildTableView(labeledTable: LabeledDataTable): Unit = {
 
-    if(!labeledTable.moreLeft)
-      scrollLeftButton.disable = true
-    else
-      scrollLeftButton.disable = false
+    //
+    // Update TableView
+    //
 
-    if(!labeledTable.moreRight)
-      scrollRightButton.disable = true
-    else
-      scrollRightButton.disable = false
-
-    if(!labeledTable.moreUp)
-      scrollUpButton.disable = true
-    else
-      scrollUpButton.disable = false
-
-    if(!labeledTable.moreDown)
-      scrollDownButton.disable = true
-    else
-      scrollDownButton.disable = false
-
+    // if only data changed, update items only
     if (!labeledTable.rebuild) {
       println("Changing table...")
 
@@ -179,7 +159,7 @@ class ViewManager extends jfxf.Initializable {
 
     println("Building table...")
 
-    // initialize and add the table
+    // otherwise initialize and add the table
     val streamTable = TableViewBuilder.build(labeledTable)
     table = streamTable.table
 
@@ -190,6 +170,33 @@ class ViewManager extends jfxf.Initializable {
     streamTable.onSelection.subscribe(onSelection.onNext _)
     // forward edits
     streamTable.onCellEdit.subscribe(onCellEdit.onNext _)
+
+    //
+    // Re-initialize scroll bars
+    //
+
+    val maxs = labeledTable.windowMaxOffsets
+    val values = labeledTable.windowOffsets
+
+    // stop listening to changes on the old bars
+    if (horizontalScroll != null)
+      horizontalScroll.unWatch()
+    horizontalScroll = new WatchableScrollBar(horizontalScrollDelegate,
+      maxs._1,
+      values._1,
+      (newValue: Int) =>
+      // slide table window horizontally by the difference
+        tableMutations.onNext(new SlideWindowBy((newValue - values._1, newValue - values._1, 0, 0))))
+
+    if (verticalScroll != null)
+      verticalScroll.unWatch()
+    verticalScroll = new WatchableScrollBar(verticalScrollDelegate,
+      maxs._2,
+      values._2,
+      (newValue: Int) =>
+      // slide table window vertically by the difference
+        tableMutations.onNext(new SlideWindowBy((0, 0, newValue - values._2, newValue - values._2))))
+
   }
 
   /**
@@ -226,10 +233,6 @@ class ViewManager extends jfxf.Initializable {
 
     newColumnButton = new Button(newColumnDelegate)
     newRowButton = new Button(newRowDelegate)
-    scrollLeftButton = new Button(scrollLeftDelegate)
-    scrollRightButton = new Button(scrollRightDelegate)
-    scrollUpButton = new Button(scrollUpDelegate)
-    scrollDownButton = new Button(scrollDownDelegate)
 
     // initialize interaction streams
     InteractionHelper.initializeInteractionStreams(this)
@@ -250,34 +253,18 @@ class ViewManager extends jfxf.Initializable {
       tableMutations.onNext(new AddNewRow(-1))
     }
 
-    scrollLeftButton.onAction = handle {
-      // add new row at the end (position -1)
-      tableMutations.onNext(new SlideWindowBy((-1, -1, 0, 0)))
-    }
-
-    scrollRightButton.onAction = handle {
-      // add new row at the end (position -1)
-      tableMutations.onNext(new SlideWindowBy((1, 1, 0, 0)))
-    }
-
-    scrollUpButton.onAction = handle {
-      // add new row at the end (position -1)
-      tableMutations.onNext(new SlideWindowBy((0, 0, -1, -1)))
-    }
-
-    scrollDownButton.onAction = handle {
-      // add new row at the end (position -1)
-      tableMutations.onNext(new SlideWindowBy((0, 0, 1, 1)))
-    }
   }
 
   def editorText = formulaEditor.text.value
-  def editorText_= (text: String):Unit = formulaEditor.text = text
+
+  def editorText_=(text: String): Unit = formulaEditor.text = text
 
   def backgroundColor = backgroundColorPicker.value.value
-  def backgroundColor_= (color: Color): Unit = backgroundColorPicker.value = color
+
+  def backgroundColor_=(color: Color): Unit = backgroundColorPicker.value = color
 
   def fontColor = fontColorPicker.value.value
-  def fontColor_= (color:Color): Unit = fontColorPicker.value = color
+
+  def fontColor_=(color: Color): Unit = fontColorPicker.value = color
 
 }

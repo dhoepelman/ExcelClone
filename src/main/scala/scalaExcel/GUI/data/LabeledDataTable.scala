@@ -145,11 +145,11 @@ class LabeledDataTable(
     }
   }
 
-  def dataSize = _dataWindow.dataSize
-  def moreLeft = _dataWindow.visibleBounds._1 > 0
-  def moreRight = _dataWindow.dataSize._1 > _dataWindow.visibleBounds._2
-  def moreUp = _dataWindow.visibleBounds._3 > 0
-  def moreDown = _dataWindow.dataSize._2 > _dataWindow.visibleBounds._4
+  // the maximum horizontal and vertical offsets the window can have
+  def windowMaxOffsets = (_dataWindow.dataSize._1 - _dataWindow.columnCount,
+    _dataWindow.dataSize._2 - _dataWindow.rowCount)
+  // the current offsets of the window
+  def windowOffsets = (_dataWindow.visibleBounds._1, _dataWindow.visibleBounds._3)
 
 }
 
