@@ -11,6 +11,5 @@ case class SlideWindowBy(offsets: (Int, Int, Int, Int)) extends TableMutations
 case class SlideWindowTo(bounds: (Int, Int, Int, Int)) extends TableMutations
 case class UpdateColumnOrder(permutations: Map[Int, Int]) extends TableMutations
 case class UpdateContents(sheet: Sheet) extends TableMutations
-case class UpdateWindow(dataWindow: DataWindow) extends TableMutations
 case class ResizeColumn(columnIndex: Int, width: Double)extends TableMutations
 
