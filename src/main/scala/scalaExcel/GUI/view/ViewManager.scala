@@ -92,15 +92,15 @@ class ViewManager extends jfxf.Initializable {
     .map(_.head)
     .combineLatest(onDataChanged)
     .map({
-    case (pos, labeledTable) => (pos, labeledTable.dataCellFromSheet(pos))
-  })
+      case (pos, labeledTable) => (pos, labeledTable.dataCellFromSheet(pos))
+    })
   //stream with all selected cell data
   val onManyCellsSelected = onSelection
     .combineLatest(onDataChanged)
     .map({
-    case (posList, labeledTable) =>
-      posList.map(pos => (pos, labeledTable.dataCellFromSheet(pos)))
-  })
+      case (posList, labeledTable) =>
+        posList.map(pos => (pos, labeledTable.dataCellFromSheet(pos)))
+    })
 
   def buildTableView(labeledTable: LabeledDataTable): Unit = {
 
@@ -138,9 +138,9 @@ class ViewManager extends jfxf.Initializable {
       .distinctUntilChanged
       .map(single => single._2.styles)
       .subscribe(s => {
-      changeBackgroundColorPicker(s.background)
-      changeFontColorPicker(s.color)
-    })
+        changeBackgroundColorPicker(s.background)
+        changeFontColorPicker(s.color)
+      })
 
     // Changes on formula editor are pushed to the selected cell
     Observable[String](o => {
@@ -148,12 +148,12 @@ class ViewManager extends jfxf.Initializable {
         o.onNext(formulaEditor.getText)
       }
     })
-      .withLatest(onSingleCellSelected)
-      .distinctUntilChanged(_._2)
-      .map({
+    .withLatest(onSingleCellSelected)
+    .distinctUntilChanged(_._2)
+    .map({
       case ((pos, _), formula) => (pos, formula)
     })
-      .subscribe(onCellEdit.onNext _)
+    .subscribe(onCellEdit.onNext _)
 
     // Changes on the background picker are pushed to the model
     Observable[Color](o => {
@@ -161,10 +161,10 @@ class ViewManager extends jfxf.Initializable {
         o.onNext(backgroundColorPicker.value.value)
       }
     })
-      .withLatest(onSelection)
-      .distinctUntilChanged(_._2)
-      .flatMap(x => Observable.from(x._1.map(i => (i, x._2))))
-      .subscribe(onBackgroundChange.onNext _)
+    .withLatest(onSelection)
+    .distinctUntilChanged(_._2)
+    .flatMap(x => Observable.from(x._1.map(i => (i, x._2))))
+    .subscribe(onBackgroundChange.onNext _)
 
     //Changes on the color picker are pushed to the model
     Observable[Color](o => {
@@ -172,48 +172,50 @@ class ViewManager extends jfxf.Initializable {
         o.onNext(fontColorPicker.value.value)
       }
     })
-      .withLatest(onSelection)
-      .distinctUntilChanged(_._2)
-      .flatMap(x => Observable.from(x._1.map(i => (i, x._2))))
-      .subscribe(onColorChange.onNext _)
+    .withLatest(onSelection)
+    .distinctUntilChanged(_._2)
+    .flatMap(x => Observable.from(x._1.map(i => (i, x._2))))
+    .subscribe(onColorChange.onNext _)
 
     // Saves are handled here
     Observable[String](o => {
       menuSave.onAction = handle {
         o.onNext("temp.csv")
       }
-    }).map(x => {
+    })
+    .map(x => {
       fileChooser.setTitle("Save destination")
       fileChooser
     })
-      .map(chooser => chooser.showSaveDialog(tableContainer.scene.window.getValue))
-      .filter(_ != null)
-      .subscribe(file => Filer.saveCSV(file, table.items.getValue))
+    .map(chooser => chooser.showSaveDialog(tableContainer.scene.window.getValue))
+    .filter(_ != null)
+    .subscribe(file => Filer.saveCSV(file, table.items.getValue))
 
     // Loads are handled here
     Observable[String](o => {
       menuLoad.onAction = handle {
         o.onNext("temp.csv")
       }
-    }).map(x => {
-      fileChooser.setTitle("Open file")
-      fileChooser
     })
-      .map(chooser => chooser.showOpenDialog(tableContainer.scene.window.getValue))
-      .filter(_ != null)
-      .map(file => Filer.loadCSV(file))
-      .subscribe(data => ??? /* DataManager.populateDataModel(data) */)
+    .map(x => {
+    fileChooser.setTitle("Open file")
+    fileChooser
+    })
+    .map(chooser => chooser.showOpenDialog(tableContainer.scene.window.getValue))
+    .filter(_ != null)
+    .map(file => Filer.loadCSV(file))
+    .subscribe(data => ??? /* DataManager.populateDataModel(data) */)
 
     // Emptying of cells is pushed to the model
     Observable[Unit](o =>
       menuDelete.onAction = handle {
         o.onNext(Unit)
-      })
-      .withLatest(onSelection)
-      .map({
+    })
+    .withLatest(onSelection)
+    .map({
       case (pos, _) => pos
     })
-      .subscribe(ps => ps foreach (p => onCellEmpty.onNext(p)))
+    .subscribe(ps => ps foreach (p => onCellEmpty.onNext(p)))
 
     // Copy-pasting is handled by this function
     // TODO:  Yeah, so putting it in a variable first works. But when I put it directly in the subscribe it doesn't?...
@@ -259,8 +261,8 @@ class ViewManager extends jfxf.Initializable {
         o.onNext(Paste)
       }
     })
-      .withLatest(onManyCellsSelected)
-      .subscribe(clipboardHandler)
+    .withLatest(onManyCellsSelected)
+    .subscribe(clipboardHandler)
 
     // Sorting of columns is pushed to the model
     Observable[Boolean](o => {
@@ -271,8 +273,8 @@ class ViewManager extends jfxf.Initializable {
         o.onNext(false)
       }
     })
-      .withLatest(onSingleCellSelected)
-      .subscribe(s => s match {
+    .withLatest(onSingleCellSelected)
+    .subscribe(s => s match {
       case (((c, r), _), asc) => onColumnSort.onNext((c, asc))
     })
   }
@@ -311,19 +313,6 @@ class ViewManager extends jfxf.Initializable {
     onDataChanged.subscribe(buildTableView _)
   }
 
-  /**
-   * Extension functions for Rx Observables
-   */
-  implicit class ExtendRx[T](ob: Observable[T]) {
-    def labelAlways[L](la: Observable[L]) =
-      ob.combineLatest(la)
-        .distinctUntilChanged(_._1)
-        .map(c => new {
-        val value = c._1
-        val label = c._2
-      })
-  }
-
   def changeEditorText(text: String) = formulaEditor.text = text
 
   def changeBackgroundColorPicker(color: Color) = backgroundColorPicker.value = color
@@ -335,11 +324,8 @@ class ViewManager extends jfxf.Initializable {
 object ViewManager {
 
   sealed trait ClipboardAction extends Serializable
-
   case object Cut extends ClipboardAction
-
   case object Copy extends ClipboardAction
-
   case object Paste extends ClipboardAction
 
 }
