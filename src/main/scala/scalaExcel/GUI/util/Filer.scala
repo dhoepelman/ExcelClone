@@ -7,7 +7,9 @@ import scala.collection.immutable
 import scalaExcel.GUI.data.{LabeledDataTable, DataCell}
 import LabeledDataTable.DataTable
 import scalaExcel.GUI.data.DataCell
+import scalaExcel.formula.{VDouble, VBool, VString, Value}
 import scalaExcel.model.Sheet
+import scalaExcel.formula
 
 /**
  * Created by Chris on 10-11-2014.
@@ -24,6 +26,16 @@ object Filer {
   def unescape(s: String): String =
     s.replace("\"\"", "\"")
 
+  /** A very basis formatter */
+  def dummyFormat(value: Value) : String = {
+    value match {
+      case VDouble(v) => v.toString
+      case VString(v) => v.toString
+      case VBool(v) => v.toString
+      case _ => ""
+    }
+  }
+
   /** Save sheet as CSV file */
   def saveCSV(file: java.io.File, sheet: Sheet) = {
     printToFile(file)(_ print sheetToCSV(sheet))
@@ -33,7 +45,7 @@ object Filer {
   def sheetToCSV(sheet: Sheet) : String = {
     (0 to sheet.rows).map(row => {
       (0 to sheet.cols).map(column => sheet.valueAt((column, row))).map({
-        case Some(v) => escape(v.toString)
+        case Some(v) => escape(dummyFormat(v)) //TODO hook to proper formatter
         case _ => ""
       }).foldLeft("")((fold, v) => fold + "\"" + v + "\"" + ",")
     }).foldLeft("")((fold, row) => fold + row + "\n")
@@ -54,7 +66,7 @@ object Filer {
   def loadCSV(file: java.io.File) : Sheet = {
     val linesOfTokens = Source.fromFile(file).getLines()
       // http://stackoverflow.com/a/769713/661190
-      .map(line => line.split(""",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))""").map(_.stripPrefix("\"").stripSuffix("\"")).toArray)
+      .map(line => line.split(""",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))""").map(_.trim.stripPrefix("\"").stripSuffix("\"")).toArray)
       .toArray
     CSVToSheet(linesOfTokens)
   }
