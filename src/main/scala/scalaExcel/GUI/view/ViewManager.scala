@@ -180,7 +180,7 @@ class ViewManager extends jfxf.Initializable {
       .map(chooser => chooser.showOpenDialog(tableContainer.scene.window.getValue))
       .filter(_ != null)
       .map(file => Filer.loadCSV(file))
-      .subscribe(sheet => model.loadSheet(sheet))
+      .subscribe(values => model.clearAndSet(values))
 
     deleteStream = streamTable.withSelectedCellsOnly(Observable[Unit]( o =>
       menuDelete.onAction = handle {

@@ -1,5 +1,6 @@
 package scalaExcel.model
 
+import scalafx.beans.value
 import scalafx.scene.paint.Color
 import rx.lang.scala.subjects.BehaviorSubject
 import scalaExcel.model.Sorter.SheetSorter
@@ -64,8 +65,12 @@ class Model {
     sheetMutations.onNext(CutCell(from, to))
   }
 
-  def loadSheet(s: Sheet) : Unit = {
-    sheetMutations.onNext(SetSheet(s))
+  def clearAndSet(values: Traversable[((Int,Int),String)]): Unit = {
+    val sheet = values.foldLeft(new Sheet()){case (sheet, ((r, c), value)) =>
+      val (s, updates) = sheet.setCell((c, r), value)
+      s
+    }
+    sheetMutations.onNext(SetSheet(sheet))
   }
 
   def changeFormula(pos : CellPos, f: String) {

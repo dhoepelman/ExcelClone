@@ -45,18 +45,16 @@ object Filer {
   }
 
   /** Covert CSV string to Sheet */
-  def CSVToSheet(csv: Array[Array[String]]) : Sheet = {
-    val indexed = csv.zipWithIndex.flatMap{case (row, rowIndex) =>
-      row.zipWithIndex.map { case (value, colIndex) => ((rowIndex, colIndex), unescape(value)) }
-    }
-    indexed.foldLeft(new Sheet()){case (sheet, ((r, c), value)) =>
-      val (s, updates) = sheet.setCell((c, r), value)
-      s
+  def CSVToSheet(csv: Array[Array[String]]) : Traversable[((Int,Int),String)] = {
+    csv.zipWithIndex.flatMap{case (row, rowIndex) =>
+      row.zipWithIndex.map { case (value, colIndex) =>
+        ((rowIndex, colIndex), unescape(value))
+      }
     }
   }
 
   /** Get the contents of a csv file */
-  def loadCSV(file: java.io.File) : Sheet = {
+  def loadCSV(file: java.io.File) : Traversable[((Int,Int),String)] = {
     val linesOfTokens = Source.fromFile(file).getLines()
       // http://stackoverflow.com/a/769713/661190
       .map(line => line.split(""",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))""").map(_.trim.stripPrefix("\"").stripSuffix("\"")).toArray)
