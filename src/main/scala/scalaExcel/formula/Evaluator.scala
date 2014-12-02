@@ -218,7 +218,7 @@ object Evaluator {
     }
 
   def evalCallAverage(ctx: Ctx, args: List[Expr]) =
-    evalIn(ctx, BinOp(Div(), Call("SUM", args), Const(VDouble(args.length))))
+    evalIn(ctx, BinOp(Div(), Call("SUM", args), Call("COUNT", args)))
 
   def evalCallRows(args: List[Expr]) = args match {
     case List(Range(Cell(_, RowRef(r1, _)), Cell(_, RowRef(r2, _)))) => {
