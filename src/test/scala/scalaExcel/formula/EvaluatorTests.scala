@@ -116,7 +116,7 @@ object EvaluatorTests {
         (false,  "=2<1"),
         (false, "=1<1"),
         (true,  "=1<2"),
-        (false, "=1<\"5\""),
+        (true,  "=1<\"5\""),
         (true,  "=1<TRUE"),
         (true,  "=1<FALSE"),
         (false, "=TRUE<1"),
@@ -156,7 +156,7 @@ object EvaluatorTests {
         (false, "=2<=1"),
         (true,  "=1<=1"),
         (true,  "=1<=2"),
-        (false, "=1<=\"5\""),
+        (true,  "=1<=\"5\""),
         (true,  "=1<=TRUE"),
         (true,  "=1<=FALSE"),
         (false, "=TRUE<=1"),
@@ -320,6 +320,8 @@ object EvaluatorTests {
         (3, "=IF(FALSE,2,3)"),
         (2, "=IF(1,2,3)"),
         (3, "=IF(0,2,3)")
+      )) ++ lstCtx("IF with empty", List(
+        (2, "=IF(B2,1,2)", (_ => VEmpty))
       )) ++ lstErr("function IF", List(
         (InvalidValue, "=IF(\"A\")")
       )) ++ lst("function OR", List(
@@ -334,6 +336,9 @@ object EvaluatorTests {
         (true,  "=OR(0,0,0,1,0)"),
         (false, "=OR(0,0,0,0,0)"),
         (true,  "=OR(1,1,1,1,1)")
+      )) ++ lstCtx("OR with empty", List(
+        (false, "=OR(B1, 0)", (_ => VEmpty)),
+        (true, "=OR(B1, 1)", (_ => VEmpty))
       )) ++ lst("function AND", List(
         (true,  "=AND(TRUE, TRUE)"),
         (false, "=AND(FALSE, TRUE)"),
@@ -346,32 +351,50 @@ object EvaluatorTests {
         (false, "=AND(0,0,0,1,0)"),
         (false, "=AND(0,0,0,0,0)"),
         (true,  "=AND(1,1,1,1,1)")
+      )) ++ lstCtx("AND with empty", List(
+        (false, "=AND(B1, 1)", (_ => VEmpty))
       )) ++ lst("function NOT", List(
         (true,  "=NOT(FALSE)"),
         (false, "=NOT(TRUE)"),
         (true,  "=NOT(0)"),
         (false, "=NOT(1)")
+      )) ++ lstCtx("NOT with empty", List(
+        (true, "=NOT(B1)", (_ => VEmpty))
       )) ++ lst("function POWER", List(
         (16, "=POWER(2,4)")
       )) ++ lst("function UPPER", List(
         ("ABC", "=UPPER(\"abc\")"),
         ("ABC", "=UPPER(\"aBc\")"),
         ("ABC", "=UPPER(\"ABC\")"),
-        (1, "=UPPER(1)")
+        ("TRUE", "=UPPER(TRUE)"),
+        ("1", "=UPPER(1)")
+      )) ++ lstCtx("UPPER empty", List(
+        ("", "=UPPER(A1)", (_ => VEmpty))
       )) ++ lst("function LOWER", List(
         ("abc", "=LOWER(\"abc\")"),
         ("abc", "=LOWER(\"aBc\")"),
         ("abc", "=LOWER(\"ABC\")"),
-        (1, "=LOWER(1)")
+        ("true", "=LOWER(TRUE)"),
+        ("1", "=LOWER(1)")
+      )) ++ lstCtx("LOWER empty", List(
+        ("", "=LOWER(A1)", (_ => VEmpty))
       )) ++ lst("function LEN", List(
         (1, "=LEN(\"a\")"),
         (0, "=LEN(\"\")"),
-        (7, "=LEN(\"abc def\")")
+        (7, "=LEN(\"abc def\")"),
+        (4, "=LEN(TRUE)"),
+        (3, "=LEN(123)")
+      )) ++ lstCtx("LEN empty", List(
+        (0, "=LEN(A1)", (_ => VEmpty))
       )) ++ lst("function TRIM", List(
         ("", "=TRIM(\"\")"),
         ("abc", "=TRIM(\"abc\")"),
         ("abc", "=TRIM(\" abc \")"),
-        ("abc", "=TRIM(\"   abc   \")")
+        ("abc", "=TRIM(\"   abc   \")"),
+        ("TRUE", "=TRIM(TRUE)"),
+        ("123", "=TRIM(123)")
+      )) ++ lstCtx("TRIM empty", List(
+        ("", "=TRIM(A1)", (_ => VEmpty))
       )) ++ lst("grouping", List(
         (10, "=(1 + 4) * 2"),
         (5, "=(2+3)")

@@ -67,6 +67,14 @@ object Evaluator {
   def valueToVBool(v: Value) = v match {
     case b: VBool => b
     case VDouble(d) => doubleToVBool(d)
+    case VEmpty => VBool(false)
+    case x => x
+  }
+
+  def valueToVString(v: Value) = v match {
+    case VBool(b) => VString(boolToString(b))
+    case VDouble(d) => VString(doubleToString(d))
+    case VEmpty => VString("")
     case x => x
   }
 
@@ -137,7 +145,7 @@ object Evaluator {
     case LT()     => reduce2(ctx, boolLt, lhs, rhs)
     case GTE()    => reduce2(ctx, boolGte, lhs, rhs)
     case LTE()    => reduce2(ctx, boolLte, lhs, rhs)
-    case NEq()    => reduce2(ctx, boolNe, lhs, rhs)
+    case NEq()    => reduce2(ctx, boolNeq, lhs, rhs)
     case Concat() => reduce2(ctx, concat, lhs, rhs)
     case Plus()   => reduce2(ctx, applyToDoubles(_ + _), lhs, rhs)
     case Minus()  => reduce2(ctx, applyToDoubles(_ - _), lhs, rhs)
@@ -153,59 +161,25 @@ object Evaluator {
     case Percent() => applyToDouble(_ / 100)(eval(ctx, v))
   }
 
-  def concat(lhs: Value, rhs: Value): Value = (lhs, rhs) match {
-    case (v, VDouble(d)) => concat(v, VString(doubleToString(d)))
-    case (VDouble(d), v) => concat(VString(doubleToString(d)), v)
-    case (v, VBool(b))   => concat(v, VString(boolToString(b)))
-    case (VBool(b), v)   => concat(VString(boolToString(b)), v)
-    case (v, VEmpty)     => concat(v, VString(""))
-    case (VEmpty, v)     => concat(VString(""), v)
+  def concat(lhs: Value, rhs: Value): Value = (valueToVString(lhs), valueToVString(rhs)) match {
     case (VString(s1), VString(s2)) => VString(s1 + s2)
     case es => pickError(es, NA)
   }
 
-  private def emptiesToZeros(vv: ((Value, Value))) = vv match {
-    case (VEmpty, v) => (VDouble(0), v)
-    case (v, VEmpty) => (v, VDouble(0))
-    case _ => vv
+  private def emptyToZero(v: Value) = v match {
+    case VEmpty => VDouble(0)
+    case _ => v
   }
 
-  def boolEq(lhs: Value, rhs: Value) = emptiesToZeros((lhs, rhs)) match {
-    case (VBool(l), VBool(r))     => VBool(l == r)
-    case (VDouble(l), VDouble(r)) => VBool(l == r)
-    case (VString(l), VString(r)) => VBool(l == r)
-    case _ => VBool(false)
-  }
+  private def boolCmp[T](cmp: (Int => T))(lhs: Value, rhs: Value) =
+    cmp(emptyToZero(lhs).compare(emptyToZero(rhs)))
 
-  def boolGt(lhs: Value, rhs: Value) = emptiesToZeros((lhs, rhs)) match {
-    case (VBool(l), VBool(r))     => VBool(l > r)
-    case (VDouble(l), VDouble(r)) => VBool(l > r)
-    case (VString(l), VString(r)) => VBool(l > r)
-    case (VBool(l), VDouble(r))   => VBool(true)
-    case _ => VBool(false)
-  }
-
-  def boolLt(lhs: Value, rhs: Value) = emptiesToZeros((lhs, rhs)) match {
-    case (VBool(l), VBool(r))     => VBool(l < r)
-    case (VDouble(l), VDouble(r)) => VBool(l < r)
-    case (VString(l), VString(r)) => VBool(l < r)
-    case (VDouble(l), VBool(r))   => VBool(true)
-    case _ => VBool(false)
-  }
-
-  def boolGte(lhs: Value, rhs: Value) = boolGt(lhs, rhs) match {
-    case VBool(true) => VBool(true)
-    case _ => boolEq(lhs, rhs)
-  }
-
-  def boolLte(lhs: Value, rhs: Value) = boolLt(lhs, rhs) match {
-    case VBool(true) => VBool(true)
-    case _ => boolEq(lhs, rhs)
-  }
-
-  def boolNe(lhs: Value, rhs: Value) = boolEq(lhs, rhs) match {
-    case VBool(b) => VBool(!b)
-  }
+  def boolEq  = boolCmp(c => VBool(c == 0)) _
+  def boolNeq = boolCmp(c => VBool(c != 0)) _
+  def boolGt  = boolCmp(c => VBool(c > 0)) _
+  def boolGte = boolCmp(c => VBool(c >= 0)) _
+  def boolLt  = boolCmp(c => VBool(c < 0)) _
+  def boolLte = boolCmp(c => VBool(c <= 0)) _
 
   def doubleDiv(lhs: Value, rhs: Value) = applyToDoubles(_ / _)(lhs, rhs) match {
     case VDouble(d) =>  if (d.isInfinity) VErr(DivBy0)
@@ -311,7 +285,7 @@ object Evaluator {
 
   def evalWithString(f: String => Value)(ctx: Ctx, args: List[Expr]) = {
     args match {
-      case List(value) => evalIn(ctx, value) match {
+      case List(value) => valueToVString(evalIn(ctx, value)) match {
         case VString(str) => f(str)
         case x => x
       }
