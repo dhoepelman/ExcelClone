@@ -35,6 +35,13 @@ class Model {
   def updateStyle(sheet: Sheet, pos : CellPos, f: Styles => Styles) =
     sheet.setCellStyle(pos, f(sheet.styles.getOrElse(pos, Styles.DEFAULT)))
 
+  private def setSheet(values: Traversable[((Int,Int),String)]): Sheet = {
+    values.foldLeft(new Sheet()) { case (sheet, ((r, c), value)) =>
+      val (s, updates) = sheet.setCell((c, r), value)
+      s
+    }
+  }
+
   // this combines the initial Sheet with all input mutations from the outside
   // world
   val sheet = sheetMutations.scan(new Sheet())((sheet, action) => action match {
@@ -46,7 +53,7 @@ class Model {
     case CutCell(from, to) => updateSheet(sheet.cutCell(from, to))
     case SetColor(pos, c) => updateStyle(sheet, pos, s => s.setColor(c))
     case SetBackground(pos, c) => updateStyle(sheet, pos, s => s.setBackground(c))
-    case SetSheet(s) => s
+    case SetSheet(values) => setSheet(values)
     case SortColumn(x, asc) => sheet.sort(x, asc)
     case Refresh => sheet
   })
@@ -66,11 +73,7 @@ class Model {
   }
 
   def clearAndSet(values: Traversable[((Int,Int),String)]): Unit = {
-    val sheet = values.foldLeft(new Sheet()){case (sheet, ((r, c), value)) =>
-      val (s, updates) = sheet.setCell((c, r), value)
-      s
-    }
-    sheetMutations.onNext(SetSheet(sheet))
+    sheetMutations.onNext(SetSheet(values))
   }
 
   def changeFormula(pos : CellPos, f: String) {
