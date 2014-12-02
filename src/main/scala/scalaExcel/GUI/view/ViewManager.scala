@@ -11,9 +11,8 @@ import scala.language.reflectiveCalls
 
 import scalaExcel.GUI.data.LabeledDataTable
 import scalaExcel.GUI.data.LabeledDataTable.DataRow
-import scalaExcel.GUI.util.Filer
 import scalaExcel.GUI.view.ViewManager._
-import scalaExcel.model.{Sheet, Model, Styles}
+import scalaExcel.model.{Filer, Sheet, Model, Styles}
 import scalaExcel.rx.operators.WithLatest._
 
 import scalafx.Includes._

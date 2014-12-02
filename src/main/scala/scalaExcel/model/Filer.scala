@@ -1,15 +1,7 @@
-package scalaExcel.GUI.util
-
-import java.io.File
+package scalaExcel.model
 
 import scala.io._
-import scala.collection.immutable
-import scalaExcel.GUI.data.{LabeledDataTable, DataCell}
-import LabeledDataTable.DataTable
-import scalaExcel.GUI.data.DataCell
-import scalaExcel.formula.{VDouble, VBool, VString, Value}
-import scalaExcel.model.Sheet
-import scalaExcel.formula
+import scalaExcel.formula.{VBool, VDouble, VString, Value}
 
 /**
  * Created by Chris on 10-11-2014.
