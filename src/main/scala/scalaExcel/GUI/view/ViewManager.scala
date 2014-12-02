@@ -44,37 +44,46 @@ class ViewManager extends jfxf.Initializable {
   private var backgroundColorPicker: jfxsc.ColorPicker = _
 
   @jfxf.FXML private var fontColorPickerDelegate: jfxsc.ColorPicker = _
-  private var fontColorPicker: jfxsc.ColorPicker = _
+  private var fontColorPicker: ColorPicker = _
 
   @jfxf.FXML private var menuLoadDelegate: jfxsc.MenuItem = _
-  private var menuLoad: jfxsc.MenuItem = _
+  private var menuLoad: MenuItem = _
 
   @jfxf.FXML private var menuSaveDelegate: jfxsc.MenuItem = _
-  private var menuSave: jfxsc.MenuItem = _
+  private var menuSave: MenuItem = _
 
   @jfxf.FXML private var menuCutDelegate: jfxsc.MenuItem = _
-  private var menuCut: jfxsc.MenuItem = _
+  private var menuCut: MenuItem = _
   @jfxf.FXML private var menuCopyDelegate: jfxsc.MenuItem = _
-  private var menuCopy: jfxsc.MenuItem = _
+  private var menuCopy: MenuItem = _
   @jfxf.FXML private var menuPasteDelegate: jfxsc.MenuItem = _
-  private var menuPaste: jfxsc.MenuItem = _
+  private var menuPaste: MenuItem = _
 
   @jfxf.FXML private var menuDeleteDelegate: jfxsc.MenuItem = _
-  private var menuDelete: jfxsc.MenuItem = _
+  private var menuDelete: MenuItem = _
 
   @jfxf.FXML private var sortUpDelegate: jfxsc.Button = _
-  private var sortUp: jfxsc.Button = _
+  private var sortUp: Button = _
   @jfxf.FXML private var sortDownDelegate: jfxsc.Button = _
-  private var sortDown: jfxsc.Button = _
+  private var sortDown: Button = _
 
   @jfxf.FXML
   private var testButtonDelegate: jfxsc.Button = _
   private var testButton: Button = _
 
-  @jfxf.FXML
-  private def makeResizable(event: jfxe.ActionEvent) {
-    //make region resizable
-  }
+  @jfxf.FXML private var newColumnDelegate: jfxsc.Button = _
+  private var newColumnButton: Button = _
+  @jfxf.FXML private var newRowDelegate: jfxsc.Button = _
+  private var newRowButton: Button = _
+  @jfxf.FXML private var scrollLeftDelegate: jfxsc.Button = _
+  private var scrollLeftButton: Button = _
+  @jfxf.FXML private var scrollRightDelegate: jfxsc.Button = _
+  private var scrollRightButton: Button = _
+
+  @jfxf.FXML private var scrollUpDelegate: jfxsc.Button = _
+  private var scrollUpButton: Button = _
+  @jfxf.FXML private var scrollDownDelegate: jfxsc.Button = _
+  private var scrollDownButton: Button = _
 
   val fileChooser = new javafx.stage.FileChooser
   fileChooser.getExtensionFilters.add(new ExtensionFilter("Comma separated values", "*.csv"))
@@ -103,6 +112,8 @@ class ViewManager extends jfxf.Initializable {
     action match {
       case SlideWindowBy(offsets) => table.slideWindowBy(offsets)
       case SlideWindowTo(bounds) => table.slideWindowTo(bounds)
+      case AddNewColumn(index) => table.addNewColumn(index)
+      case AddNewRow(index) => table.addNewRow(index)
       case UpdateContents(newSheet) => table.updateContents(newSheet)
       case UpdateWindow(newWindow) => table.updateWindow(newWindow)
       case UpdateColumnOrder(permutations) => table.updateColumnOrder(permutations)
@@ -143,6 +154,26 @@ class ViewManager extends jfxf.Initializable {
    * @param labeledTable  the latest LabeledDataTable
    */
   def buildTableView(labeledTable: LabeledDataTable): Unit = {
+
+    if(!labeledTable.moreLeft)
+      scrollLeftButton.disable = true
+    else
+      scrollLeftButton.disable = false
+
+    if(!labeledTable.moreRight)
+      scrollRightButton.disable = true
+    else
+      scrollRightButton.disable = false
+
+    if(!labeledTable.moreUp)
+      scrollUpButton.disable = true
+    else
+      scrollUpButton.disable = false
+
+    if(!labeledTable.moreDown)
+      scrollDownButton.disable = true
+    else
+      scrollDownButton.disable = false
 
     if (!labeledTable.rebuild) {
       println("Changing table...")
@@ -345,6 +376,13 @@ class ViewManager extends jfxf.Initializable {
     menuPaste = new MenuItem(menuPasteDelegate)
     menuDelete = new MenuItem(menuDeleteDelegate)
 
+    newColumnButton = new Button(newColumnDelegate)
+    newRowButton = new Button(newRowDelegate)
+    scrollLeftButton = new Button(scrollLeftDelegate)
+    scrollRightButton = new Button(scrollRightDelegate)
+    scrollUpButton = new Button(scrollUpDelegate)
+    scrollDownButton = new Button(scrollDownDelegate)
+
     //
     // Initialization of GUI streams
     //
@@ -356,6 +394,36 @@ class ViewManager extends jfxf.Initializable {
 
     // start rendering the visible table
     tableMutations.onNext(new RefreshTable())
+
+    newColumnButton.onAction = handle {
+      // add new column at the end (position -1)
+      tableMutations.onNext(new AddNewColumn(-1))
+    }
+
+    newRowButton.onAction = handle {
+      // add new row at the end (position -1)
+      tableMutations.onNext(new AddNewRow(-1))
+    }
+
+    scrollLeftButton.onAction = handle {
+      // add new row at the end (position -1)
+      tableMutations.onNext(new SlideWindowBy((-1, -1, 0, 0)))
+    }
+
+    scrollRightButton.onAction = handle {
+      // add new row at the end (position -1)
+      tableMutations.onNext(new SlideWindowBy((1, 1, 0, 0)))
+    }
+
+    scrollUpButton.onAction = handle {
+      // add new row at the end (position -1)
+      tableMutations.onNext(new SlideWindowBy((0, 0, -1, -1)))
+    }
+
+    scrollDownButton.onAction = handle {
+      // add new row at the end (position -1)
+      tableMutations.onNext(new SlideWindowBy((0, 0, 1, 1)))
+    }
   }
 
   def changeEditorText(text: String) = formulaEditor.text = text

@@ -48,14 +48,15 @@ class DataCellColumn(onCellEdit: ((CellPos, String)) => Unit,
 
 }
 
-class NumberedColumn extends TableColumn[DataRow, DataCell] {
+class NumberedColumn(indexConverter: (Int) => Int) extends TableColumn[DataRow, DataCell] {
   text = DefaultProperties.NUMBERED_COLUMN_HEADER
   id = "-1"
   cellValueFactory = _ => ObjectProperty(DataCell.newEmpty())
   cellFactory = _ => new TableCell[DataRow, DataCell] {
     item.onChange {
       (_, _, _) =>
-        text = (tableRow.value.getIndex + 1).toString
+        // row index must be converted to sheet row index
+        text = (indexConverter(tableRow.value.getIndex) + 1).toString
         style = "-fx-alignment: CENTER;"
     }
   }
@@ -72,7 +73,10 @@ class StreamingTable(labeledTable: LabeledDataTable) {
     editable = true
 
     // the first column is special
-    columns += new NumberedColumn
+    columns += new NumberedColumn(
+      {case index =>
+        //convert table row index to sheet row index
+        labeledTable.toSheetIndex((0, index))._2})
     // add the rest of the columns in the order given by the LabeledDataTable
     columns ++= buildColumns(labeledTable.headers,
       labeledTable.headerWidths)
@@ -132,11 +136,15 @@ class StreamingTable(labeledTable: LabeledDataTable) {
       .zip(widths)
       .foldLeft(new TableColumns())((cols, data) => {
       cols += new DataCellColumn(
-        onCellEdit.onNext,
-        onColResize.onNext,
-        cols.length,
-        data._1,
-        data._2)
+      {case (pos, formula) =>
+          // convert table index to sheet index
+          onCellEdit.onNext((labeledTable.toSheetIndex(pos), formula))},
+      {case (index, formula) =>
+          // convert table column index to sheet column index
+          onColResize.onNext((labeledTable.toSheetIndex((index, 0))._1, formula))},
+      cols.length,
+      data._1,
+      data._2)
     })
   }
 }

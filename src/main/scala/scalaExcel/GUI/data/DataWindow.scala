@@ -3,7 +3,7 @@ package scalaExcel.GUI.data
 import scalaExcel.CellPos
 import scalaExcel.GUI.data.DataWindow._
 
-class DataWindow(val maxBounds: Bounds,
+class DataWindow(val dataSize: Size,
                  val visibleBounds: Bounds) {
 
   def addToVisibleBound(f: (Bounds) => Int, add: (Int, Int) => Int)(x: Int) = add(x, f(visibleBounds))
@@ -28,24 +28,52 @@ class DataWindow(val maxBounds: Bounds,
   }
 
   def slideBy(offsets: Offsets) = {
-    val bounds = (visibleBounds._1 + offsets._1,
+    new DataWindow(dataSize, addOffsetsToBounds(offsets, visibleBounds))
+  }
+
+  def addOffsetsToBounds(offsets: Offsets, bounds: Bounds) = {
+    (visibleBounds._1 + offsets._1,
       visibleBounds._2 + offsets._2,
       visibleBounds._3 + offsets._3,
       visibleBounds._4 + offsets._4)
-    new DataWindow(maxBounds, bounds)
   }
 
   def slideTo(bounds: (Int, Int, Int, Int)) = {
-    new DataWindow(maxBounds, bounds)
+    new DataWindow(dataSize, bounds)
   }
 
   def columnCount = visibleBounds._2 - visibleBounds._1
 
   def rowCount = visibleBounds._4 - visibleBounds._3
 
+  def addNewRow() = {
+    // add one more column to maximum bounds
+    val newSize = (dataSize._1, dataSize._2 + 1)
+    // if the column should be in view, slide the visibleBounds over it
+    if(visibleBounds._4 == dataSize._2)
+      new DataWindow(newSize, addOffsetsToBounds((0, 0, 1, 1), visibleBounds))
+    else
+      new DataWindow(newSize, visibleBounds)
+  }
+
+  def addNewColumn() = {
+    // add one more row to maximum bounds
+    val newSize = (dataSize._1 + 1, dataSize._2)
+    // if the column should be in view, slide the visibleBounds over it
+    if(visibleBounds._2 == dataSize._1)
+      new DataWindow(newSize, addOffsetsToBounds((1, 1, 0, 0), visibleBounds))
+    else
+      new DataWindow(newSize, visibleBounds)
+  }
+
+  def expandTo(size: Size) =
+    new DataWindow((Math.max(size._1, dataSize._1), Math.max(size._2, dataSize._2)), visibleBounds)
+
 }
 
 object DataWindow {
+  type Cols = Int
+  type Rows = Int
   type MinCol = Int
   type MinColOffset = Int
   type MaxCol = Int
@@ -57,4 +85,5 @@ object DataWindow {
 
   type Bounds = (MinCol, MaxCol, MinRow, MaxRow)
   type Offsets = (MinColOffset, MaxColOffset, MinRowOffset, MaxRowOffset)
+  type Size = (Cols, Rows)
 }
