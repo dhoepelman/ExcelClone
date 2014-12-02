@@ -8,11 +8,7 @@ import java.io.IOException
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.scene.Scene
 import scalaExcel.GUI.view.ViewManager
-import scalaExcel.GUI.data._
 import scalaExcel.model.Model
-import scalaExcel.GUI.data.ChangeFormula
-import scalaExcel.GUI.data.ChangeBackground
-import scalaExcel.GUI.data.ChangeColor
 
 object RunGUI extends JFXApp {
 
@@ -25,10 +21,18 @@ object RunGUI extends JFXApp {
   val loader = new jfxf.FXMLLoader(resource)
   val root = loader.load[jfxs.Parent]
 
+  /**
+   * The data model
+   */
   val model = new Model()
 
+  /**
+   * The view
+   */
   val vm = loader.getController[ViewManager]
-  val dm = new DataManager(model)
+
+  // notify ViewManager of modifications in the model
+  model.sheet.subscribe(vm.dataChanged _)
 
   // Putting events from the GUI into the model
   // This should be the only place where that ever happens
@@ -67,12 +71,6 @@ object RunGUI extends JFXApp {
   vm.onCellCut.subscribe { exchange =>
     model.cutCell(exchange._1, exchange._2)
   }
-
-  // re-render table after data/resize/scroll/sort changes
-  dm.labeledDataTable.subscribe(table => vm.onDataChanged.onNext(table))
-
-  // start streaming
-  dm.windowMutations.onNext(new RefreshWindow())
 
   stage = new PrimaryStage() {
     title = "Scala Excel"

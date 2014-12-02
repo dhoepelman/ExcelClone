@@ -10,6 +10,11 @@ object WithLatest {
   implicit class RxWithLatest[B](slow: Observable[B]) {
     def withLatest[A](fast : Observable[A]): Observable[(A,B)] =
       fast.map({a => slow.publish.refCount.map({b => (a,b)})}).switch
+
+    def distinctWithAllLatest[A](fast : Observable[List[A]]): Observable[(A,B)] =
+      withLatest(fast)
+        .distinctUntilChanged(_._2)
+        .flatMap(x => Observable.from(x._1.map(i => (i, x._2))))
   }
 
 }

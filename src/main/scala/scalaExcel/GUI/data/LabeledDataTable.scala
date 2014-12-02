@@ -7,7 +7,17 @@ import scalafx.beans.property.ObjectProperty
 
 import scalaExcel.model.{Sheet, Styles}
 import scalaExcel.util.DefaultProperties
+import scalaExcel.GUI.data.DataWindow.{Bounds, Offsets}
 
+/**
+ * Wrapper on the data model sheet
+ *
+ * It contains all sheet data, but also information on the current window,
+ * the column headers and widths, the current sort configuration, etc.
+ *
+ * The 'rebuild' property shows if the table has changed its structure
+ * and needs to be rebuilt, or only its contents need updating
+ */
 class LabeledDataTable(
                         _dataWindow: DataWindow = LabeledDataTable.defaultDataWindow,
                         _allHeaderWidths: List[Double] = LabeledDataTable.defaultHeaderWidths,
@@ -24,6 +34,22 @@ class LabeledDataTable(
 
   def toSheetIndex = _dataWindow.windowToAbsolute _
   def toTableIndex = _dataWindow.absoluteToWindow _
+
+  def slideWindowBy(offsets: Offsets) =
+    new LabeledDataTable(_dataWindow.slideBy(offsets),
+      _allHeaderWidths,
+      _sheet,
+      _sortColumn,
+      sortAscending,
+      rebuild = false)
+
+  def slideWindowTo(bounds: Bounds) =
+    new LabeledDataTable(_dataWindow.slideTo(bounds),
+      _allHeaderWidths,
+      _sheet,
+      _sortColumn,
+      sortAscending,
+      rebuild = false)
 
   def dataCellFromSheet(index: CellPos) = {
     // function that builds a DataCell based on a window index
@@ -91,6 +117,9 @@ class LabeledDataTable(
 
 }
 
+/**
+ * Object with general operations and properties of the LabeledDataTable class
+ */
 object LabeledDataTable {
   type DataRow = ObservableBuffer[ObjectProperty[DataCell]]
   type DataTable = ObservableBuffer[DataRow]
@@ -115,10 +144,9 @@ object LabeledDataTable {
     List.fill(defaultDataWindow.columnCount)(DefaultProperties.COLUMN_WIDTH.toDouble)
 
   def dataWithIndex(data: List[List[String]]): List[(Int, Int, String)] =
-    data.zipWithIndex.map({
+    data.zipWithIndex.flatMap({
       case (row, i) => row.zipWithIndex.map({
         case (expression, j) => (i, j, expression)
       })
-    }).flatten
-
+    })
 }

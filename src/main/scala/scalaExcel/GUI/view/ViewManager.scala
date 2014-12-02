@@ -9,7 +9,7 @@ import rx.lang.scala._
 
 import scala.language.reflectiveCalls
 
-import scalaExcel.GUI.data.{DataCell, LabeledDataTable}
+import scalaExcel.GUI.data._
 import scalaExcel.GUI.data.LabeledDataTable.DataRow
 import scalaExcel.GUI.util.Filer
 import scalaExcel.GUI.view.ViewManager._
@@ -22,6 +22,13 @@ import scalafx.scene.layout.AnchorPane
 import scalafx.scene.paint.Color
 
 import scalaExcel.CellPos
+import scalaExcel.GUI.data.SlideWindowTo
+import scalaExcel.GUI.data.ResizeColumn
+import scalaExcel.GUI.data.UpdateColumnOrder
+import scalaExcel.GUI.data.UpdateWindow
+import scalaExcel.GUI.data.UpdateContents
+import scalaExcel.GUI.data.SlideWindowBy
+import scalaExcel.model.Sheet
 
 class ViewManager extends jfxf.Initializable {
 
@@ -82,26 +89,59 @@ class ViewManager extends jfxf.Initializable {
   val onCellEmpty = Subject[CellPos]()
   val onCellCut = Subject[(CellPos, CellPos)]()
   val onCellCopy = Subject[(CellPos, CellPos)]()
-  // global selection stream
+
+
+  /**
+   * Rx stream of changes to the visible table
+   */
+  val tableMutations = Subject[TableMutations]()
+
+  /**
+   * Rx stream of wrappers on the data model sheet
+   */
+  val labeledDataTable = tableMutations.scan(new LabeledDataTable(rebuild = true))((table, action) =>
+    action match {
+      case SlideWindowBy(offsets) => table.slideWindowBy(offsets)
+      case SlideWindowTo(bounds) => table.slideWindowTo(bounds)
+      case UpdateContents(newSheet) => table.updateContents(newSheet)
+      case UpdateWindow(newWindow) => table.updateWindow(newWindow)
+      case UpdateColumnOrder(permutations) => table.updateColumnOrder(permutations)
+      case ResizeColumn(columnIndex, width) => table.resizeColumn(columnIndex, width)
+      case RefreshTable() => table
+    })
+
+  /**
+   * Global selection stream
+   */
   val onSelection = Subject[List[CellPos]]()
-  // stream with cell data packaged as a LabeledDataTable
-  val onDataChanged = Subject[LabeledDataTable]()
-  // stream with the first selected cell data
+
+  /**
+   * Stream with the first selected cell data
+   * type : Observable[(CellPos, DataCell)]
+   */
   val onSingleCellSelected = onSelection
     .filter(_.size == 1)
     .map(_.head)
-    .combineLatest(onDataChanged)
+    .combineLatest(labeledDataTable)
     .map({
-      case (pos, labeledTable) => (pos, labeledTable.dataCellFromSheet(pos))
-    })
-  //stream with all selected cell data
-  val onManyCellsSelected = onSelection
-    .combineLatest(onDataChanged)
-    .map({
-      case (posList, labeledTable) =>
-        posList.map(pos => (pos, labeledTable.dataCellFromSheet(pos)))
-    })
+    case (pos, labeledTable) => (pos, labeledTable.dataCellFromSheet(pos))
+  })
 
+  /**
+   * Stream with all selected cell data
+   * type: Observable[List[(CellPos, DataCell)]]
+   */
+  val onManyCellsSelected = onSelection
+    .combineLatest(labeledDataTable)
+    .map({
+    case (posList, labeledTable) =>
+      posList.map(pos => (pos, labeledTable.dataCellFromSheet(pos)))
+  })
+
+  /**
+   * Builds the visible table or only updates its contents
+   * @param labeledTable  the latest LabeledDataTable
+   */
   def buildTableView(labeledTable: LabeledDataTable): Unit = {
 
     if (!labeledTable.rebuild) {
@@ -126,6 +166,9 @@ class ViewManager extends jfxf.Initializable {
     streamTable.onCellEdit.subscribe(onCellEdit.onNext _)
   }
 
+  /**
+   * Initializes all GUI streams
+   */
   def initializeStreams(): Unit = {
 
     // Selecting a single cell updates the formula editor
@@ -142,17 +185,13 @@ class ViewManager extends jfxf.Initializable {
         changeFontColorPicker(s.color)
       })
 
-    // Changes on formula editor are pushed to the selected cell
+    // Changes on formula editor are pushed to the selected cells
     Observable[String](o => {
       formulaEditor.onAction = handle {
         o.onNext(formulaEditor.getText)
       }
     })
-    .withLatest(onSingleCellSelected)
-    .distinctUntilChanged(_._2)
-    .map({
-      case ((pos, _), formula) => (pos, formula)
-    })
+    .distinctWithAllLatest(onSelection)
     .subscribe(onCellEdit.onNext _)
 
     // Changes on the background picker are pushed to the model
@@ -161,9 +200,7 @@ class ViewManager extends jfxf.Initializable {
         o.onNext(backgroundColorPicker.value.value)
       }
     })
-    .withLatest(onSelection)
-    .distinctUntilChanged(_._2)
-    .flatMap(x => Observable.from(x._1.map(i => (i, x._2))))
+    .distinctWithAllLatest(onSelection)
     .subscribe(onBackgroundChange.onNext _)
 
     //Changes on the color picker are pushed to the model
@@ -172,9 +209,7 @@ class ViewManager extends jfxf.Initializable {
         o.onNext(fontColorPicker.value.value)
       }
     })
-    .withLatest(onSelection)
-    .distinctUntilChanged(_._2)
-    .flatMap(x => Observable.from(x._1.map(i => (i, x._2))))
+    .distinctWithAllLatest(onSelection)
     .subscribe(onColorChange.onNext _)
 
     // Saves are handled here
@@ -211,11 +246,8 @@ class ViewManager extends jfxf.Initializable {
       menuDelete.onAction = handle {
         o.onNext(Unit)
     })
-    .withLatest(onSelection)
-    .map({
-      case (pos, _) => pos
-    })
-    .subscribe(ps => ps foreach (p => onCellEmpty.onNext(p)))
+    .distinctWithAllLatest(onSelection)
+    .subscribe(s => onCellEmpty.onNext(s._1))
 
     // Copy-pasting is handled by this function
     // TODO:  Yeah, so putting it in a variable first works. But when I put it directly in the subscribe it doesn't?...
@@ -281,6 +313,16 @@ class ViewManager extends jfxf.Initializable {
 
   val copyPasteFormat = new DataFormat("x-excelClone/cutcopy")
 
+  /**
+   * To be called when the data model contents have changed
+   * @param sheet the new data model sheet
+   */
+  def dataChanged(sheet: Sheet) =
+    tableMutations.onNext(new UpdateContents(sheet))
+
+  /**
+   * Called on initialization of the FXML controller
+   */
   def initialize(url: URL, rb: java.util.ResourceBundle) {
 
     println("ViewManager initializing...")
@@ -310,7 +352,10 @@ class ViewManager extends jfxf.Initializable {
     initializeStreams()
 
     // subscribe table to data changes
-    onDataChanged.subscribe(buildTableView _)
+    labeledDataTable.subscribe(buildTableView _)
+
+    // start rendering the visible table
+    tableMutations.onNext(new RefreshTable())
   }
 
   def changeEditorText(text: String) = formulaEditor.text = text

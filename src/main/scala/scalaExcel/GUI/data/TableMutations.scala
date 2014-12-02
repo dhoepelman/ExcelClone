@@ -1,12 +1,14 @@
 package scalaExcel.GUI.data
 
-import scalaExcel.CellPos
-import scalaExcel.model.{Sheet, Styles}
-import scalaExcel.formula.Value
+import scalaExcel.model.Sheet
 
 abstract class TableMutations
 
 case class RefreshTable() extends TableMutations
+case class AddNewColumn(position: Int) extends TableMutations
+case class AddNewRow() extends TableMutations
+case class SlideWindowBy(offsets: (Int, Int, Int, Int)) extends TableMutations
+case class SlideWindowTo(bounds: (Int, Int, Int, Int)) extends TableMutations
 case class UpdateColumnOrder(permutations: Map[Int, Int]) extends TableMutations
 case class UpdateContents(sheet: Sheet) extends TableMutations
 case class UpdateWindow(dataWindow: DataWindow) extends TableMutations
