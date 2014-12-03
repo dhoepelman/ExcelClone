@@ -5,6 +5,7 @@ import java.io.File
 import scalaExcel.formula.{VBool, VDouble, VString, Value}
 
 
+
 /**
  * Created by Chris on 10-11-2014.
  *
@@ -14,14 +15,14 @@ object Filer {
 
   /** Make Filer load functionality accessible directly on the model */
   implicit class ModelExtension(model: Model) {
-    def loadFrom(file: java.io.File): Unit = {
+    def loadFrom(file: File): Unit = {
       model.clearAndSet(Filer.load(file))
     }
   }
 
   /** Make Filer save functionality accessible directly on the sheet */
   implicit class SheetExtension(sheet: Sheet) {
-    def saveTo(file: java.io.File): Unit = {
+    def saveTo(file: File): Unit = {
       Filer.save(file, sheet)
     }
   }
@@ -29,7 +30,7 @@ object Filer {
 
   /** Saves the sheet to the file.
     * File format is inferred by the file extension */
-  def save(file: java.io.File, sheet: Sheet): Unit = {
+  def save(file: File, sheet: Sheet): Unit = {
     fileExtension(file.getName).toLowerCase match {
       case "csv" => saveCSV(file, sheet)
       case "scalaexcel" => saveHomebrew(file, sheet)
@@ -38,7 +39,7 @@ object Filer {
 
   /** Load from file
     * File format is inferred by the file extension */
-  def load(file: java.io.File) = {
+  def load(file: File) = {
     fileExtension(file.getName).toLowerCase match {
       case "csv" => loadCSV(file)
       case "scalaexcel" => loadHomebrew(file)
@@ -51,9 +52,9 @@ object Filer {
   }
 
 
-  def saveHomebrew(file: java.io.File, sheet: Sheet): Unit = ???
+  def saveHomebrew(file: File, sheet: Sheet): Unit = ???
 
-  def loadHomebrew(file: java.io.File) = ???
+  def loadHomebrew(file: File) = ???
 
 
 
@@ -77,7 +78,7 @@ object Filer {
   }
 
   /** Save sheet as CSV file */
-  def saveCSV(file: java.io.File, sheet: Sheet) = {
+  def saveCSV(file: File, sheet: Sheet) = {
     printToFile(file)(_ print sheetToCSV(sheet))
   }
 
@@ -101,7 +102,7 @@ object Filer {
   }
 
   /** Get the contents of a csv file */
-  def loadCSV(file: java.io.File): Traversable[((Int, Int), String)] = {
+  def loadCSV(file: File): Traversable[((Int, Int), String)] = {
     val linesOfTokens = Source.fromFile(file).getLines()
       // http://stackoverflow.com/a/769713/661190
       .map(line => line.split( """,(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))""").map(_.trim.stripPrefix("\"").stripSuffix("\"")).toArray)
@@ -112,7 +113,7 @@ object Filer {
 
 
   /** Generic printer to file */
-  private def printToFile(f: java.io.File)(op: java.io.PrintWriter => Unit) = {
+  private def printToFile(f: File)(op: java.io.PrintWriter => Unit) = {
     val p = new java.io.PrintWriter(f)
     try {
       op(p)
