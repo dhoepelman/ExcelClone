@@ -24,12 +24,7 @@ class DataWindow(val dataSize: Size,
         index._2 >= visibleBounds._3 && index._2 < visibleBounds._4
 
   def slideBy(offsets: Offsets) = {
-    val newBounds = addOffsetsToBounds(offsets, visibleBounds)
-    new DataWindow(dataSize,
-      (Math.max(0, newBounds._1),
-        Math.max(0, newBounds._2),
-        Math.max(0, newBounds._3),
-        Math.max(0, newBounds._4)))
+    new DataWindow(dataSize, addOffsetsToBounds(offsets, visibleBounds))
   }
 
   def addOffsetsToBounds(offsets: Offsets, bounds: Bounds) = {

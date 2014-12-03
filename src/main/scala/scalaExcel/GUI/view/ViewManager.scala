@@ -181,14 +181,8 @@ class ViewManager extends jfxf.Initializable {
       val newValY = verticalScroll.value.value + percentY * verticalScroll.max.value
 
       // apply change
-      horizontalScroll.value =
-        if (newValX < 0) 0
-        else if (newValX > horizontalScroll.max.value) horizontalScroll.max.value
-        else newValX
-      verticalScroll.value =
-        if (newValY < 0) 0
-        else if (newValY > verticalScroll.max.value) verticalScroll.max.value
-        else newValY
+      horizontalScroll.value = Math.max(0, Math.min(newValX, horizontalScroll.max.value))
+      verticalScroll.value = Math.max(0, Math.min(newValY, verticalScroll.max.value))
     }
 
     // forward selection
