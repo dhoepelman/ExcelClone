@@ -1,6 +1,7 @@
 package scalaExcel.model
 
 import scala.io._
+import java.io.File
 import scalaExcel.formula.{VBool, VDouble, VString, Value}
 
 
@@ -17,15 +18,46 @@ object Filer {
    */
   implicit class ModelExtension(model: Model) {
     def loadFrom(file: java.io.File): Unit = {
-      model.clearAndSet(Filer.loadCSV(file))
+      model.clearAndSet(Filer.load(file))
     }
   }
 
   implicit class SheetExtension(sheet: Sheet) {
     def saveTo(file: java.io.File): Unit = {
-      Filer.saveCSV(file, sheet)
+      Filer.save(file, sheet)
     }
   }
+
+
+  /** Saves the sheet to the file.
+    * File format is inferred by the file extension */
+  def save(file: java.io.File, sheet: Sheet): Unit = {
+    fileExtension(file.getName).toLowerCase match {
+      case "csv" => saveCSV(file, sheet)
+      case "scalaexcel" => saveHomebrew(file, sheet)
+    }
+  }
+
+  /** Load from file
+    * File format is inferred by the file extension */
+  def load(file: java.io.File) = {
+    fileExtension(file.getName).toLowerCase match {
+      case "csv" => loadCSV(file)
+      case "scalaexcel" => loadHomebrew(file)
+    }
+  }
+
+  /** The the extension part of a name, not including the dot */
+  def fileExtension(filename: String): String = {
+    filename.substring(filename.lastIndexOf('.') + 1)
+  }
+
+
+  def saveHomebrew(file: java.io.File, sheet: Sheet): Unit = ???
+
+  def loadHomebrew(file: java.io.File) = ???
+
+
 
   /** Escape for csv */
   def escape(s: String): String =
@@ -78,6 +110,8 @@ object Filer {
       .toArray
     CSVToSheet(linesOfTokens)
   }
+
+
 
   /** Generic printer to file */
   private def printToFile(f: java.io.File)(op: java.io.PrintWriter => Unit) = {
