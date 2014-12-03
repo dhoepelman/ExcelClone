@@ -26,6 +26,7 @@ import scalaExcel.GUI.data.UpdateContents
 import scalaExcel.GUI.data.SlideWindowBy
 import scalaExcel.model.Sheet
 import scalaExcel.GUI.view.InteractionHelper.WatchableScrollBar
+import scalafx.scene.input.ScrollEvent
 
 class ViewManager extends jfxf.Initializable {
 
@@ -165,6 +166,30 @@ class ViewManager extends jfxf.Initializable {
     table = streamTable.table
     AnchorPane.setAnchors(table, 0, 0, 0, 0)
     tableContainer.content = List(table)
+
+    //
+    // Re-subscribe scroll listener on table
+    //
+
+    table.onScroll = (event: ScrollEvent) => {
+      // calculate scroll amount as percentage of table width
+      val percentX = event.deltaX/table.width.value
+      val percentY = event.deltaY/table.height.value
+
+      // calculate a proportional change of scroll bar value
+      val newValX = horizontalScroll.value.value + percentX * horizontalScroll.max.value
+      val newValY = verticalScroll.value.value + percentY * verticalScroll.max.value
+
+      // apply change
+      horizontalScroll.value =
+        if (newValX < 0) 0
+        else if (newValX > horizontalScroll.max.value) horizontalScroll.max.value
+        else newValX
+      verticalScroll.value =
+        if (newValY < 0) 0
+        else if (newValY > verticalScroll.max.value) verticalScroll.max.value
+        else newValY
+    }
 
     // forward selection
     streamTable.onSelection.subscribe(onSelection.onNext _)
