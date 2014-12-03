@@ -12,16 +12,14 @@ import scalaExcel.formula.{VBool, VDouble, VString, Value}
  */
 object Filer {
 
-  /**
-   * Make Filer functionality accessible directly on the model
-   * @param model
-   */
+  /** Make Filer load functionality accessible directly on the model */
   implicit class ModelExtension(model: Model) {
     def loadFrom(file: java.io.File): Unit = {
       model.clearAndSet(Filer.load(file))
     }
   }
 
+  /** Make Filer save functionality accessible directly on the sheet */
   implicit class SheetExtension(sheet: Sheet) {
     def saveTo(file: java.io.File): Unit = {
       Filer.save(file, sheet)
