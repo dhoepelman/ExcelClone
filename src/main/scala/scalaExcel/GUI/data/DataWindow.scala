@@ -19,16 +19,17 @@ class DataWindow(val dataSize: Size,
   def absoluteToWindow(index: (Int, Int)): (Int, Int) =
     (absoluteToWindowColumn(index._1), absoluteToWindowRow(index._2))
 
-  def isInBounds(index: CellPos) = {
-    if (index._1 >= visibleBounds._1 && index._1 < visibleBounds._2 &&
-        index._2 >= visibleBounds._3 && index._2 < visibleBounds._4)
-      true
-    else
-      false
-  }
+  def isInBounds(index: CellPos) =
+    index._1 >= visibleBounds._1 && index._1 < visibleBounds._2 &&
+        index._2 >= visibleBounds._3 && index._2 < visibleBounds._4
 
   def slideBy(offsets: Offsets) = {
-    new DataWindow(dataSize, addOffsetsToBounds(offsets, visibleBounds))
+    val newBounds = addOffsetsToBounds(offsets, visibleBounds)
+    new DataWindow(dataSize,
+      (Math.max(0, newBounds._1),
+        Math.max(0, newBounds._2),
+        Math.max(0, newBounds._3),
+        Math.max(0, newBounds._4)))
   }
 
   def addOffsetsToBounds(offsets: Offsets, bounds: Bounds) = {

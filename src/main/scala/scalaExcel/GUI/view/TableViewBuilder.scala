@@ -27,7 +27,8 @@ class DataCellColumn(onCellEdit: ((CellPos, String)) => Unit,
   id = colIndex.toString
   cellValueFactory = _.value.get(colIndex)
   cellFactory = _ => new DataCellView
-  prefWidth = headerWidth
+  minWidth = headerWidth
+  maxWidth = headerWidth
   sortable = false
 
   // listen for column width changes
@@ -60,7 +61,8 @@ class NumberedColumn(indexConverter: (Int) => Int) extends TableColumn[DataRow, 
         style = "-fx-alignment: CENTER;"
     }
   }
-  prefWidth = DefaultProperties.NUMBERED_COLUMN_WIDTH
+  minWidth = DefaultProperties.NUMBERED_COLUMN_WIDTH
+  maxWidth = DefaultProperties.NUMBERED_COLUMN_WIDTH
   editable = false
   sortable = false
 }
@@ -71,6 +73,7 @@ class StreamingTable(labeledTable: LabeledDataTable) {
 
   val table = new TableView[DataRow](labeledTable.data) {
     editable = true
+    fixedCellSize = DefaultProperties.FIXED_ROW_HEIGHT
 
     // the first column is special
     columns += new NumberedColumn(

@@ -99,16 +99,16 @@ class ViewManager extends jfxf.Initializable {
   /**
    * Rx stream of wrappers on the data model sheet
    */
-  val labeledDataTable = tableMutations.scan(new LabeledDataTable(rebuild = true))((table, action) =>
+  val labeledDataTable = tableMutations.scan(new LabeledDataTable(rebuild = true))((dataTable, action) =>
     action match {
-      case SlideWindowBy(offsets) => table.slideWindowBy(offsets)
-      case SlideWindowTo(bounds) => table.slideWindowTo(bounds)
-      case AddNewColumn(index) => table.addNewColumn(index)
-      case AddNewRow(index) => table.addNewRow(index)
-      case UpdateContents(newSheet) => table.updateContents(newSheet)
-      case UpdateColumnOrder(permutations) => table.updateColumnOrder(permutations)
-      case ResizeColumn(columnIndex, width) => table.resizeColumn(columnIndex, width)
-      case RefreshTable() => table
+      case SlideWindowBy(offsets) => dataTable.slideWindowBy(offsets)
+      case SlideWindowTo(bounds) => dataTable.slideWindowTo(bounds)
+      case AddNewColumn(index) => dataTable.addNewColumn(index)
+      case AddNewRow(index) => dataTable.addNewRow(index)
+      case UpdateContents(newSheet) => dataTable.updateContents(newSheet)
+      case UpdateColumnOrder(permutations) => dataTable.updateColumnOrder(permutations)
+      case ResizeColumn(columnIndex, width) => dataTable.resizeColumn(columnIndex, width)
+      case LayOutTable(width, height, cellHeight) => dataTable.layOut(width, height, cellHeight)
     })
 
   /**
@@ -161,8 +161,8 @@ class ViewManager extends jfxf.Initializable {
 
     // otherwise initialize and add the table
     val streamTable = TableViewBuilder.build(labeledTable)
-    table = streamTable.table
 
+    table = streamTable.table
     AnchorPane.setAnchors(table, 0, 0, 0, 0)
     tableContainer.content = List(table)
 
@@ -240,9 +240,6 @@ class ViewManager extends jfxf.Initializable {
     // subscribe table to data changes
     labeledDataTable.subscribe(buildTableView _)
 
-    // start rendering the visible table
-    tableMutations.onNext(new RefreshTable())
-
     newColumnButton.onAction = handle {
       // add new column at the end (position -1)
       tableMutations.onNext(new AddNewColumn(-1))
@@ -251,6 +248,24 @@ class ViewManager extends jfxf.Initializable {
     newRowButton.onAction = handle {
       // add new row at the end (position -1)
       tableMutations.onNext(new AddNewRow(-1))
+    }
+
+    tableContainer.width.onChange {
+      (_, _, newWidth) => {
+        // re-render the table
+        tableMutations.onNext(new LayOutTable(newWidth.doubleValue,
+          tableContainer.height.value,
+          table.fixedCellSize.value))
+      }
+    }
+
+    tableContainer.height.onChange {
+      (_, _, newHeight) => {
+        // re-render the table
+        tableMutations.onNext(new LayOutTable(tableContainer.width.value,
+          newHeight.doubleValue,
+          if(table == null ) -1 else table.fixedCellSize.value))
+      }
     }
 
   }
