@@ -80,7 +80,10 @@ class ViewManager extends jfxf.Initializable {
   }
 
   val fileChooser = new javafx.stage.FileChooser
-  fileChooser.getExtensionFilters.add(new ExtensionFilter("Comma separated values", "*.csv"))
+  fileChooser.getExtensionFilters.addAll(
+    new ExtensionFilter("ScalaExcel homebrew", "*.scalaexcel"),
+    new ExtensionFilter("Comma separated values", "*.csv")
+  )
 
   // Exposed observers, so we can gather those events and put
   // them into the model
