@@ -13,6 +13,7 @@ import scalaExcel.GUI.data.LabeledDataTable
 import scalaExcel.GUI.data.LabeledDataTable.DataRow
 import scalaExcel.GUI.view.ViewManager._
 import scalaExcel.model.{Filer, Sheet, Model, Styles}
+import scalaExcel.model.Filer._
 import scalaExcel.rx.operators.WithLatest._
 
 import scalafx.Includes._
@@ -170,7 +171,7 @@ class ViewManager extends jfxf.Initializable {
       .withLatest(model.sheet)
       .subscribe(fs => {
           val (sheet, file) = fs
-          Filer.saveCSV(file, sheet)
+          sheet.saveTo(file)
       })
 
     loadStream.map(x => {
@@ -179,8 +180,7 @@ class ViewManager extends jfxf.Initializable {
     })
       .map(chooser => chooser.showOpenDialog(tableContainer.scene.window.getValue))
       .filter(_ != null)
-      .map(file => Filer.loadCSV(file))
-      .subscribe(values => model.clearAndSet(values))
+      .subscribe(file => model.loadFrom(file))
 
     deleteStream = streamTable.withSelectedCellsOnly(Observable[Unit]( o =>
       menuDelete.onAction = handle {
