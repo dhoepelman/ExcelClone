@@ -172,23 +172,22 @@ class ViewManager extends jfxf.Initializable {
     // Re-subscribe scroll listener on table
     //
 
-    table.onScroll = (event: ScrollEvent) => {
-      // abort if sizes are 0 (table under construction)
-      if(table.width.value <=0  || table.height.value <= 0)
-        return
-
-      // calculate scroll amount as percentage of table width
-      val percentX = event.deltaX/table.width.value
-      val percentY = event.deltaY/table.height.value
-
-      // calculate a proportional change of scroll bar value
-      val newValX = horizontalScroll.value.value + percentX * horizontalScroll.max.value
-      val newValY = verticalScroll.value.value + percentY * verticalScroll.max.value
-
+    Observable[(Double, Double)](o => {
+      table.onScroll = (event: ScrollEvent) =>
+        o.onNext((event.deltaX, event.deltaY))
+    })
+    // abort if sizes are 0 (table under construction)
+    .filter(_ => table.width.value > 0  && table.height.value > 0)
+    // calculate scroll amount as percentage of table width
+    .map(deltas => (deltas._1/table.width.value, deltas._2/table.height.value))
+    // calculate a proportional change of scroll bar value
+    .map(percents => (horizontalScroll.value.value + percents._1 * horizontalScroll.max.value,
+        verticalScroll.value.value + percents._2 * verticalScroll.max.value))
+    .subscribe(amounts => {
       // apply change
-      horizontalScroll.value = Math.max(0, Math.min(newValX, horizontalScroll.max.value))
-      verticalScroll.value = Math.max(0, Math.min(newValY, verticalScroll.max.value))
-    }
+      horizontalScroll.value = Math.max(0, Math.min(amounts._1, horizontalScroll.max.value))
+      verticalScroll.value = Math.max(0, Math.min(amounts._2, verticalScroll.max.value))
+    })
 
     // forward selection
     streamTable.onSelection.subscribe(onSelection.onNext _)
