@@ -21,10 +21,7 @@ sealed trait Cell {
 
   override def toString = '"' + f + '"'
 
-  protected def Ctx(values: Map[CellPos, Value])(c: ACell) = values get c.pos match {
-    case Some(v) => v
-    case None => VDouble(0)//throw new IllegalArgumentException(s"Dependency (${c.c},${c.r}}) not found in map")
-  }
+  protected def Ctx(values: Map[CellPos, Value])(c: ACell) = values.getOrElse(c.pos, VEmpty)
 
 }
 
@@ -37,7 +34,7 @@ object Cell {
 
   private object EmptyCell extends Cell {
     override lazy val f = ""
-    override lazy val AST = Const(VString(""))
+    override lazy val AST = Const(VEmpty)
     override lazy val refs = List()
   }
   private class ASTCell(val AST_ : Expr) extends Cell {
