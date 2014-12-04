@@ -8,6 +8,7 @@ import scalafx.beans.property.ObjectProperty
 import scalaExcel.model.{Sheet, Styles}
 import scalaExcel.util.DefaultProperties
 import scalaExcel.GUI.data.DataWindow.{Bounds, Offsets}
+import scalaExcel.model.Filer._
 
 /**
  * Wrapper on the data model sheet
@@ -183,6 +184,8 @@ class LabeledDataTable(
     // move window to initial position, but with new size
     slideWindowTo((0, maxCols,0, maxRows))
   }
+
+  def saveTo(file: java.io.File) = _sheet.saveTo(file)
 
 }
 

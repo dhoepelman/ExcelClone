@@ -6,7 +6,6 @@ import scalafx.scene.paint.Color
 import scalaExcel._
 import scalaExcel.GUI.data.DataCell
 import scalafx.scene.input.{DataFormat, ClipboardContent, Clipboard}
-import scalaExcel.GUI.util.Filer
 import scalaExcel.rx.operators.WithLatest._
 import scalafx.scene.control.ScrollBar
 import javafx.scene.{control => jfxsc}
@@ -101,7 +100,8 @@ object InteractionHelper {
     })
     .map(chooser => chooser.showSaveDialog(controller.tableContainer.scene.window.getValue))
     .filter(_ != null)
-    .subscribe(file => Filer.saveCSV(file, controller.table.items.getValue))
+      .withLatest(controller.labeledDataTable)
+      .subscribe(fs => fs._1.saveTo(fs._2))
 
     // Loads are handled here
     Observable[String](o => {
@@ -115,8 +115,7 @@ object InteractionHelper {
     })
     .map(chooser => chooser.showOpenDialog(controller.tableContainer.scene.window.getValue))
     .filter(_ != null)
-    .map(file => Filer.loadCSV(file))
-    .subscribe(data => ??? /* DataManager.populateDataModel(data) */)
+    .subscribe(controller.onLoad.onNext _)
 
     // Emptying of cells is pushed to the model
     Observable[Unit](o =>

@@ -91,6 +91,7 @@ class ViewManager extends jfxf.Initializable {
   val onCellEmpty = Subject[CellPos]()
   val onCellCut = Subject[(CellPos, CellPos)]()
   val onCellCopy = Subject[(CellPos, CellPos)]()
+  val onLoad = Subject[java.io.File]()
 
   /**
    * Rx stream of changes to the visible table

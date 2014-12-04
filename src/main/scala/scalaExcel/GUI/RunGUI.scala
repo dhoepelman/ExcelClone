@@ -9,6 +9,7 @@ import scalafx.application.JFXApp.PrimaryStage
 import scalafx.scene.Scene
 import scalaExcel.GUI.view.ViewManager
 import scalaExcel.model.Model
+import scalaExcel.model.Filer._
 
 object RunGUI extends JFXApp {
 
@@ -70,6 +71,11 @@ object RunGUI extends JFXApp {
   // when a cell is cut
   vm.onCellCut.subscribe { exchange =>
     model.cutCell(exchange._1, exchange._2)
+  }
+
+  // when a file is loaded
+  vm.onLoad.subscribe { file =>
+    model.loadFrom(file)
   }
 
   stage = new PrimaryStage() {
