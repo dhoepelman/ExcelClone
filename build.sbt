@@ -14,7 +14,9 @@ libraryDependencies += "org.scalafx" % "scalafx_2.11" % "8.0.20-R6"
 
 libraryDependencies += "com.netflix.rxjava" % "rxjava-scala" % "0.20.6"
 
-libraryDependencies += "org.scala-lang" %% "scala-pickling" % "0.9.0"
+libraryDependencies += "org.scala-lang.modules" %% "scala-pickling" % "0.10.0-SNAPSHOT"
+
+resolvers += Resolver.sonatypeRepo("snapshots")
 
 scalacOptions ++= Seq("-feature", "-deprecation", "-Xlint")
 
