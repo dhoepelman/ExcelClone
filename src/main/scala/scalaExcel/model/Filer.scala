@@ -87,11 +87,6 @@ object Filer {
   /** Manually deserialize Color */
   def deserializeColour(colour: String): Color = Color.web(colour)
 
-  /** Combine two maps, zipping elements with the same key */
-  def join[A,B,C](map1: Map[A,B], map2: Map[A,C]) : Map[A,(B,C)] = {
-    (map1.keys ++ map2.keys).map(a => ((a)->(map1(a),map2(a)))).toMap
-  }
-
   /** Save sheet to custom file type that preserves all the features */
   def saveHomebrew(file: File, sheet: Sheet): Unit = {
     // Pickling Sheet itself causes compiler to hang
