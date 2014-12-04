@@ -92,6 +92,7 @@ object Filer {
     (map1.keys ++ map2.keys).map(a => ((a)->(map1(a),map2(a)))).toMap
   }
 
+  /** Save sheet to custom file type that preserves all the features */
   def saveHomebrew(file: File, sheet: Sheet): Unit = {
     // Pickling Sheet itself causes compiler to hang
     // Pickling Color class produces empty pickle
@@ -106,14 +107,28 @@ object Filer {
           s.format)
         )
       )
-      printToFile(file)(_.print(structure.pickle))
+      printToFile(file)(_.print(structure.pickle.value))
       println("Save completed")
     } catch {
       case e: Throwable => println("Moooom, scala.pickling is broken again: " + e)
     }
   }
 
-  def loadHomebrew(file: File) : FileType = ???
+  /** Load from a file of the custom file type */
+  def loadHomebrew(file: File) : FileType = {
+    val source = Source.fromFile(file)
+    val json: String = source.mkString
+    source.close()
+    val data = JSONPickle(json).unpickle[FileTypeSerialized]
+    (data._1, data._2.mapValues{
+      case (align, background, colour, format) => new Styles(
+        deserializeColour(background),
+        deserializeColour(colour),
+        format,
+        deserializeAlignment(align)
+      )
+    })
+  }
 
 
 
