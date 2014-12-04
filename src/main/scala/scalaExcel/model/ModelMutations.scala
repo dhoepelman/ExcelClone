@@ -15,4 +15,4 @@ case class SetColor(pos : CellPos, c: Color) extends ModelMutations
 case class SetBackground(pos : CellPos, c: Color) extends ModelMutations
 case class SortColumn(x: Int, asc: Boolean) extends ModelMutations
 case object Refresh extends ModelMutations
-case class SetSheet(values: Traversable[((Int,Int),String)]) extends ModelMutations
+case class SetSheet(values: Map[(Int,Int),String], styles: Map[(Int,Int), Styles]) extends ModelMutations

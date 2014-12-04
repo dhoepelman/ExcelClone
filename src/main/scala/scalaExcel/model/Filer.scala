@@ -17,10 +17,14 @@ import json._
  */
 object Filer {
 
+  type FileTypeSerialized = (Map[(Int,Int), String], Map[(Int,Int), (String,String,String,String)])
+  type FileType = (Map[(Int,Int), String], Map[(Int,Int), Styles])
+
   /** Make Filer load functionality accessible directly on the model */
   implicit class ModelExtension(model: Model) {
     def loadFrom(file: File): Unit = {
-      model.clearAndSet(Filer.load(file))
+      val data = Filer.load(file)
+      model.clearAndSet(data._1, data._2)
     }
   }
 
@@ -43,7 +47,7 @@ object Filer {
 
   /** Load from file
     * File format is inferred by the file extension */
-  def load(file: File) = {
+  def load(file: File) : FileType = {
     fileExtension(file.getName).toLowerCase match {
       case "csv" => loadCSV(file)
       case "scalaexcel" => loadHomebrew(file)
@@ -93,7 +97,7 @@ object Filer {
     // Pickling Color class produces empty pickle
     // Pickling case class not working
     try {
-      val structure = (
+      val structure : FileTypeSerialized = (
         sheet.cells.mapValues(_.f),
         sheet.styles.mapValues(s => (
           serializeAlignment(s.align),
@@ -104,13 +108,12 @@ object Filer {
       )
       printToFile(file)(_.print(structure.pickle))
       println("Save completed")
-      //println(something.pickle.unpickle[(Map[(Int,Int), String], Map[(Int,Int), (String,String,String,String)])])
     } catch {
       case e: Throwable => println("Moooom, scala.pickling is broken again: " + e)
     }
   }
 
-  def loadHomebrew(file: File) = ???
+  def loadHomebrew(file: File) : FileType = ???
 
 
 
@@ -149,21 +152,21 @@ object Filer {
   }
 
   /** Covert CSV string to Sheet */
-  def CSVToSheet(csv: Array[Array[String]]): Traversable[((Int, Int), String)] = {
+  def CSVToSheet(csv: Array[Array[String]]): Map[(Int, Int), String] = {
     csv.zipWithIndex.flatMap { case (row, rowIndex) =>
       row.zipWithIndex.map { case (value, colIndex) =>
-        ((rowIndex, colIndex), unescape(value))
+        ((rowIndex, colIndex) -> unescape(value))
       }
-    }
+    }.toMap
   }
 
   /** Get the contents of a csv file */
-  def loadCSV(file: File): Traversable[((Int, Int), String)] = {
+  def loadCSV(file: File): FileType = {
     val linesOfTokens = Source.fromFile(file).getLines()
       // http://stackoverflow.com/a/769713/661190
       .map(line => line.split( """,(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))""").map(_.trim.stripPrefix("\"").stripSuffix("\"")).toArray)
       .toArray
-    CSVToSheet(linesOfTokens)
+    (CSVToSheet(linesOfTokens), Map())
   }
 
 

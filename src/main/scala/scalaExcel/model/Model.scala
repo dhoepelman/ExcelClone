@@ -53,7 +53,7 @@ class Model {
     case CutCell(from, to) => updateSheet(sheet.cutCell(from, to))
     case SetColor(pos, c) => updateStyle(sheet, pos, s => s.setColor(c))
     case SetBackground(pos, c) => updateStyle(sheet, pos, s => s.setBackground(c))
-    case SetSheet(values) => setSheet(values)
+    case SetSheet(values, styles) => setSheet(values) // TODO also styles
     case SortColumn(x, asc) => sheet.sort(x, asc)
     case Refresh => sheet
   })
@@ -72,8 +72,8 @@ class Model {
     sheetMutations.onNext(CutCell(from, to))
   }
 
-  def clearAndSet(values: Traversable[((Int,Int),String)]): Unit = {
-    sheetMutations.onNext(SetSheet(values))
+  def clearAndSet(values: Map[(Int,Int), String], styles: Map[(Int,Int), Styles]): Unit = {
+    sheetMutations.onNext(SetSheet(values, styles))
   }
 
   def changeFormula(pos : CellPos, f: String) {
