@@ -1,9 +1,13 @@
 package scalaExcel.model
 
 import scala.io._
-import java.io.File
+import java.io._
+import scalafx.scene.paint.Color
+import scalaExcel.GUI.util.CSSHelper
 import scalaExcel.formula.{VBool, VDouble, VString, Value}
-
+import scala.pickling._
+import scala.pickling.json._
+import json._
 
 
 /**
@@ -52,7 +56,48 @@ object Filer {
   }
 
 
-  def saveHomebrew(file: File, sheet: Sheet): Unit = ???
+
+  /** Manually serialize Alignment case class */
+  def serializeAlignment(alignment: Alignment): String = {
+    alignment match {
+      case LeftAlign   => "LeftAlign"
+      case CenterAlign => "CenterAlign"
+      case RightAlign  => "RightAlign"
+      case NoAlign     => "NoAlign"
+    }
+  }
+
+  /** Manually deserialize Alignment case class */
+  def deserializeAlignment(alignment: String): Alignment = {
+    alignment match {
+      case "LeftAlign"   => LeftAlign
+      case "CenterAlign" => CenterAlign
+      case "RightAlign"  => RightAlign
+      case "NoAlign"     => NoAlign
+    }
+  }
+
+  /** Manually serialize Color */
+  def serializeColour(colour: Color): String = CSSHelper.colorToWeb(colour)
+
+  /** Manually deserialize Color */
+  def deserializeColour(colour: String): Color = Color.web(colour)
+
+  def saveHomebrew(file: File, sheet: Sheet): Unit = {
+    // Pickling Sheet itself causes compiler to hang
+    // Pickling Color class produces empty pickle
+    // Pickling Alignment not working
+    try {
+      println("It's a pickle")
+      val something = Map((0,0) -> ("Harro", serializeColour(Color.Azure), serializeAlignment(CenterAlign)))
+      println(something)
+      println(something.pickle)
+      println(something.pickle.unpickle[Map[(Int,Int), (String, String, String)]])
+      println("or was it?")
+    } catch {
+      case e: Throwable => println("Moooom, scala.pickling is broken again: " + e)
+    }
+  }
 
   def loadHomebrew(file: File) = ???
 
