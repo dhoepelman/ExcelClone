@@ -75,8 +75,7 @@ class LabeledDataTable(
    */
   def dataCellFromTable(index: CellPos) = dataCellFromSheet(toSheetIndex(index))
 
-  val data =
-    LabeledDataTable.buildDataTable(
+  def data = LabeledDataTable.buildDataTable(
       _dataWindow.rowCount,
       _dataWindow.columnCount,
       dataCellFromTable)
