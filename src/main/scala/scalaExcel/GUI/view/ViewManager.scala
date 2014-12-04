@@ -173,6 +173,10 @@ class ViewManager extends jfxf.Initializable {
     //
 
     table.onScroll = (event: ScrollEvent) => {
+      // abort if sizes are 0 (table under construction)
+      if(table.width.value <=0  || table.height.value <= 0)
+        return
+
       // calculate scroll amount as percentage of table width
       val percentX = event.deltaX/table.width.value
       val percentY = event.deltaY/table.height.value
