@@ -1,5 +1,6 @@
 package scalaExcel.model
 
+import scalafx.beans.value
 import scalafx.scene.paint.Color
 import rx.lang.scala.subjects.BehaviorSubject
 import scalaExcel.model.Sorter.SheetSorter
@@ -34,6 +35,13 @@ class Model {
   def updateStyle(sheet: Sheet, pos : CellPos, f: Styles => Styles) =
     sheet.setCellStyle(pos, f(sheet.styles.getOrElse(pos, Styles.DEFAULT)))
 
+  private def setSheet(values: Traversable[((Int,Int),String)]): Sheet = {
+    values.foldLeft(new Sheet()) { case (sheet, ((r, c), value)) =>
+      val (s, updates) = sheet.setCell((c, r), value)
+      s
+    }
+  }
+
   // this combines the initial Sheet with all input mutations from the outside
   // world
   val sheet = sheetMutations.scan(new Sheet())((sheet, action) => action match {
@@ -45,6 +53,7 @@ class Model {
     case CutCell(from, to) => updateSheet(sheet.cutCell(from, to))
     case SetColor(pos, c) => updateStyle(sheet, pos, s => s.setColor(c))
     case SetBackground(pos, c) => updateStyle(sheet, pos, s => s.setBackground(c))
+    case SetSheet(values) => setSheet(values)
     case SortColumn(x, asc) => sheet.sort(x, asc)
     case Refresh => sheet
   })
@@ -61,6 +70,10 @@ class Model {
 
   def cutCell(from : CellPos, to : CellPos) {
     sheetMutations.onNext(CutCell(from, to))
+  }
+
+  def clearAndSet(values: Traversable[((Int,Int),String)]): Unit = {
+    sheetMutations.onNext(SetSheet(values))
   }
 
   def changeFormula(pos : CellPos, f: String) {
