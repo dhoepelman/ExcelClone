@@ -83,17 +83,28 @@ object Filer {
   /** Manually deserialize Color */
   def deserializeColour(colour: String): Color = Color.web(colour)
 
+  /** Combine two maps, zipping elements with the same key */
+  def join[A,B,C](map1: Map[A,B], map2: Map[A,C]) : Map[A,(B,C)] = {
+    (map1.keys ++ map2.keys).map(a => ((a)->(map1(a),map2(a)))).toMap
+  }
+
   def saveHomebrew(file: File, sheet: Sheet): Unit = {
     // Pickling Sheet itself causes compiler to hang
     // Pickling Color class produces empty pickle
-    // Pickling Alignment not working
+    // Pickling case class not working
     try {
-      println("It's a pickle")
-      val something = Map((0,0) -> ("Harro", serializeColour(Color.Azure), serializeAlignment(CenterAlign)))
-      println(something)
-      println(something.pickle)
-      println(something.pickle.unpickle[Map[(Int,Int), (String, String, String)]])
-      println("or was it?")
+      val structure = (
+        sheet.cells.mapValues(_.f),
+        sheet.styles.mapValues(s => (
+          serializeAlignment(s.align),
+          serializeColour(s.background),
+          serializeColour(s.color),
+          s.format)
+        )
+      )
+      printToFile(file)(_.print(structure.pickle))
+      println("Save completed")
+      //println(something.pickle.unpickle[(Map[(Int,Int), String], Map[(Int,Int), (String,String,String,String)])])
     } catch {
       case e: Throwable => println("Moooom, scala.pickling is broken again: " + e)
     }
