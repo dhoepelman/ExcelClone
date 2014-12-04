@@ -35,8 +35,9 @@ class Model {
   def updateStyle(sheet: Sheet, pos : CellPos, f: Styles => Styles) =
     sheet.setCellStyle(pos, f(sheet.styles.getOrElse(pos, Styles.DEFAULT)))
 
-  private def setSheet(values: Traversable[((Int,Int),String)]): Sheet = {
-    values.foldLeft(new Sheet()) { case (sheet, ((r, c), value)) =>
+  private def setSheet(values: Map[(Int,Int),String], styles: Map[(Int,Int),Styles]): Sheet = {
+    val styledSheet = new Sheet(Map(), Map(), Map(), styles)
+    values.foldLeft(styledSheet) { case (sheet, ((r, c), value)) =>
       val (s, updates) = sheet.setCell((c, r), value)
       s
     }
@@ -53,7 +54,7 @@ class Model {
     case CutCell(from, to) => updateSheet(sheet.cutCell(from, to))
     case SetColor(pos, c) => updateStyle(sheet, pos, s => s.setColor(c))
     case SetBackground(pos, c) => updateStyle(sheet, pos, s => s.setBackground(c))
-    case SetSheet(values, styles) => setSheet(values) // TODO also styles
+    case SetSheet(values, styles) => setSheet(values, styles)
     case SortColumn(x, asc) => sheet.sort(x, asc)
     case Refresh => sheet
   })
