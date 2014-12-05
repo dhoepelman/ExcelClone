@@ -3,6 +3,7 @@ package scalaExcel.GUI.data
 import scalaExcel.CellPos
 import scalaExcel.GUI.data.DataWindow._
 import scalaExcel.util.DefaultProperties
+import scalaExcel.formula.numToCol
 
 class DataWindow(val dataSize: Size,
                  val visibleBounds: Bounds) {
@@ -65,6 +66,9 @@ class DataWindow(val dataSize: Size,
 
   def expandTo(size: Size) =
     new DataWindow((Math.max(size._1, dataSize._1), Math.max(size._2, dataSize._2)), visibleBounds)
+
+  def visibleHeaders =
+    List.range(visibleBounds._1, visibleBounds._2) map numToCol
 
 }
 

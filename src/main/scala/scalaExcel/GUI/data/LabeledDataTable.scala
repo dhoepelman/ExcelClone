@@ -1,7 +1,7 @@
 package scalaExcel.GUI.data
 
 import scalaExcel.CellPos
-import scalaExcel.formula.{VEmpty, numToCol}
+import scalaExcel.formula.VEmpty
 import scalafx.collections.ObservableBuffer
 import scalafx.beans.property.ObjectProperty
 
@@ -21,13 +21,13 @@ import scalaExcel.model.Filer._
  */
 class LabeledDataTable(
                         _dataWindow: DataWindow = DataWindow.DEFAULT,
-                        _allHeaderWidths: List[Double] = LabeledDataTable.defaultHeaderWidths,
+                        _allHeaderWidths: List[Double] = LabeledDataTable.DEFAULT_WIDTHS,
                         _sheet: Sheet = new Sheet(),
                         _sortColumn: Int = -1,
                         val sortAscending: Boolean = true,
                         val rebuild: Boolean) {
 
-  def headers = LabeledDataTable.getHeaders(_dataWindow.visibleBounds)
+  def headers = _dataWindow.visibleHeaders
 
   def headerWidths = _allHeaderWidths.drop(_dataWindow.visibleBounds._1).take(_dataWindow.columnCount)
 
@@ -199,16 +199,6 @@ object LabeledDataTable {
           ObjectProperty(dataGrabber((c, r)))))
   }
 
-  def getHeaders(bounds: (Int, Int, Int, Int)) =
-    List.range(bounds._1, bounds._2) map numToCol
-
-  val defaultHeaderWidths =
+  val DEFAULT_WIDTHS =
     List.fill(DataWindow.DEFAULT.dataSize._1)(DefaultProperties.COLUMN_WIDTH.toDouble)
-
-  def dataWithIndex(data: List[List[String]]): List[(Int, Int, String)] =
-    data.zipWithIndex.flatMap({
-      case (row, i) => row.zipWithIndex.map({
-        case (expression, j) => (i, j, expression)
-      })
-    })
 }
