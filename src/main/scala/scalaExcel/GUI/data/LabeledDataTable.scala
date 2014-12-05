@@ -20,7 +20,7 @@ import scalaExcel.model.Filer._
  * and needs to be rebuilt, or only its contents need updating
  */
 class LabeledDataTable(
-                        _dataWindow: DataWindow = LabeledDataTable.defaultDataWindow,
+                        _dataWindow: DataWindow = DataWindow.DEFAULT,
                         _allHeaderWidths: List[Double] = LabeledDataTable.defaultHeaderWidths,
                         _sheet: Sheet = new Sheet(),
                         _sortColumn: Int = -1,
@@ -202,12 +202,8 @@ object LabeledDataTable {
   def getHeaders(bounds: (Int, Int, Int, Int)) =
     List.range(bounds._1, bounds._2) map numToCol
 
-  val defaultDataWindow = new DataWindow(
-    (DefaultProperties.GRID_SIZE._1, DefaultProperties.GRID_SIZE._2),
-    (0, DefaultProperties.GRID_SIZE._1, 0, DefaultProperties.GRID_SIZE._2))
-
   val defaultHeaderWidths =
-    List.fill(defaultDataWindow.dataSize._1)(DefaultProperties.COLUMN_WIDTH.toDouble)
+    List.fill(DataWindow.DEFAULT.dataSize._1)(DefaultProperties.COLUMN_WIDTH.toDouble)
 
   def dataWithIndex(data: List[List[String]]): List[(Int, Int, String)] =
     data.zipWithIndex.flatMap({

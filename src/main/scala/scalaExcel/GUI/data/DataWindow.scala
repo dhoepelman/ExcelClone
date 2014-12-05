@@ -2,6 +2,7 @@ package scalaExcel.GUI.data
 
 import scalaExcel.CellPos
 import scalaExcel.GUI.data.DataWindow._
+import scalaExcel.util.DefaultProperties
 
 class DataWindow(val dataSize: Size,
                  val visibleBounds: Bounds) {
@@ -82,4 +83,8 @@ object DataWindow {
   type Bounds = (MinCol, MaxCol, MinRow, MaxRow)
   type Offsets = (MinColOffset, MaxColOffset, MinRowOffset, MaxRowOffset)
   type Size = (Cols, Rows)
+
+  val DEFAULT = new DataWindow(
+    (DefaultProperties.GRID_SIZE._1, DefaultProperties.GRID_SIZE._2),
+    (0, DefaultProperties.GRID_SIZE._1, 0, DefaultProperties.GRID_SIZE._2))
 }
