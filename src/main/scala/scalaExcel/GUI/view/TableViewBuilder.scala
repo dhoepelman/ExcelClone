@@ -76,10 +76,9 @@ class StreamingTable(labeledTable: LabeledDataTable) {
     fixedCellSize = DefaultProperties.FIXED_ROW_HEIGHT
 
     // the first column is special
-    columns += new NumberedColumn(
-      {case index =>
+    columns += new NumberedColumn(index =>
         //convert table row index to sheet row index
-        labeledTable.toSheetIndex((0, index))._2})
+        labeledTable.toSheetIndex((0, index))._2)
     // add the rest of the columns in the order given by the LabeledDataTable
     columns ++= buildColumns(labeledTable.headers,
       labeledTable.headerWidths)
