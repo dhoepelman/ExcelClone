@@ -22,7 +22,7 @@ import scalaExcel.model.Filer._
 class LabeledDataTable(
                         _dataWindow: DataWindow = LabeledDataTable.defaultDataWindow,
                         _allHeaderWidths: List[Double] = LabeledDataTable.defaultHeaderWidths,
-                        _sheet: Sheet = null,
+                        _sheet: Sheet = new Sheet(),
                         _sortColumn: Int = -1,
                         val sortAscending: Boolean = true,
                         val rebuild: Boolean) {
@@ -37,8 +37,8 @@ class LabeledDataTable(
 
   def toTableIndex(index: CellPos) = {
     val tableIndex = _dataWindow.absoluteToWindow(index)
-    if(_dataWindow.isInBounds(tableIndex)) tableIndex
-    else null
+    if(_dataWindow.isInBounds(tableIndex)) Some(tableIndex)
+    else None
   }
 
   def slideWindowBy(offsets: Offsets) =
@@ -53,19 +53,14 @@ class LabeledDataTable(
    * @return
    */
   def dataCellFromSheet(index: CellPos) = {
-   
-    if (_sheet == null)
-    // there is no data yet, only empty cells
-      DataCell.newEmpty()
-    else
     // build a DataCell with the contents of the sheet at that position
-      DataCell.newEvaluated(
-        _sheet.cells.get(index) match {
-          case Some(c) => c.f
-          case None => ""
-        },
-        _sheet.valueAt(index).getOrElse(VEmpty),
-        _sheet.styles.getOrElse(index, Styles.DEFAULT))
+    DataCell.newEvaluated(
+      _sheet.cells.get(index) match {
+        case Some(c) => c.f
+        case None => ""
+      },
+      _sheet.valueAt(index).getOrElse(VEmpty),
+      _sheet.styles.getOrElse(index, Styles.DEFAULT))
   }
 
   /**

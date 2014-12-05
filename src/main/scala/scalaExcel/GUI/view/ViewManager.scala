@@ -287,7 +287,7 @@ class ViewManager extends jfxf.Initializable {
         // re-render the table
         tableMutations.onNext(new LayOutTable(tableContainer.width.value,
           newHeight.doubleValue,
-          if(table == null ) -1 else table.fixedCellSize.value))
+          if (table == null) -1 else table.fixedCellSize.value))
       }
     }
 
