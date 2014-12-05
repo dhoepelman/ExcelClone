@@ -10,7 +10,6 @@ import rx.lang.scala._
 import scala.language.reflectiveCalls
 
 import scalaExcel.GUI.data._
-import scalaExcel.GUI.data.LabeledDataTable.DataRow
 
 
 import scalafx.Includes._
@@ -19,14 +18,10 @@ import scalafx.scene.layout.AnchorPane
 import scalafx.scene.paint.Color
 
 import scalaExcel.CellPos
-import scalaExcel.GUI.data.SlideWindowTo
-import scalaExcel.GUI.data.ResizeColumn
-import scalaExcel.GUI.data.UpdateColumnOrder
-import scalaExcel.GUI.data.UpdateContents
-import scalaExcel.GUI.data.SlideWindowBy
 import scalaExcel.model.Sheet
 import scalaExcel.GUI.view.InteractionHelper.WatchableScrollBar
 import scalafx.scene.input.ScrollEvent
+import scalaExcel.GUI.data.LabeledDataTable.DataRow
 
 class ViewManager extends jfxf.Initializable {
 
