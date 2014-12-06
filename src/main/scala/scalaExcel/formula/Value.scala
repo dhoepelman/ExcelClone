@@ -27,6 +27,13 @@ case class VBool(b: Boolean) extends Value {
 }
 
 case class VErr(t: ErrType) extends Value {
+  def compare(v: Value) = v match {
+    case VEmpty => -1
+    case _ => 1
+  }
+}
+
+case object VEmpty extends Value {
   def compare(v: Value) = 1
 }
 

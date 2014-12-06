@@ -1,6 +1,6 @@
 package scalaExcel.GUI.util
 
-import scalaExcel.model.{Styles, Right, Center, Left, Default}
+import scalaExcel.model.{Styles, RightAlign, CenterAlign, LeftAlign, NoAlign}
 import scalafx.scene.paint.Color
 
 object CSSHelper {
@@ -62,18 +62,18 @@ object CSSHelper {
     Color.web(propertyFromCssOrElse(css, property, colorToWeb(orElse)))
 
 
-  def CSSFromStyle(style: Styles): String = {
-    val props = Map(
+  def getCSSFromStyle(style: Styles): String = {
+    fieldsToCss(Map(
       "-fx-background-color" -> ("-fx-table-cell-border-color, " + colorToWeb(style.background)),
       "-fx-text-fill" -> colorToWeb(style.color),
       "-fx-background-insets" -> "0, 0 0 1 0",
       "-fx-alignment" -> (style.align match {
-        case Left() => "CENTER-LEFT"
-        case Right() => "CENTER-RIGHT"
-        case Center() => "CENTER"
-        case Default() => "CENTER-LEFT"
+        case LeftAlign   => "CENTER-LEFT"
+        case RightAlign  => "CENTER-RIGHT"
+        case CenterAlign => "CENTER"
+        case NoAlign     => "CENTER-LEFT"
       })
-    )
-    fieldsToCss(props)
+    ))
   }
+
 }

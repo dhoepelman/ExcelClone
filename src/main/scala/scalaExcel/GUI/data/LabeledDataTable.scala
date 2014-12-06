@@ -4,6 +4,7 @@ import scalaExcel.CellPos
 import scalaExcel.formula.{Value, numToCol}
 import scalafx.collections.ObservableBuffer
 import scalafx.beans.property.ObjectProperty
+
 import scalaExcel.model.Styles
 import scalaExcel.util.DefaultProperties
 

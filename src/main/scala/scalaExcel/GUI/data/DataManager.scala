@@ -1,5 +1,6 @@
 package scalaExcel.GUI.data
 
+import scalaExcel.formula.VEmpty
 import scalaExcel.model.{Styles, Model}
 import rx.lang.scala.Subject
 import rx.lang.scala.subjects.BehaviorSubject
@@ -62,7 +63,7 @@ class DataManager(val model: Model) {
             case Some(c) => c.f
             case None => ""
           },
-          sheet.valueAt((i._1, i._2)).getOrElse(null),
+          sheet.valueAt(i).getOrElse(VEmpty),
           sheet.styles.getOrElse(i, Styles.DEFAULT)
         ))
     })
