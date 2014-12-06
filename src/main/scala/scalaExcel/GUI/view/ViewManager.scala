@@ -52,6 +52,11 @@ class ViewManager extends jfxf.Initializable {
   private var menuSave: jfxsc.MenuItem = _
   private var saveStream: Observable[String] = _
 
+  @jfxf.FXML private var menuUndoDelegate: jfxsc.MenuItem = _
+  private var menuUndo : jfxsc.MenuItem = _
+  @jfxf.FXML private var menuRedoDelegate: jfxsc.MenuItem = _
+  private var menuRedo : jfxsc.MenuItem = _
+
   @jfxf.FXML private var menuCutDelegate: jfxsc.MenuItem = _
   private var menuCut: jfxsc.MenuItem = _
   @jfxf.FXML private var menuCopyDelegate: jfxsc.MenuItem = _
@@ -189,6 +194,9 @@ class ViewManager extends jfxf.Initializable {
     ))
     deleteStream.subscribe( ps => ps foreach( p => model.emptyCell(p)) )
 
+    menuUndo.onAction = handle { model.undo() }
+    menuRedo.onAction = handle { model.redo() }
+
     // TODO:  Yeah, so putting it in a variable first works. But when I put it directly in the subscribe it doesn't?...
     val clipboardHandler : ((Sheet, List[CellPos], ClipboardAction)) => Unit = {case (s, ps,action) =>
       // Ignore if no cells are selected
@@ -292,6 +300,9 @@ class ViewManager extends jfxf.Initializable {
         o.onNext("temp.csv")
       }
     })
+
+    menuRedo = new MenuItem(menuRedoDelegate)
+    menuUndo = new MenuItem(menuUndoDelegate)
 
     menuCut = new MenuItem(menuCutDelegate)
     menuCopy = new MenuItem(menuCopyDelegate)
