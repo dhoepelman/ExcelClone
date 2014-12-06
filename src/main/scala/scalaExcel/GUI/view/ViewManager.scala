@@ -11,9 +11,9 @@ import scala.language.reflectiveCalls
 
 import scalaExcel.GUI.data.LabeledDataTable
 import scalaExcel.GUI.data.LabeledDataTable.DataRow
-import scalaExcel.GUI.util.Filer
 import scalaExcel.GUI.view.ViewManager._
-import scalaExcel.model.{Sheet, Model, Styles}
+import scalaExcel.model.{Filer, Sheet, Model, Styles}
+import scalaExcel.model.Filer._
 import scalaExcel.rx.operators.WithLatest._
 
 import scalafx.Includes._
@@ -168,7 +168,11 @@ class ViewManager extends jfxf.Initializable {
     })
       .map(chooser => chooser.showSaveDialog(tableContainer.scene.window.getValue))
       .filter(_ != null)
-      .subscribe(file => Filer.saveCSV(file, table.items.getValue))
+      .withLatest(model.sheet)
+      .subscribe(fs => {
+          val (sheet, file) = fs
+          sheet.saveTo(file)
+      })
 
     loadStream.map(x => {
       fileChooser.setTitle("Open file")
@@ -176,8 +180,7 @@ class ViewManager extends jfxf.Initializable {
     })
       .map(chooser => chooser.showOpenDialog(tableContainer.scene.window.getValue))
       .filter(_ != null)
-      .map(file => Filer.loadCSV(file))
-      .subscribe(data => ??? /* DataManager.populateDataModel(data) */)
+      .subscribe(file => model.loadFrom(file))
 
     deleteStream = streamTable.withSelectedCellsOnly(Observable[Unit]( o =>
       menuDelete.onAction = handle {
@@ -309,18 +312,6 @@ class ViewManager extends jfxf.Initializable {
     menuDelete = new MenuItem(menuDeleteDelegate)
   }
 
-  /**
-   * Extension functions for Rx Observables
-   */
-  implicit class ExtendRx[T](ob: Observable[T]) {
-    def labelAlways[L](la: Observable[L]) =
-      ob.combineLatest(la)
-        .distinctUntilChanged(_._1)
-        .map(c => new {
-        val value = c._1
-        val label = c._2
-      })
-  }
 
   def changeEditorText(text: String) = formulaEditor.text = text
 

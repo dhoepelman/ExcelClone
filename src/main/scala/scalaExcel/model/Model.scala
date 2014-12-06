@@ -1,6 +1,5 @@
 package scalaExcel.model
 
-import scalaExcel.model.{ModelMutations, Sheet}
 import scalafx.scene.paint.Color
 import rx.lang.scala.Observable
 import rx.lang.scala.subjects.BehaviorSubject
@@ -36,6 +35,13 @@ class Model {
   def updateStyle(sheet: Sheet, pos : CellPos, f: Styles => Styles) =
     sheet.setCellStyle(pos, f(sheet.styles.getOrElse(pos, Styles.DEFAULT)))
 
+  private def setSheet(values: Traversable[((Int,Int),String)]): Sheet = {
+    values.foldLeft(new Sheet()) { case (sheet, ((r, c), value)) =>
+      val (s, updates) = sheet.setCell((c, r), value)
+      s
+    }
+  }
+
   // this combines the initial Sheet with all input mutations from the outside
   // world
   private val undoRedoSheet = sheetMutations.scan(new UndoRedo(new Sheet()))({
@@ -51,6 +57,7 @@ class Model {
         case CutCell(from, to) => ur.next(updateSheet(sheet.cutCell(from, to)))
         case SetColor(pos, c) => ur.next(updateStyle(sheet, pos, s => s.setColor(c)))
         case SetBackground(pos, c) => ur.next(updateStyle(sheet, pos, s => s.setBackground(c)))
+        case SetSheet(values) => ur.next(setSheet(values))
         case SortColumn(x, asc) => ur.next(sheet.sort(x, asc))
         case Undo => ur.undo()
         case Redo => ur.redo()
@@ -72,6 +79,10 @@ class Model {
 
   def cutCell(from : CellPos, to : CellPos) {
     sheetMutations.onNext(CutCell(from, to))
+  }
+
+  def clearAndSet(values: Traversable[((Int,Int),String)]): Unit = {
+    sheetMutations.onNext(SetSheet(values))
   }
 
   def changeFormula(pos : CellPos, f: String) {
