@@ -1,47 +1,48 @@
 package scalaExcel.model
 
-class UndoRedo[A](val current : A,
-                  val undoRedoBufferSize : Int = 10,
-                  private val undoStack : List[A] = List(),
-                  private val redoStack : List[A] = List()) {
+/**
+ * Provides undo and redo functionality
+ * @param current The current version of the value
+ * @param maxSize The number of undo's and redo's that can be done
+ * @tparam T Any immutable value
+ */
+class UndoRedo[T](val current : T,
+                  val maxSize : Int = 10,
+                  private val undos : List[T] = List(),
+                  private val redos : List[T] = List()) {
 
   /** Do an operation, keeping the current value available as an undo option **/
-  def next(nw : A) : UndoRedo[A] = new UndoRedo(
-    nw,
-    undoRedoBufferSize,
-    add(current, undoStack),
+  def next(v : T) = new UndoRedo(
+    v,
+    maxSize,
+    add(current, undos),
     List()
   )
 
   /** Redo the previous undone operation **/
-  def redo() : UndoRedo[A] = {
-    if(canRedo())
+  def redo() =
+    if(redos.nonEmpty)
       new UndoRedo(
-        redoStack.head,
-        undoRedoBufferSize,
-        add(current, undoStack),
-        redoStack.tail
+        redos.head,
+        maxSize,
+        add(current, undos),
+        redos.tail
       )
     else
       this
-  }
 
   /** Undo the previous operation **/
-  def undo() : UndoRedo[A] = {
-    if(canUndo())
+  def undo() =
+    if(undos.nonEmpty)
       new UndoRedo(
-        undoStack.head,
-        undoRedoBufferSize,
-        undoStack.tail,
-        add(current, redoStack)
+        undos.head,
+        maxSize,
+        undos.tail,
+        add(current, redos)
       )
     else
       this
-  }
 
-  def canUndo() = undoStack.nonEmpty
-  def canRedo() = redoStack.nonEmpty
-
-  private def add(a : A, stack : List[A]) = a :: stack.take(undoRedoBufferSize - 1)
+  private def add(a : T, stack : List[T]) = a :: stack.take(maxSize - 1)
 }
 
