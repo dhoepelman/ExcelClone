@@ -74,11 +74,6 @@
                                 </MenuItem>
                             </items>
                         </Menu>
-                        <Menu mnemonicParsing="false" text="Help">
-                            <items>
-                                <MenuItem mnemonicParsing="false" text="About" />
-                            </items>
-                        </Menu>
                     </menus>
                 </MenuBar>
                 <GridPane alignment="CENTER" gridLinesVisible="true" prefHeight="42" styleClass="button-bar">
