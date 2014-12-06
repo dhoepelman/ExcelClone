@@ -10,7 +10,7 @@ class UndoRedo[A](val current : A,
     nw,
     undoRedoBufferSize,
     add(current, undoStack),
-    redoStack
+    List()
   )
 
   /** Redo the previous undone operation **/
