@@ -17,10 +17,10 @@ class UndoRedo[A](val current : A,
   def redo() : UndoRedo[A] = {
     if(canRedo())
       new UndoRedo(
-        redoStack head,
+        redoStack.head,
         undoRedoBufferSize,
         add(current, undoStack),
-        redoStack tail
+        redoStack.tail
       )
     else
       this
@@ -30,17 +30,17 @@ class UndoRedo[A](val current : A,
   def undo() : UndoRedo[A] = {
     if(canUndo())
       new UndoRedo(
-        undoStack head,
+        undoStack.head,
         undoRedoBufferSize,
-        undoStack tail,
+        undoStack.tail,
         add(current, redoStack)
       )
     else
       this
   }
 
-  def canUndo() = undoStack nonEmpty
-  def canRedo() = redoStack nonEmpty
+  def canUndo() = undoStack.nonEmpty
+  def canRedo() = redoStack.nonEmpty
 
   private def add(a : A, stack : List[A]) = a :: stack.take(undoRedoBufferSize - 1)
 }
