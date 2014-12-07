@@ -1,28 +1,25 @@
 package scalaExcel.GUI.view
 
+import scala.language.reflectiveCalls
 import java.net.URL
-import javafx.scene.{control => jfxsc, layout => jfxsl}
-import javafx.stage.FileChooser.ExtensionFilter
-import javafx.{event => jfxe, fxml => jfxf}
-
 import rx.lang.scala._
 
-import scala.language.reflectiveCalls
-
-import scalaExcel.GUI.data._
-
+import javafx.{event => jfxe, fxml => jfxf}
+import javafx.scene.{control => jfxsc, layout => jfxsl}
+import javafx.stage.FileChooser.ExtensionFilter
 
 import scalafx.Includes._
 import scalafx.scene.control._
+import scalafx.scene.input.ScrollEvent
 import scalafx.scene.layout.AnchorPane
 import scalafx.scene.paint.Color
 
 import scalaExcel.CellPos
-import scalaExcel.model.Sheet
-import scalaExcel.GUI.view.InteractionHelper.WatchableScrollBar
-import scalafx.scene.input.ScrollEvent
-import scalaExcel.GUI.data.LabeledDataTable.DataRow
+import scalaExcel.GUI.data._
 import scalaExcel.GUI.data.DataWindow.Bounds
+import scalaExcel.GUI.data.LabeledDataTable.DataRow
+import scalaExcel.GUI.view.InteractionHelper.WatchableScrollBar
+import scalaExcel.model.Sheet
 
 class ViewManager extends jfxf.Initializable {
 
@@ -136,9 +133,9 @@ class ViewManager extends jfxf.Initializable {
     .filter(_.size == 1)
     .map(_.head)
     .combineLatest(labeledDataTable)
-    .map({
-    case (pos, labeledTable) => (pos, labeledTable.dataCellFromSheet(pos))
-  })
+    .map {
+      case (pos, labeledTable) => (pos, labeledTable.dataCellFromSheet(pos))
+    }
 
   /**
    * Stream with all selected cell data
@@ -146,10 +143,10 @@ class ViewManager extends jfxf.Initializable {
    */
   val onManyCellsSelected = onSelection
     .combineLatest(labeledDataTable)
-    .map({
-    case (posList, labeledTable) =>
-      posList.map(pos => (pos, labeledTable.dataCellFromSheet(pos)))
-  })
+    .map {
+      case (posList, labeledTable) =>
+        posList.map(pos => (pos, labeledTable.dataCellFromSheet(pos)))
+    }
 
   /**
    * Builds the visible table or only updates its contents
