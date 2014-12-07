@@ -1,6 +1,6 @@
 package scalaExcel.GUI.view
 
-import _root_.rx.lang.scala.{Subject, Observable}
+import _root_.rx.lang.scala.Observable
 import scalafx.Includes._
 import scalafx.scene.paint.Color
 import scalaExcel._
@@ -38,7 +38,8 @@ object InteractionHelper {
         }
     })
     .distinctUntilChanged
-    .subscribe(v => if(v != currentValue) valueListener(v))
+    .filter(v => v != currentValue)
+    .subscribe(v => valueListener(v))
 
     def unWatch() = subscription.unsubscribe()
   }

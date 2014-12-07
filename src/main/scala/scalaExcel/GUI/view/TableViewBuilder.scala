@@ -1,7 +1,5 @@
 package scalaExcel.GUI.view
 
-import javafx.event.EventHandler
-import javafx.scene.input.{MouseButton, MouseEvent}
 import javafx.scene.{control => jfxc}
 
 import rx.lang.scala.{Observable, Subject}
@@ -10,12 +8,13 @@ import scalaExcel.CellPos
 import scalaExcel.GUI.data.LabeledDataTable.DataRow
 import scalaExcel.GUI.data.{DataCell, LabeledDataTable}
 import scalaExcel.util.DefaultProperties
-import scalaExcel.rx.operators.WithLatest._
 
 import scalafx.Includes._
 import scalafx.beans.property.ObjectProperty
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.control._
+import scalafx.scene.input.{MouseButton, MouseEvent}
+import scalafx.scene.control.TableColumn.CellEditEvent
 
 class DataCellColumn(onCellEdit: ((CellPos, String)) => Unit,
                      onColResize: ((Int, Double)) => Unit,
@@ -36,14 +35,12 @@ class DataCellColumn(onCellEdit: ((CellPos, String)) => Unit,
   }
 
   // listen for cell edits
-  onEditCommit = new EventHandler[jfxc.TableColumn.CellEditEvent[DataRow, DataCell]] {
-    override def handle(e: jfxc.TableColumn.CellEditEvent[DataRow, DataCell]) = {
+  onEditCommit = (e: CellEditEvent[DataRow, DataCell]) => {
       val text = e.getNewValue.expression
       // account for numbered column
       val col = e.getTablePosition.getColumn - 1
       val row = e.getTablePosition.getRow
       onCellEdit(((col, row), text))
-    }
   }
 
 }
@@ -121,11 +118,8 @@ class StreamingTable(labeledTable: LabeledDataTable) {
   val onColResize = Subject[(Int, Double)]()
 
   val onClick = Observable[MouseEvent](o => {
-    table.onMouseClicked = new EventHandler[MouseEvent] {
-      override def handle(event: MouseEvent) {
-        o.onNext(event)
-      }
-    }
+    table.onMouseClicked =
+      (event: MouseEvent) => o.onNext(event)
   })
 
   val onRightClick = onClick
