@@ -33,7 +33,7 @@ class Model {
   }
 
   def updateStyle(sheet: Sheet, pos : CellPos, f: Styles => Styles) =
-    sheet.setCellStyle(pos, f(sheet.styles.getOrElse(pos, Styles.DEFAULT)))
+    sheet.setCellStyle(pos, f(sheet.getCellStyle(pos)))
 
   private def setSheet(values: Traversable[((Int,Int),String)]): Sheet = {
     values.foldLeft(new Sheet()) { case (sheet, ((r, c), value)) =>
@@ -52,12 +52,28 @@ class Model {
         case SetFormula(pos, f) =>
           val (s, updates) = sheet.setCell(pos, f)
           ur.next(updateSheet(s, updates, Set(pos)))
-        case EmptyCell(pos) => ur.next(updateSheet(sheet.deleteCell(pos)))
+        case EmptyCell(poss) => ur.next(
+          poss.foldLeft(sheet)( (sheet, pos) =>
+            updateSheet(sheet.deleteCell(pos))
+          )
+        )
         case CopyCell(from, to) => ur.next(updateSheet(sheet.copyCell(from, to)))
         case CutCell(from, to) => ur.next(updateSheet(sheet.cutCell(from, to)))
-        case SetColor(pos, c) => ur.next(updateStyle(sheet, pos, s => s.setColor(c)))
-        case SetBackground(pos, c) => ur.next(updateStyle(sheet, pos, s => s.setBackground(c)))
-        case SetSheet(values) => ur.next(setSheet(values))
+        case SetColor(poss, c) => ur.next(
+          poss.foldLeft(sheet)( (sheet, pos) =>
+            updateStyle(sheet, pos, s => s.setColor(c))
+          )
+        )
+        case SetBackground(poss, c) => ur.next(
+          poss.foldLeft(sheet)( (sheet, pos) =>
+            updateStyle(sheet, pos, s => s.setBackground(c))
+          )
+        )
+        case SetSheet(values) => ur.next(
+          values.foldLeft(new Sheet()) { case (sheet, (pos, value)) =>
+            sheet.setCell(pos, value)._1
+          }
+        )
         case SortColumn(x, asc) => ur.next(sheet.sort(x, asc))
         case Undo => ur.undo()
         case Redo => ur.redo()
@@ -69,8 +85,12 @@ class Model {
 
   def refresh() = sheetMutations.onNext(Refresh)
 
-  def emptyCell(pos : CellPos)  {
-    sheetMutations.onNext(EmptyCell(pos))
+  def emptyCell(pos : CellPos) {
+    emptyCell(List(pos))
+  }
+
+  def emptyCell(poss : Traversable[CellPos]) {
+    sheetMutations.onNext(EmptyCell(poss))
   }
 
   def copyCell(from : CellPos, to : CellPos) {
@@ -81,7 +101,7 @@ class Model {
     sheetMutations.onNext(CutCell(from, to))
   }
 
-  def clearAndSet(values: Traversable[((Int,Int),String)]): Unit = {
+  def clearAndSet(values: Traversable[((Int,Int),String)]) {
     sheetMutations.onNext(SetSheet(values))
   }
 
@@ -89,12 +109,20 @@ class Model {
     sheetMutations.onNext(SetFormula(pos, f))
   }
 
-  def changeBackground(pos : CellPos, c: Color): Unit = {
-    sheetMutations.onNext(SetBackground(pos, c))
+  def changeBackground(pos : CellPos, c: Color) {
+    changeBackground(List(pos), c)
   }
 
-  def changeColor(pos : CellPos, c: Color): Unit = {
-    sheetMutations.onNext(SetColor(pos, c))
+  def changeBackground(poss : Traversable[CellPos], c: Color) {
+    sheetMutations.onNext(SetBackground(poss, c))
+  }
+
+  def changeColor(pos : CellPos, c: Color) {
+    changeColor(List(pos),c)
+  }
+
+  def changeColor(poss : Traversable[CellPos], c: Color): Unit = {
+    sheetMutations.onNext(SetColor(poss, c))
   }
 
   def sortColumn(x: Int, asc: Boolean) = {

@@ -54,10 +54,9 @@ object Filer {
   /** Convert sheet to CSV string */
   def sheetToCSV(sheet: Sheet): String = {
     (0 to sheet.rows).map(row => {
-      (0 to sheet.cols).map(column => sheet.valueAt((column, row))).map({
-        case Some(v) => escape(dummyFormat(v)) //TODO hook to proper formatter
-        case _ => ""
-      }).foldLeft("")((fold, v) => fold + "\"" + v + "\"" + ",")
+      (0 to sheet.cols).map(column => sheet.getValue((column, row))).map(v =>
+         escape(dummyFormat(v)) //TODO hook to proper formatter
+      ).foldLeft("")((fold, v) => fold + "\"" + v + "\"" + ",")
     }).foldLeft("")((fold, row) => fold + row + "\n")
   }
 
@@ -65,7 +64,7 @@ object Filer {
   def CSVToSheet(csv: Array[Array[String]]): Traversable[((Int, Int), String)] = {
     csv.zipWithIndex.flatMap { case (row, rowIndex) =>
       row.zipWithIndex.map { case (value, colIndex) =>
-        ((rowIndex, colIndex), unescape(value))
+        ((colIndex, rowIndex), unescape(value))
       }
     }
   }
