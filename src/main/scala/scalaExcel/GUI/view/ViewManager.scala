@@ -9,80 +9,75 @@ import rx.lang.scala._
 
 import scala.language.reflectiveCalls
 
-import scalaExcel.GUI.data.LabeledDataTable
-import scalaExcel.GUI.data.LabeledDataTable.DataRow
-import scalaExcel.GUI.view.ViewManager._
-import scalaExcel.model.{Filer, Sheet, Model, Styles}
-import scalaExcel.model.Filer._
-import scalaExcel.rx.operators.WithLatest._
+import scalaExcel.GUI.data._
+
 
 import scalafx.Includes._
 import scalafx.scene.control._
-import scalafx.scene.input.{ClipboardContent, _}
 import scalafx.scene.layout.AnchorPane
 import scalafx.scene.paint.Color
 
 import scalaExcel.CellPos
+import scalaExcel.model.Sheet
+import scalaExcel.GUI.view.InteractionHelper.WatchableScrollBar
+import scalafx.scene.input.ScrollEvent
+import scalaExcel.GUI.data.LabeledDataTable.DataRow
+import scalaExcel.GUI.data.DataWindow.Bounds
 
 class ViewManager extends jfxf.Initializable {
 
-  private var streamTable: StreamingTable = _
-  private var table: TableView[DataRow] = _
+  var table: TableView[DataRow] = _
 
   @jfxf.FXML private var tableContainerDelegate: jfxsl.AnchorPane = _
-  private var tableContainer: AnchorPane = _
+  var tableContainer: AnchorPane = _
 
   @jfxf.FXML private var formulaEditorDelegate: jfxsc.TextField = _
-  private var formulaEditor: TextField = _
-  private var formulaEditorStream: Observable[String] = _
+  var formulaEditor: TextField = _
 
   @jfxf.FXML private var backgroundColorPickerDelegate: jfxsc.ColorPicker = _
-  private var backgroundColorPicker: jfxsc.ColorPicker = _
-  private var backgroundColorStream: Observable[Color] = _
+  var backgroundColorPicker: jfxsc.ColorPicker = _
 
   @jfxf.FXML private var fontColorPickerDelegate: jfxsc.ColorPicker = _
-  private var fontColorPicker: jfxsc.ColorPicker = _
-  private var fontColorStream: Observable[Color] = _
+  var fontColorPicker: ColorPicker = _
 
   @jfxf.FXML private var menuLoadDelegate: jfxsc.MenuItem = _
-  private var menuLoad: jfxsc.MenuItem = _
-  private var loadStream: Observable[String] = _
+  var menuLoad: MenuItem = _
 
   @jfxf.FXML private var menuSaveDelegate: jfxsc.MenuItem = _
-  private var menuSave: jfxsc.MenuItem = _
-  private var saveStream: Observable[String] = _
+  var menuSave: MenuItem = _
 
   @jfxf.FXML private var menuUndoDelegate: jfxsc.MenuItem = _
-  private var menuUndo : jfxsc.MenuItem = _
+  var menuUndo : MenuItem = _
   @jfxf.FXML private var menuRedoDelegate: jfxsc.MenuItem = _
-  private var menuRedo : jfxsc.MenuItem = _
+  var menuRedo : MenuItem = _
 
   @jfxf.FXML private var menuCutDelegate: jfxsc.MenuItem = _
-  private var menuCut: jfxsc.MenuItem = _
+  var menuCut: MenuItem = _
   @jfxf.FXML private var menuCopyDelegate: jfxsc.MenuItem = _
-  private var menuCopy: jfxsc.MenuItem = _
+  var menuCopy: MenuItem = _
   @jfxf.FXML private var menuPasteDelegate: jfxsc.MenuItem = _
-  private var menuPaste: jfxsc.MenuItem = _
-  private var clipboardStream: Observable[ClipboardAction] = _
+  var menuPaste: MenuItem = _
 
   @jfxf.FXML private var menuDeleteDelegate: jfxsc.MenuItem = _
-  private var menuDelete: jfxsc.MenuItem = _
-  private var deleteStream: Observable[List[CellPos]] = _
+  var menuDelete: MenuItem = _
 
   @jfxf.FXML private var sortUpDelegate: jfxsc.Button = _
-  private var sortUp: jfxsc.Button = _
+  var sortUp: Button = _
   @jfxf.FXML private var sortDownDelegate: jfxsc.Button = _
-  private var sortDown: jfxsc.Button = _
-  private var onSortButtonStream: Observable[Boolean] = _
+  var sortDown: Button = _
 
   @jfxf.FXML
   private var testButtonDelegate: jfxsc.Button = _
   private var testButton: Button = _
 
-  @jfxf.FXML
-  private def makeResizable(event: jfxe.ActionEvent) {
-    //make region resizable
-  }
+  @jfxf.FXML private var newColumnDelegate: jfxsc.Button = _
+  private var newColumnButton: Button = _
+  @jfxf.FXML private var newRowDelegate: jfxsc.Button = _
+  private var newRowButton: Button = _
+  @jfxf.FXML private var horizontalScrollDelegate: jfxsc.ScrollBar = _
+  private var horizontalScroll: WatchableScrollBar = _
+  @jfxf.FXML private var verticalScrollDelegate: jfxsc.ScrollBar = _
+  private var verticalScroll: WatchableScrollBar = _
 
   val fileChooser = new javafx.stage.FileChooser
   fileChooser.getExtensionFilters.add(new ExtensionFilter("Comma separated values", "*.csv"))
@@ -94,9 +89,79 @@ class ViewManager extends jfxf.Initializable {
   val onBackgroundChange = Subject[(CellPos, Color)]()
   val onColorChange = Subject[(CellPos, Color)]()
   val onColumnSort = Subject[(Int, Boolean)]()
+  val onCellEmpty = Subject[CellPos]()
+  val onCellCut = Subject[(CellPos, CellPos)]()
+  val onCellCopy = Subject[(CellPos, CellPos)]()
+  val onLoad = Subject[java.io.File]()
+  val onUndo = Subject[Unit]()
+  val onRedo = Subject[Unit]()
 
-  def buildTableView(labeledTable: LabeledDataTable, model: Model): Unit = {
+  /**
+   * Rx stream of changes to the visible table
+   */
+  val tableMutations = Subject[TableMutations]()
 
+  /**
+   * Rx stream of wrappers on the data model sheet
+   */
+  val labeledDataTable = tableMutations.scan(new LabeledDataTable(rebuild = true))((dataTable, action) =>
+    action match {
+      case SlideWindowBy(offsets) => dataTable.slideWindowBy(offsets)
+      case SlideWindowTo(bounds) => dataTable.slideWindowTo(bounds)
+      case AddNewColumn(index) => dataTable.addNewColumn(index)
+      case AddNewRow(index) => dataTable.addNewRow(index)
+      case UpdateContents(newSheet) => dataTable.updateContents(newSheet)
+      case UpdateColumnOrder(permutations) => dataTable.updateColumnOrder(permutations)
+      case ResizeColumn(columnIndex, width) =>
+        val newTable = dataTable.resizeColumn(columnIndex, width)
+        val availableWidth = tableContainer.width.value
+        if (dataTable.fitColumns(availableWidth) != newTable.fitColumns(availableWidth))
+          newTable.layOut(availableWidth, tableContainer.height.value)
+        else
+          newTable
+      case LayOutTable() =>
+        dataTable.layOut(tableContainer.width.value, tableContainer.height.value)
+    })
+
+  /**
+   * Global selection stream
+   */
+  val onSelection = Subject[List[CellPos]]()
+
+  /**
+   * Stream with the first selected cell data
+   * type : Observable[(CellPos, DataCell)]
+   */
+  val onSingleCellSelected = onSelection
+    .filter(_.size == 1)
+    .map(_.head)
+    .combineLatest(labeledDataTable)
+    .map({
+    case (pos, labeledTable) => (pos, labeledTable.dataCellFromSheet(pos))
+  })
+
+  /**
+   * Stream with all selected cell data
+   * type: Observable[List[(CellPos, DataCell)]]
+   */
+  val onManyCellsSelected = onSelection
+    .combineLatest(labeledDataTable)
+    .map({
+    case (posList, labeledTable) =>
+      posList.map(pos => (pos, labeledTable.dataCellFromSheet(pos)))
+  })
+
+  /**
+   * Builds the visible table or only updates its contents
+   * @param labeledTable  the latest LabeledDataTable
+   */
+  def buildTableView(labeledTable: LabeledDataTable): Unit = {
+
+    //
+    // Update TableView
+    //
+
+    // if only data changed, update items only
     if (!labeledTable.rebuild) {
       println("Changing table...")
 
@@ -106,145 +171,83 @@ class ViewManager extends jfxf.Initializable {
 
     println("Building table...")
 
-    // initialize and add the table
-    streamTable = TableViewBuilder.build(labeledTable)
-    table = streamTable.table
+    // otherwise initialize and add the table
+    val streamTable = TableViewBuilder.build(labeledTable)
 
+    table = streamTable.table
     AnchorPane.setAnchors(table, 0, 0, 0, 0)
     tableContainer.content = List(table)
 
-    // streamTable.onRightClick.subscribe(_ => println("right click"))
+    //
+    // Re-subscribe scroll listener on table
+    //
 
+    Observable[(Double, Double)](o => {
+      table.onScroll = (event: ScrollEvent) =>
+        o.onNext((event.deltaX, event.deltaY))
+    })
+    // abort if sizes are 0 (table under construction)
+    .filter(_ => table.width.value > 0  && table.height.value > 0)
+    // calculate scroll amount as percentage of table width
+    .map(deltas => (deltas._1/table.width.value, deltas._2/table.height.value))
+    // calculate a proportional change of scroll bar value
+    .map(percents => (horizontalScroll.value.value - percents._1 * horizontalScroll.max.value,
+        verticalScroll.value.value - percents._2 * verticalScroll.max.value))
+    .subscribe(amounts => {
+      // apply change
+      horizontalScroll.value = Math.max(0, Math.min(amounts._1, horizontalScroll.max.value))
+      verticalScroll.value = Math.max(0, Math.min(amounts._2, verticalScroll.max.value))
+    })
+
+
+    // re-subscribe column width listener on table
+    streamTable.onColResize.subscribe(resize =>
+      tableMutations.onNext(ResizeColumn(resize._1, resize._2)))
+
+    // forward selection
+    streamTable.onSelection.subscribe(onSelection.onNext _)
     // forward edits
-    streamTable.onCellEdit.subscribe(x => onCellEdit.onNext(x))
+    streamTable.onCellEdit.subscribe(onCellEdit.onNext _)
 
-    // A stream with the first selected cell
-    val singleSelectedCell = streamTable.onSelection
-      .filter(_.size == 1)
-      .map(_.head)
+    //
+    // Re-initialize scroll bars
+    //
 
-    val sheetWithSelectedCell = model.sheet.combineLatest(singleSelectedCell)
+    val maxs = labeledTable.windowMaxOffsets
+    val values = labeledTable.windowOffsets
 
-    // Update the formula editor
-    sheetWithSelectedCell
-      .map({
-        case (sheet, pos) => sheet.cells.get(pos) match {
-        case Some(cell) => cell.f
-        case None => ""
-      }
-    })
-      .distinctUntilChanged
-      .subscribe(f => changeEditorText(f))
+    // stop listening to changes on the old bars
+    if (horizontalScroll != null)
+      horizontalScroll.unWatch()
+    horizontalScroll = new WatchableScrollBar(horizontalScrollDelegate,
+      maxs._1,
+      values._1,
+      (newValue: Int) =>
+      // slide table window horizontally by the difference
+        tableMutations.onNext(SlideWindowBy(Bounds(newValue - values._1, newValue - values._1, 0, 0))))
 
-    // Update color pickers when selection changes
-    sheetWithSelectedCell
-      .map({
-        case (sheet, pos) => sheet.styles.get(pos) match {
-        case Some(style) => style
-        case None => Styles.DEFAULT
-      }
-    })
-      .distinctUntilChanged
-      .subscribe(s => {
-      changeBackgroundColorPicker(s.background)
-      changeFontColorPicker(s.color)
-    })
+    if (verticalScroll != null)
+      verticalScroll.unWatch()
+    verticalScroll = new WatchableScrollBar(verticalScrollDelegate,
+      maxs._2,
+      values._2,
+      (newValue: Int) =>
+      // slide table window vertically by the difference
+        tableMutations.onNext(SlideWindowBy(Bounds(0, 0, newValue - values._2, newValue - values._2))))
 
-    // Changes on formula editor are pushed to the selected cell
-    singleSelectedCell.combineLatest(formulaEditorStream)
-      .distinctUntilChanged(_._2)
-      .subscribe(x => onCellEdit.onNext(x))
-
-    // Changes on the ColorPickers are pushed to the model
-    streamTable.onSelection.combineLatest(backgroundColorStream)
-      .distinctUntilChanged(_._2)
-      .flatMap(x => Observable.from(x._1.map(i => (i, x._2))))
-      .subscribe(x => onBackgroundChange.onNext(x))
-
-    streamTable.onSelection.combineLatest(fontColorStream)
-      .distinctUntilChanged(_._2)
-      .flatMap(x => Observable.from(x._1.map(i => (i, x._2))))
-      .subscribe(x => onColorChange.onNext(x))
-
-    // Load - Save
-    saveStream.map(x => {
-      fileChooser.setTitle("Save destination")
-      fileChooser
-    })
-      .map(chooser => chooser.showSaveDialog(tableContainer.scene.window.getValue))
-      .filter(_ != null)
-      .withLatest(model.sheet)
-      .subscribe(fs => {
-          val (sheet, file) = fs
-          sheet.saveTo(file)
-      })
-
-    loadStream.map(x => {
-      fileChooser.setTitle("Open file")
-      fileChooser
-    })
-      .map(chooser => chooser.showOpenDialog(tableContainer.scene.window.getValue))
-      .filter(_ != null)
-      .subscribe(file => model.loadFrom(file))
-
-    deleteStream = streamTable.withSelectedCellsOnly(Observable[Unit]( o =>
-      menuDelete.onAction = handle {
-        o.onNext(Unit)
-      }
-    ))
-    deleteStream.subscribe( ps => ps foreach( p => model.emptyCell(p)) )
-
-    menuUndo.onAction = handle { model.undo() }
-    menuRedo.onAction = handle { model.redo() }
-
-    // TODO:  Yeah, so putting it in a variable first works. But when I put it directly in the subscribe it doesn't?...
-    val clipboardHandler : ((Sheet, List[CellPos], ClipboardAction)) => Unit = {case (s, ps,action) =>
-      // Ignore if no cells are selected
-      if(ps.isEmpty)
-        return
-      // TODO: Multiple selection
-      // TODO: Make the cell immediately disappear when cut
-      val clipboard = Clipboard.systemClipboard
-      val contents = new ClipboardContent()
-      action match {
-        case Cut | Copy => {
-          contents.put(copyPasteFormat, (action, ps.head))
-          contents.putString(s.valueAt(ps.head).get.toString)
-          clipboard.setContent(contents)
-        }
-        case Paste => {
-          val to = ps.head
-          if(clipboard.hasContent(copyPasteFormat))
-            clipboard.getContent(copyPasteFormat) match {
-              case (Cut, from) => {
-                // Cut-Pasting can only happen once
-                clipboard.clear()
-                model.cutCell(from.asInstanceOf[CellPos], to)
-              }
-              case (Copy, from) => model.copyCell(from.asInstanceOf[CellPos], to)
-              case a => throw new IllegalArgumentException("Clipboard contained invalid copy-paste data {" + a.toString + "}")
-            }
-          else if(clipboard.hasString)
-            model.changeFormula(to, clipboard.getString)
-        }
-      }
-    }
-    streamTable
-      .withSelectedCells(clipboardStream)
-      .withLatest(model.sheet)
-      .map({ case (s, (ps, a)) => (s,ps,a) })
-      .subscribe(clipboardHandler)
-
-    onSortButtonStream
-      .withLatest(singleSelectedCell)
-      .subscribe { s => s match {
-        case ((x, y), asc) => onColumnSort.onNext((x, asc))
-      }}
   }
 
-  val copyPasteFormat = new DataFormat("x-excelClone/cutcopy")
+  /**
+   * To be called when the data model contents have changed
+   * @param sheet the new data model sheet
+   */
+  def dataChanged(sheet: Sheet) =
+    tableMutations.onNext(UpdateContents(sheet))
 
-  def initialize(url: URL, rb: java.util.ResourceBundle) {
+  /**
+   * Called on initialization of the FXML controller
+   */
+  def initialize(url: URL, rb: java.util.ResourceBundle) = {
 
     println("ViewManager initializing...")
 
@@ -254,87 +257,73 @@ class ViewManager extends jfxf.Initializable {
 
     tableContainer = new AnchorPane(tableContainerDelegate)
     testButton = new Button(testButtonDelegate)
-
     backgroundColorPicker = new ColorPicker(backgroundColorPickerDelegate)
-    backgroundColorStream = Observable[Color](o => {
-      backgroundColorPicker.onAction = handle {
-        o.onNext(backgroundColorPicker.value.value)
-      }
-    })
-
     fontColorPicker = new ColorPicker(fontColorPickerDelegate)
-    fontColorStream = Observable[Color](o => {
-      fontColorPicker.onAction = handle {
-        o.onNext(fontColorPicker.value.value)
-      }
-    })
-
     sortUp = new Button(sortUpDelegate)
     sortDown = new Button(sortDownDelegate)
-    onSortButtonStream = Observable[Boolean](o => {
-      sortUp.onAction = handle {
-        o.onNext(true)
-      }
-      sortDown.onAction = handle {
-        o.onNext(false)
-      }
-    })
-
     formulaEditor = new TextField(formulaEditorDelegate)
-    formulaEditorStream = Observable[String](o => {
-      formulaEditor.onAction = handle {
-        o.onNext(formulaEditor.getText)
-      }
-    })
-
     menuLoad = new MenuItem(menuLoadDelegate)
-    loadStream = Observable[String](o => {
-      menuLoad.onAction = handle {
-        o.onNext("temp.csv")
-      }
-    })
-
     menuSave = new MenuItem(menuSaveDelegate)
-    saveStream = Observable[String](o => {
-      menuSave.onAction = handle {
-        o.onNext("temp.csv")
-      }
-    })
-
     menuRedo = new MenuItem(menuRedoDelegate)
     menuUndo = new MenuItem(menuUndoDelegate)
-
     menuCut = new MenuItem(menuCutDelegate)
     menuCopy = new MenuItem(menuCopyDelegate)
     menuPaste = new MenuItem(menuPasteDelegate)
-    clipboardStream = Observable( o => {
-      menuCut.onAction = handle {
-        o.onNext(Cut)
-      }
-      menuCopy.onAction = handle {
-        o.onNext(Copy)
-      }
-      menuPaste.onAction = handle {
-        o.onNext(Paste)
+    menuDelete = new MenuItem(menuDeleteDelegate)
+
+    newColumnButton = new Button(newColumnDelegate)
+    newRowButton = new Button(newRowDelegate)
+
+    // initialize interaction streams
+    InteractionHelper.initializeInteractionStreams(this)
+
+    // subscribe table to data changes
+    labeledDataTable.subscribe(buildTableView _)
+
+    // handle adding of rows/columns
+    newColumnButton.onAction = handle {
+      // add new column at the end (position -1)
+      tableMutations.onNext(AddNewColumn(-1))
+    }
+    newRowButton.onAction = handle {
+      // add new row at the end (position -1)
+      tableMutations.onNext(AddNewRow(-1))
+    }
+
+    // handle changes on size of table container
+    tableContainer.width.onChange {
+      (_, _, newWidth) => {
+        // re-render the table
+        tableMutations.onNext(LayOutTable())
       }
     }
-    )
+    tableContainer.height.onChange {
+      (_, _, newHeight) => {
+        // re-render the table
+        tableMutations.onNext(LayOutTable())
+      }
+    }
 
-    menuDelete = new MenuItem(menuDeleteDelegate)
+    // handle undo/redo
+    menuUndo.onAction = handle {
+      onUndo.onNext(Unit)
+    }
+    menuRedo.onAction = handle {
+      onRedo.onNext(Unit)
+    }
+
   }
 
+  def editorText = formulaEditor.text.value
 
-  def changeEditorText(text: String) = formulaEditor.text = text
+  def editorText_=(text: String): Unit = formulaEditor.text = text
 
-  def changeBackgroundColorPicker(color: Color) = backgroundColorPicker.value = color
+  def backgroundColor = backgroundColorPicker.value.value
 
-  def changeFontColorPicker(color: Color) = fontColorPicker.value = color
+  def backgroundColor_=(color: Color): Unit = backgroundColorPicker.value = color
 
-}
+  def fontColor = fontColorPicker.value.value
 
-object ViewManager {
-  sealed trait ClipboardAction extends Serializable
-  case object Cut extends ClipboardAction
-  case object Copy extends ClipboardAction
-  case object Paste extends ClipboardAction
+  def fontColor_=(color: Color): Unit = fontColorPicker.value = color
+
 }

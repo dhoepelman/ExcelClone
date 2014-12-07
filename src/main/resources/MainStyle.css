@@ -17,7 +17,7 @@
 }
 
 .cell:empty{
-    -fx-background-color: silver;
+    -fx-background-color: whitesmoke;
 }
 
 .cell:selected, .table-row-cell:hover .cell:selected{

@@ -1,61 +1,96 @@
 package scalaExcel.GUI.data
 
 import scalaExcel.CellPos
-import scalaExcel.formula.{Value, numToCol}
+import scalaExcel.formula.VEmpty
 import scalafx.collections.ObservableBuffer
 import scalafx.beans.property.ObjectProperty
 
-import scalaExcel.model.Styles
+import scalaExcel.model.{Sheet, Styles}
 import scalaExcel.util.DefaultProperties
+import scalaExcel.GUI.data.DataWindow.{Size, Bounds}
+import scalaExcel.model.Filer._
 
+/**
+ * Wrapper on the data model sheet
+ *
+ * It contains all sheet data, but also information on the current window,
+ * the column headers and widths, the current sort configuration, etc.
+ *
+ * The 'rebuild' property shows if the table has changed its structure
+ * and needs to be rebuilt, or only its contents need updating
+ */
 class LabeledDataTable(
-    _dataWindow: DataWindow = LabeledDataTable.defaultDataWindow,
-    _allHeaderWidths: List[Double] = LabeledDataTable.defaultHeaderWidths,
-    _cellContents: Iterable[(CellPos, String, Value, Styles)] = List(),
-    _sortColumn: Int = -1,
-    val sortAscending: Boolean = true,
-    val rebuild: Boolean) {
+                        _dataWindow: DataWindow = DataWindow.DEFAULT,
+                        _allHeaderWidths: List[Double] = LabeledDataTable.DEFAULT_WIDTHS,
+                        _sheet: Sheet = new Sheet(),
+                        _sortColumn: Int = -1,
+                        val sortAscending: Boolean = true,
+                        val rebuild: Boolean) {
 
-  def headers = LabeledDataTable.getHeaders(_dataWindow.visibleBounds)
+  def headers = _dataWindow.visibleHeaders
 
-  def headerWidths = _allHeaderWidths.drop(_dataWindow.visibleBounds._3).take(_dataWindow.columnCount)
+  def headerWidths =
+    _allHeaderWidths
+      .drop(_dataWindow.visibleBounds.minColOffset)
+      .take(_dataWindow.columnCount)
 
-  def sortColumn = _dataWindow.absoluteToWindowColumn(_sortColumn)
+  def sortColumn = _dataWindow.absoluteToWindow((_sortColumn, 0))._1
 
-  private val translatedContents =
-    _cellContents
-      .map(content => (_dataWindow.absoluteToWindow(content._1), content._2, content._3, content._4))
+  def toSheetIndex = _dataWindow.windowToAbsolute _
 
-  private def contentsToCells(filter: ((CellPos, String, Value, Styles)) => Boolean) =
-    translatedContents
-      .filter(filter)
-      .foldLeft(Map[CellPos, DataCell]())({
-        case (cells, (index, formula, value, style)) =>
-          cells + (index -> DataCell.newEvaluated(formula, value, style))
-      })
-
-  val data = {
-    // transform cell contents contained in window into DataCells
-    val _cells = contentsToCells(contents => _dataWindow.isInBounds(contents._1))
-    //build data table with the DataCells
-    LabeledDataTable.buildDataTable(_dataWindow.rowCount,
-      _dataWindow.columnCount,
-      _cells,
-      _dataWindow)
+  def toTableIndex(index: CellPos) = {
+    val tableIndex = _dataWindow.absoluteToWindow(index)
+    if(_dataWindow.isInBounds(tableIndex)) Some(tableIndex)
+    else None
   }
 
-  def updateContents(contents: Iterable[(CellPos, String, Value, Styles)]) =
-    new LabeledDataTable(_dataWindow,
+  def slideWindowBy(offsets: Bounds) =
+    updateWindow(_dataWindow.slideBy(offsets))
+
+  def slideWindowTo(bounds: Bounds) =
+    updateWindow(_dataWindow.slideTo(bounds))
+
+  /**
+   * Gets the contents of the sheet cell as a DataCell
+   * @param index sheet index of cell
+   * @return
+   */
+  def dataCellFromSheet(index: CellPos) = {
+    // build a DataCell with the contents of the sheet at that position
+    DataCell.newEvaluated(
+      _sheet.cells.get(index) match {
+        case Some(c) => c.f
+        case None => ""
+      },
+      _sheet.valueAt(index).getOrElse(VEmpty),
+      _sheet.styles.getOrElse(index, Styles.DEFAULT))
+  }
+
+  /**
+   * Gets the contents of the sheet cell as a DataCell
+   * @param index table index of cell
+   * @return
+   */
+  def dataCellFromTable(index: CellPos) = dataCellFromSheet(toSheetIndex(index))
+
+  def data = LabeledDataTable.buildDataTable(
+      _dataWindow.rowCount,
+      _dataWindow.columnCount,
+      dataCellFromTable)
+
+  def updateContents(sheet: Sheet) = {
+    new LabeledDataTable(_dataWindow.expandTo(Size(sheet.size._1, sheet.size._2)),
       _allHeaderWidths,
-      contents,
+      sheet,
       _sortColumn,
       sortAscending,
       rebuild = false)
+  }
 
-  def updateWindow(dataWindow: DataWindow) = {
+  private def updateWindow(dataWindow: DataWindow) = {
     new LabeledDataTable(dataWindow,
       _allHeaderWidths,
-      _cellContents,
+      _sheet,
       _sortColumn,
       sortAscending,
       rebuild = true)
@@ -68,53 +103,122 @@ class LabeledDataTable(
     }
     new LabeledDataTable(_dataWindow,
       newWidths,
-      _cellContents,
+      _sheet,
       _sortColumn,
       sortAscending,
       rebuild = true)
   }
 
   def resizeColumn(columnIndex: Int, width: Double) = {
-    val realIndex = _dataWindow.windowToAbsoluteColumn(columnIndex)
     new LabeledDataTable(_dataWindow,
-      _allHeaderWidths.take(realIndex) ++ List(width) ++ _allHeaderWidths.drop(realIndex + 1),
-      _cellContents,
+      _allHeaderWidths.take(columnIndex) ++ List(width) ++ _allHeaderWidths.drop(columnIndex + 1),
+      _sheet,
       _sortColumn,
       sortAscending,
       rebuild = false)
   }
 
+  def addNewColumn(index: Int) = {
+    if (index == -1) {
+      new LabeledDataTable(_dataWindow.addNewColumn(),
+        _allHeaderWidths :+ DefaultProperties.COLUMN_WIDTH.toDouble,
+        _sheet,
+        _sortColumn,
+        sortAscending,
+        rebuild = true)
+    }
+    else {
+      this // TODO: if the column is added in the middle, columns need to be reordered
+    }
+  }
+
+  def addNewRow(index: Int) = {
+    if (index == -1) {
+      new LabeledDataTable(_dataWindow.addNewRow(),
+        _allHeaderWidths,
+        _sheet,
+        _sortColumn,
+        sortAscending,
+        rebuild = true)
+    }
+    else {
+      this // TODO: if the row is added in the middle, rows need to be reordered
+    }
+  }
+
+  /**
+   * Calculates the maximum horizontal and vertical offsets the window can have
+   */
+  def windowMaxOffsets =
+    (_dataWindow.dataSize.columnCount - _dataWindow.columnCount,
+      _dataWindow.dataSize.rowCount - _dataWindow.rowCount)
+  
+  /**
+   * Calculates the current offsets of the window
+   */
+  def windowOffsets =
+    (_dataWindow.visibleBounds.minColOffset,
+      _dataWindow.visibleBounds.minRowOffset)
+
+  /**
+   * Calculates the maximum number of data columns that fit in a given table width
+   * @param availableWidth  the width available to the table
+   * @return                number of columns that fit
+   */
+  def fitColumns(availableWidth: Double) = {
+    // all header widths (including numbered column)
+    val widths = _allHeaderWidths.::(DefaultProperties.NUMBERED_COLUMN_WIDTH.toDouble)
+    // number of columns that fit in the table container
+    val cols = widths.scan(0.0)((acc, w) => acc + w).drop(2).takeWhile(_ < availableWidth).length
+    // truncate the number at maximum column number (if applicable)
+    Math.min(cols, _dataWindow.dataSize.columnCount)
+  }
+
+  /**
+   * Calculates the maximum number of data rows that fit in a given table height
+   * @param availableHeight  the height available to the table
+   * @return                number of rows that fit
+   */
+  def fitRows(availableHeight: Double) = {
+    // TODO if rows can vary height, this must be rewritten
+    val rowHeight = DefaultProperties.FIXED_ROW_HEIGHT
+    // number of rows that fit in the table container (-1 because of header row)
+    val rows = Math.max(0, (availableHeight / rowHeight).toInt - 1)
+    // truncate the number of rows at maximum row number (if applicable)
+    Math.min(rows, _dataWindow.dataSize.rowCount)
+  }
+  
+  /**
+   * Recalculates the data window to fit all columns and rows that can be seen
+   * @param availableWidth  the width available to the table
+   * @param availableHeight the height available to the table
+   * @return
+   */
+  def layOut(availableWidth: Double, availableHeight: Double) = {
+    // move window to initial position, but with new size
+    slideWindowTo(Bounds(0, fitColumns(availableWidth),0, fitRows(availableHeight)))
+  }
+
+  def saveTo(file: java.io.File) = _sheet.saveTo(file)
+
 }
 
+/**
+ * Object with general operations and properties of the LabeledDataTable class
+ */
 object LabeledDataTable {
   type DataRow = ObservableBuffer[ObjectProperty[DataCell]]
   type DataTable = ObservableBuffer[DataRow]
 
   def buildDataTable(rows: Int,
                      columns: Int,
-                     data: Map[CellPos, DataCell],
-                     dataWindow: DataWindow): DataTable = {
+                     dataGrabber: (CellPos) => DataCell): DataTable = {
     new DataTable() ++=
-      List.range(0, rows + 1).map(i => new DataRow() ++=
-        List.range(0, columns + 1).map(j =>
-          ObjectProperty(data.getOrElse((i, j), DataCell.newEmpty()))))
+      List.range(0, rows).map(r => new DataRow() ++=
+        List.range(0, columns).map(c =>
+          ObjectProperty(dataGrabber((c, r)))))
   }
 
-  def getHeaders(bounds: (Int, Int, Int, Int)) =
-    List.range(bounds._3, bounds._4) map numToCol
-
-  val defaultDataWindow = new DataWindow(
-    (0, DefaultProperties.GRID_SIZE._1, 0, DefaultProperties.GRID_SIZE._2),
-    (0, DefaultProperties.GRID_SIZE._1, 0, DefaultProperties.GRID_SIZE._2))
-
-  val defaultHeaderWidths =
-    List.fill(defaultDataWindow.columnCount)(DefaultProperties.COLUMN_WIDTH.toDouble)
-
-  def dataWithIndex(data: List[List[String]]): List[(Int, Int, String)] =
-    data.zipWithIndex.map({
-      case (row, i) => row.zipWithIndex.map({
-        case (expression, j) => (i, j, expression)
-      })
-    }).flatten
-
+  val DEFAULT_WIDTHS =
+    List.fill(DataWindow.DEFAULT.dataSize.columnCount)(DefaultProperties.COLUMN_WIDTH.toDouble)
 }
