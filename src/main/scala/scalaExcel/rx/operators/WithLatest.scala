@@ -14,6 +14,8 @@ object WithLatest {
           b => (a, b)
         })
       }).switch
+
+    def withOnlyLatest[A](fast : Observable[A]) = slow.withLatest(fast).map(_._1)
   }
 
   implicit class RxDistinctWithAllLatest[B](slow: Observable[B]) {

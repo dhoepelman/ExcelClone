@@ -47,7 +47,12 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
    */
   def copyCell(from: CellPos, to: CellPos) = {
     val cell = Cell(DependencyModifier.moveDependencies(from, to)(getCell(from).AST))
-    (new Sheet(cells + (to -> cell), calcNewValue(to, cell), calcNewDependents(to, cell), styles), dependentsOf(to))
+    (new Sheet(
+      cells + (to -> cell),
+      calcNewValue(to, cell),
+      calcNewDependents(to, cell),
+      styles + (to -> getCellStyle(from)))
+      , dependentsOf(to))
   }
 
   /**
@@ -57,7 +62,9 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
     val dependents = dependentsOf(from)
     val toUpdate = dependents ++ dependentsOf(to)
 
-    val (tempSheet, _) = setCell(to, getCell(from))
+    val tempSheet = this
+      .setCell(to, getCell(from))._1
+      .setCellStyle(to, getCellStyle(from))
 
     // Change all the dependent cells to point to the new cell
     val tempSheet2 = dependents.foldLeft(tempSheet){(s, pos) =>
@@ -78,6 +85,8 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
     (new Sheet(cells, calcNewValue(pos, getCell(pos)), dependents, styles), dependentsOf(pos))
   }
 
+  def getCellStyle(pos : CellPos) = styles.getOrElse(pos, Styles.DEFAULT)
+
   /** Set the style of a cell */
   def setCellStyle(pos : CellPos, s: Styles) = {
     new Sheet(cells, values, dependents, styles + (pos -> s))
@@ -97,6 +106,8 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
 
   /** Get the Cell or return an empty cell */
   def getCell(pos : CellPos) : Cell = cells getOrElse(pos, Cell())
+
+  def getValue(pos : CellPos) : Value = values getOrElse(pos, VEmpty)
 
   private def calcNewValue(pos: CellPos, c: Cell) = {
     val value = c.eval(values)
