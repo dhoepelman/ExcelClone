@@ -7,7 +7,7 @@ import scalafx.beans.property.ObjectProperty
 
 import scalaExcel.model.{Sheet, Styles}
 import scalaExcel.util.DefaultProperties
-import scalaExcel.GUI.data.DataWindow.{Bounds, Offsets}
+import scalaExcel.GUI.data.DataWindow.{Size, Bounds}
 import scalaExcel.model.Filer._
 
 /**
@@ -29,9 +29,12 @@ class LabeledDataTable(
 
   def headers = _dataWindow.visibleHeaders
 
-  def headerWidths = _allHeaderWidths.drop(_dataWindow.visibleBounds._1).take(_dataWindow.columnCount)
+  def headerWidths =
+    _allHeaderWidths
+      .drop(_dataWindow.visibleBounds.minColOffset)
+      .take(_dataWindow.columnCount)
 
-  def sortColumn = _dataWindow.absoluteToWindowColumn(_sortColumn)
+  def sortColumn = _dataWindow.absoluteToWindow((_sortColumn, 0))._1
 
   def toSheetIndex = _dataWindow.windowToAbsolute _
 
@@ -41,7 +44,7 @@ class LabeledDataTable(
     else None
   }
 
-  def slideWindowBy(offsets: Offsets) =
+  def slideWindowBy(offsets: Bounds) =
     updateWindow(_dataWindow.slideBy(offsets))
 
   def slideWindowTo(bounds: Bounds) =
@@ -76,7 +79,7 @@ class LabeledDataTable(
       dataCellFromTable)
 
   def updateContents(sheet: Sheet) = {
-    new LabeledDataTable(_dataWindow.expandTo(sheet.size),
+    new LabeledDataTable(_dataWindow.expandTo(new Size(sheet.size._1, sheet.size._2)),
       _allHeaderWidths,
       sheet,
       _sortColumn,
@@ -107,7 +110,7 @@ class LabeledDataTable(
   }
 
   def resizeColumn(columnIndex: Int, width: Double) = {
-    val realIndex = _dataWindow.windowToAbsoluteColumn(columnIndex)
+    val realIndex = _dataWindow.windowToAbsolute((columnIndex, 0))._1
     new LabeledDataTable(_dataWindow,
       _allHeaderWidths.take(realIndex) ++ List(width) ++ _allHeaderWidths.drop(realIndex + 1),
       _sheet,
@@ -147,13 +150,16 @@ class LabeledDataTable(
   /**
    * Calculates the maximum horizontal and vertical offsets the window can have
    */
-  def windowMaxOffsets = (_dataWindow.dataSize._1 - _dataWindow.columnCount,
-    _dataWindow.dataSize._2 - _dataWindow.rowCount)
+  def windowMaxOffsets =
+    (_dataWindow.dataSize.columnCount - _dataWindow.columnCount,
+      _dataWindow.dataSize.rowCount - _dataWindow.rowCount)
   
   /**
    * Calculates the current offsets of the window
    */
-  def windowOffsets = (_dataWindow.visibleBounds._1, _dataWindow.visibleBounds._3)
+  def windowOffsets =
+    (_dataWindow.visibleBounds.minColOffset,
+      _dataWindow.visibleBounds.minRowOffset)
 
   /**
    * Recalculates the data window to fit all columns and rows that can be seen
@@ -172,11 +178,11 @@ class LabeledDataTable(
     // number of columns that fit in the table container
     val cols = widths.scan(0.0)((acc, w) => acc + w).drop(2).takeWhile(_ < tableWidth).length
     // truncate the number at maximum column number (if applicable)
-    val maxCols = Math.min(cols, _dataWindow.dataSize._1)
+    val maxCols = Math.min(cols, _dataWindow.dataSize.columnCount)
     // truncate the number of rows at maximum row number (if applicable)
-    val maxRows = Math.min(rows, _dataWindow.dataSize._2)
+    val maxRows = Math.min(rows, _dataWindow.dataSize.rowCount)
     // move window to initial position, but with new size
-    slideWindowTo((0, maxCols,0, maxRows))
+    slideWindowTo(new Bounds(0, maxCols,0, maxRows))
   }
 
   def saveTo(file: java.io.File) = _sheet.saveTo(file)
@@ -200,5 +206,5 @@ object LabeledDataTable {
   }
 
   val DEFAULT_WIDTHS =
-    List.fill(DataWindow.DEFAULT.dataSize._1)(DefaultProperties.COLUMN_WIDTH.toDouble)
+    List.fill(DataWindow.DEFAULT.dataSize.columnCount)(DefaultProperties.COLUMN_WIDTH.toDouble)
 }

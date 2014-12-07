@@ -8,87 +8,80 @@ import scalaExcel.formula.numToCol
 class DataWindow(val dataSize: Size,
                  val visibleBounds: Bounds) {
 
-  def addToVisibleBound(f: (Bounds) => Int, add: (Int, Int) => Int)(x: Int) = add(x, f(visibleBounds))
 
-  def windowToAbsoluteColumn = addToVisibleBound(_._1, _ + _) _
-  def absoluteToWindowColumn = addToVisibleBound(_._1, _ - _) _
-  def windowToAbsoluteRow = addToVisibleBound(_._3, _ + _) _
-  def absoluteToWindowRow = addToVisibleBound(_._3, _ - _) _
+  def windowToAbsolute(index: CellPos) =
+    (index._1 + visibleBounds.minColOffset, index._2 + visibleBounds.minRowOffset)
 
-  def windowToAbsolute(index: (Int, Int)): (Int, Int) =
-    (windowToAbsoluteColumn(index._1), windowToAbsoluteRow(index._2))
+  def absoluteToWindow(index: CellPos) =
+    (index._1 - visibleBounds.minColOffset, index._2 - visibleBounds.minRowOffset)
 
-  def absoluteToWindow(index: (Int, Int)): (Int, Int) =
-    (absoluteToWindowColumn(index._1), absoluteToWindowRow(index._2))
-
-  def isInBounds(index: CellPos) =
-    index._1 >= visibleBounds._1 && index._1 < visibleBounds._2 &&
-        index._2 >= visibleBounds._3 && index._2 < visibleBounds._4
-
-  def slideBy(offsets: Offsets) = {
-    new DataWindow(dataSize, addOffsetsToBounds(offsets, visibleBounds))
+  def isInBounds(index: CellPos) = visibleBounds match {
+    case Bounds(minCol, maxCol, minRow, maxRow) =>
+      index._1 >= minCol && index._1 < maxCol &&
+        index._2 >= minRow && index._2 < maxRow
   }
 
-  def addOffsetsToBounds(offsets: Offsets, bounds: Bounds) = {
-    (visibleBounds._1 + offsets._1,
-      visibleBounds._2 + offsets._2,
-      visibleBounds._3 + offsets._3,
-      visibleBounds._4 + offsets._4)
+  def slideBy(offsets: Bounds) = {
+    new DataWindow(dataSize, addBounds(offsets, visibleBounds))
   }
 
-  def slideTo(bounds: (Int, Int, Int, Int)) = {
+  def addBounds(b1: Bounds, b2: Bounds) =
+    new Bounds(b1.minColOffset + b2.minColOffset,
+      b1.maxColOffset + b2.maxColOffset,
+      b1.minRowOffset + b2.minRowOffset,
+      b1.maxRowOffset + b2.maxRowOffset)
+
+  def slideTo(bounds: Bounds) = {
     new DataWindow(dataSize, bounds)
   }
 
-  def columnCount = visibleBounds._2 - visibleBounds._1
+  def columnCount =
+    visibleBounds.maxColOffset - visibleBounds.minColOffset
 
-  def rowCount = visibleBounds._4 - visibleBounds._3
+  def rowCount =
+    visibleBounds.maxRowOffset - visibleBounds.minRowOffset
 
-  def addNewRow() = {
-    // add one more column to maximum bounds
-    val newSize = (dataSize._1, dataSize._2 + 1)
-    // if the column should be in view, slide the visibleBounds over it
-    if(visibleBounds._4 == dataSize._2)
-      new DataWindow(newSize, addOffsetsToBounds((0, 0, 1, 1), visibleBounds))
-    else
-      new DataWindow(newSize, visibleBounds)
-  }
+  def addNewRow() =
+    new DataWindow(
+      // add one more column to maximum bounds
+      new Size(dataSize.columnCount, dataSize.rowCount + 1),
+      // if the column should be in view, slide the visibleBounds over it
+      if (visibleBounds.maxRowOffset == dataSize.rowCount)
+        addBounds(new Bounds(0, 0, 1, 1), visibleBounds)
+      else
+        visibleBounds
+    )
 
-  def addNewColumn() = {
-    // add one more row to maximum bounds
-    val newSize = (dataSize._1 + 1, dataSize._2)
-    // if the column should be in view, slide the visibleBounds over it
-    if(visibleBounds._2 == dataSize._1)
-      new DataWindow(newSize, addOffsetsToBounds((1, 1, 0, 0), visibleBounds))
-    else
-      new DataWindow(newSize, visibleBounds)
-  }
+  def addNewColumn() =
+    new DataWindow(
+      // add one more column to maximum bounds
+      new Size(dataSize.columnCount + 1, dataSize.rowCount),
+      // if the row should be in view, slide the visibleBounds over it
+      if (visibleBounds.maxColOffset == dataSize.columnCount)
+        addBounds(new Bounds(1, 1, 0, 0), visibleBounds)
+      else
+        visibleBounds)
 
   def expandTo(size: Size) =
-    new DataWindow((Math.max(size._1, dataSize._1), Math.max(size._2, dataSize._2)), visibleBounds)
+    new DataWindow(
+      new Size(Math.max(size.columnCount, dataSize.columnCount),
+        Math.max(size.rowCount, dataSize.rowCount)
+      ),
+      visibleBounds
+    )
 
   def visibleHeaders =
-    List.range(visibleBounds._1, visibleBounds._2) map numToCol
+    List.range(visibleBounds.minColOffset, visibleBounds.maxColOffset) map numToCol
 
 }
 
 object DataWindow {
-  type Cols = Int
-  type Rows = Int
-  type MinCol = Int
-  type MinColOffset = Int
-  type MaxCol = Int
-  type MaxColOffset = Int
-  type MinRow = Int
-  type MinRowOffset = Int
-  type MaxRow = Int
-  type MaxRowOffset = Int
 
-  type Bounds = (MinCol, MaxCol, MinRow, MaxRow)
-  type Offsets = (MinColOffset, MaxColOffset, MinRowOffset, MaxRowOffset)
-  type Size = (Cols, Rows)
+  case class Bounds(minColOffset: Int, maxColOffset: Int, minRowOffset: Int, maxRowOffset: Int)
+  case class Size(columnCount: Int, rowCount: Int)
 
   val DEFAULT = new DataWindow(
-    (DefaultProperties.GRID_SIZE._1, DefaultProperties.GRID_SIZE._2),
-    (0, DefaultProperties.GRID_SIZE._1, 0, DefaultProperties.GRID_SIZE._2))
+    new Size(DefaultProperties.GRID_SIZE._1, DefaultProperties.GRID_SIZE._2),
+    new Bounds(0, DefaultProperties.GRID_SIZE._1, 0, DefaultProperties.GRID_SIZE._2)
+  )
 }

@@ -22,6 +22,7 @@ import scalaExcel.model.Sheet
 import scalaExcel.GUI.view.InteractionHelper.WatchableScrollBar
 import scalafx.scene.input.ScrollEvent
 import scalaExcel.GUI.data.LabeledDataTable.DataRow
+import scalaExcel.GUI.data.DataWindow.Bounds
 
 class ViewManager extends jfxf.Initializable {
 
@@ -204,7 +205,7 @@ class ViewManager extends jfxf.Initializable {
       values._1,
       (newValue: Int) =>
       // slide table window horizontally by the difference
-        tableMutations.onNext(new SlideWindowBy((newValue - values._1, newValue - values._1, 0, 0))))
+        tableMutations.onNext(new SlideWindowBy(new Bounds(newValue - values._1, newValue - values._1, 0, 0))))
 
     if (verticalScroll != null)
       verticalScroll.unWatch()
@@ -213,7 +214,7 @@ class ViewManager extends jfxf.Initializable {
       values._2,
       (newValue: Int) =>
       // slide table window vertically by the difference
-        tableMutations.onNext(new SlideWindowBy((0, 0, newValue - values._2, newValue - values._2))))
+        tableMutations.onNext(new SlideWindowBy(new Bounds(0, 0, newValue - values._2, newValue - values._2))))
 
   }
 
