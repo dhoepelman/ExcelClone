@@ -83,10 +83,10 @@ class ViewManager extends jfxf.Initializable {
   // them into the model
 
   val onCellEdit = Subject[(CellPos, String)]()
-  val onBackgroundChange = Subject[(CellPos, Color)]()
-  val onColorChange = Subject[(CellPos, Color)]()
+  val onBackgroundChange = Subject[(Traversable[CellPos], Color)]()
+  val onColorChange = Subject[(Traversable[CellPos], Color)]()
   val onColumnSort = Subject[(Int, Boolean)]()
-  val onCellEmpty = Subject[CellPos]()
+  val onCellEmpty = Subject[Traversable[CellPos]]()
   val onCellCut = Subject[(CellPos, CellPos)]()
   val onCellCopy = Subject[(CellPos, CellPos)]()
   val onLoad = Subject[java.io.File]()

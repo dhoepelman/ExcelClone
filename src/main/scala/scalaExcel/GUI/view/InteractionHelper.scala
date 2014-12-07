@@ -77,7 +77,7 @@ object InteractionHelper {
         o.onNext(controller.backgroundColor)
       }
     })
-    .distinctWithAllLatest(controller.onSelection)
+    .withLatest(controller.onSelection)
     .subscribe(controller.onBackgroundChange.onNext _)
 
     //Changes on the color picker are pushed to the model
@@ -86,7 +86,7 @@ object InteractionHelper {
         o.onNext(controller.fontColorPicker.value.value)
       }
     })
-    .distinctWithAllLatest(controller.onSelection)
+    .withLatest(controller.onSelection)
     .subscribe(controller.onColorChange.onNext _)
 
     // Saves are handled here
@@ -123,8 +123,8 @@ object InteractionHelper {
       controller.menuDelete.onAction = handle {
         o.onNext(Unit)
     })
-    .distinctWithAllLatest(controller.onSelection)
-    .subscribe(s => controller.onCellEmpty.onNext(s._1))
+    .withOnlyLatest(controller.onSelection)
+    .subscribe(controller.onCellEmpty.onNext(_))
 
     // Copy-pasting is handled by this function
     // TODO:  Yeah, so putting it in a variable first works. But when I put it directly in the subscribe it doesn't?...
