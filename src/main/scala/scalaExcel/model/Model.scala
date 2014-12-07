@@ -35,13 +35,6 @@ class Model {
   def updateStyle(sheet: Sheet, pos : CellPos, f: Styles => Styles) =
     sheet.setCellStyle(pos, f(sheet.getCellStyle(pos)))
 
-  private def setSheet(values: Traversable[((Int,Int),String)]): Sheet = {
-    values.foldLeft(new Sheet()) { case (sheet, ((r, c), value)) =>
-      val (s, updates) = sheet.setCell((c, r), value)
-      s
-    }
-  }
-
   // this combines the initial Sheet with all input mutations from the outside
   // world
   private val undoRedoSheet = sheetMutations.scan(new UndoRedo(new Sheet()))({
