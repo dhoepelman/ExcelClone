@@ -105,8 +105,15 @@ class ViewManager extends jfxf.Initializable {
       case AddNewRow(index) => dataTable.addNewRow(index)
       case UpdateContents(newSheet) => dataTable.updateContents(newSheet)
       case UpdateColumnOrder(permutations) => dataTable.updateColumnOrder(permutations)
-      case ResizeColumn(columnIndex, width) => dataTable.resizeColumn(columnIndex, width)
-      case LayOutTable(width, height, cellHeight) => dataTable.layOut(width, height, cellHeight)
+      case ResizeColumn(columnIndex, width) =>
+        val newTable = dataTable.resizeColumn(columnIndex, width)
+        val availableWidth = tableContainer.width.value
+        if (dataTable.fitColumns(availableWidth) != newTable.fitColumns(availableWidth))
+          newTable.layOut(availableWidth, tableContainer.height.value)
+        else
+          newTable
+      case LayOutTable() =>
+        dataTable.layOut(tableContainer.width.value, tableContainer.height.value)
     })
 
   /**
@@ -184,6 +191,11 @@ class ViewManager extends jfxf.Initializable {
       horizontalScroll.value = Math.max(0, Math.min(amounts._1, horizontalScroll.max.value))
       verticalScroll.value = Math.max(0, Math.min(amounts._2, verticalScroll.max.value))
     })
+
+
+    // re-subscribe column width listener on table
+    streamTable.onColResize.subscribe(resize =>
+      tableMutations.onNext(new ResizeColumn(resize._1, resize._2)))
 
     // forward selection
     streamTable.onSelection.subscribe(onSelection.onNext _)
@@ -272,18 +284,14 @@ class ViewManager extends jfxf.Initializable {
     tableContainer.width.onChange {
       (_, _, newWidth) => {
         // re-render the table
-        tableMutations.onNext(new LayOutTable(newWidth.doubleValue,
-          tableContainer.height.value,
-          table.fixedCellSize.value))
+        tableMutations.onNext(new LayOutTable())
       }
     }
 
     tableContainer.height.onChange {
       (_, _, newHeight) => {
         // re-render the table
-        tableMutations.onNext(new LayOutTable(tableContainer.width.value,
-          newHeight.doubleValue,
-          if (table == null) -1 else table.fixedCellSize.value))
+        tableMutations.onNext(new LayOutTable())
       }
     }
 

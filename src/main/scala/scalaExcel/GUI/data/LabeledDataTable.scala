@@ -110,9 +110,8 @@ class LabeledDataTable(
   }
 
   def resizeColumn(columnIndex: Int, width: Double) = {
-    val realIndex = _dataWindow.windowToAbsolute((columnIndex, 0))._1
     new LabeledDataTable(_dataWindow,
-      _allHeaderWidths.take(realIndex) ++ List(width) ++ _allHeaderWidths.drop(realIndex + 1),
+      _allHeaderWidths.take(columnIndex) ++ List(width) ++ _allHeaderWidths.drop(columnIndex + 1),
       _sheet,
       _sortColumn,
       sortAscending,
@@ -162,27 +161,42 @@ class LabeledDataTable(
       _dataWindow.visibleBounds.minRowOffset)
 
   /**
-   * Recalculates the data window to fit all columns and rows that can be seen
-   * @param tableWidth  the width available to the table
-   * @param tableHeight the height available to the table
-   * @param rowHeight   the current row height
-   * @return
+   * Calculates the maximum number of data columns that fit in a given table width
+   * @param availableWidth  the width available to the table
+   * @return                number of columns that fit
    */
-  def layOut(tableWidth: Double, tableHeight: Double, rowHeight: Double) = {
-    // TODO if rows can vary height, this must be rewritten
-    val realRowHeight = if (rowHeight < 0) DefaultProperties.FIXED_ROW_HEIGHT else rowHeight
-    // number of rows that fit in the table container (-1 because of header row)
-    val rows = Math.max(0, (tableHeight / realRowHeight).toInt - 1)
+  def fitColumns(availableWidth: Double) = {
     // all header widths (including numbered column)
     val widths = _allHeaderWidths.::(DefaultProperties.NUMBERED_COLUMN_WIDTH.toDouble)
     // number of columns that fit in the table container
-    val cols = widths.scan(0.0)((acc, w) => acc + w).drop(2).takeWhile(_ < tableWidth).length
+    val cols = widths.scan(0.0)((acc, w) => acc + w).drop(2).takeWhile(_ < availableWidth).length
     // truncate the number at maximum column number (if applicable)
-    val maxCols = Math.min(cols, _dataWindow.dataSize.columnCount)
+    Math.min(cols, _dataWindow.dataSize.columnCount)
+  }
+
+  /**
+   * Calculates the maximum number of data rows that fit in a given table height
+   * @param availableHeight  the height available to the table
+   * @return                number of rows that fit
+   */
+  def fitRows(availableHeight: Double) = {
+    // TODO if rows can vary height, this must be rewritten
+    val rowHeight = DefaultProperties.FIXED_ROW_HEIGHT
+    // number of rows that fit in the table container (-1 because of header row)
+    val rows = Math.max(0, (availableHeight / rowHeight).toInt - 1)
     // truncate the number of rows at maximum row number (if applicable)
-    val maxRows = Math.min(rows, _dataWindow.dataSize.rowCount)
+    Math.min(rows, _dataWindow.dataSize.rowCount)
+  }
+  
+  /**
+   * Recalculates the data window to fit all columns and rows that can be seen
+   * @param availableWidth  the width available to the table
+   * @param availableHeight the height available to the table
+   * @return
+   */
+  def layOut(availableWidth: Double, availableHeight: Double) = {
     // move window to initial position, but with new size
-    slideWindowTo(new Bounds(0, maxCols,0, maxRows))
+    slideWindowTo(new Bounds(0, fitColumns(availableWidth),0, fitRows(availableHeight)))
   }
 
   def saveTo(file: java.io.File) = _sheet.saveTo(file)

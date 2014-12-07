@@ -27,8 +27,7 @@ class DataCellColumn(onCellEdit: ((CellPos, String)) => Unit,
   id = colIndex.toString
   cellValueFactory = _.value.get(colIndex)
   cellFactory = _ => new DataCellView
-  minWidth = headerWidth
-  maxWidth = headerWidth
+  prefWidth = headerWidth
   sortable = false
 
   // listen for column width changes
@@ -141,9 +140,9 @@ class StreamingTable(labeledTable: LabeledDataTable) {
       {case (pos, formula) =>
           // convert table index to sheet index
           onCellEdit.onNext((labeledTable.toSheetIndex(pos), formula))},
-      {case (index, formula) =>
+      {case (index, w) =>
           // convert table column index to sheet column index
-          onColResize.onNext((labeledTable.toSheetIndex((index, 0))._1, formula))},
+          onColResize.onNext((labeledTable.toSheetIndex((index, 0))._1, w))},
       cols.length,
       data._1,
       data._2)
