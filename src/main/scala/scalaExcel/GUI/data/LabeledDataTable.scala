@@ -14,7 +14,7 @@ import scalaExcel.model.Filer._
  * Wrapper on the data model sheet
  *
  * It contains all sheet data, but also information on the current window,
- * the column headers and widths, the current sort configuration, etc.
+ * the column headers and widths, etc.
  *
  * The 'rebuild' property shows if the table has changed its structure
  * and needs to be rebuilt, or only its contents need updating
@@ -23,8 +23,6 @@ class LabeledDataTable(
                         _dataWindow: DataWindow = DataWindow.DEFAULT,
                         _allHeaderWidths: List[Double] = LabeledDataTable.DEFAULT_WIDTHS,
                         _sheet: Sheet = new Sheet(),
-                        _sortColumn: Int = -1,
-                        val sortAscending: Boolean = true,
                         val rebuild: Boolean) {
 
   def headers = _dataWindow.visibleHeaders
@@ -33,8 +31,6 @@ class LabeledDataTable(
     _allHeaderWidths
       .drop(_dataWindow.visibleBounds.minCol)
       .take(_dataWindow.columnCount)
-
-  def sortColumn = _dataWindow.absoluteToWindow((_sortColumn, 0))._1
 
   def toSheetIndex = _dataWindow.windowToAbsolute _
 
@@ -82,8 +78,6 @@ class LabeledDataTable(
     new LabeledDataTable(_dataWindow.expandTo(Size(sheet.size._1, sheet.size._2)),
       _allHeaderWidths,
       sheet,
-      _sortColumn,
-      sortAscending,
       rebuild = false)
   }
 
@@ -91,8 +85,6 @@ class LabeledDataTable(
     new LabeledDataTable(dataWindow,
       _allHeaderWidths,
       _sheet,
-      _sortColumn,
-      sortAscending,
       rebuild = true)
   }
 
@@ -104,8 +96,6 @@ class LabeledDataTable(
     new LabeledDataTable(_dataWindow,
       newWidths,
       _sheet,
-      _sortColumn,
-      sortAscending,
       rebuild = true)
   }
 
@@ -113,8 +103,6 @@ class LabeledDataTable(
     new LabeledDataTable(_dataWindow,
       _allHeaderWidths.take(columnIndex) ++ List(width) ++ _allHeaderWidths.drop(columnIndex + 1),
       _sheet,
-      _sortColumn,
-      sortAscending,
       rebuild = false)
   }
 
@@ -123,8 +111,6 @@ class LabeledDataTable(
       new LabeledDataTable(_dataWindow.addNewColumn(),
         _allHeaderWidths :+ DefaultProperties.COLUMN_WIDTH.toDouble,
         _sheet,
-        _sortColumn,
-        sortAscending,
         rebuild = true)
     }
     else {
@@ -137,8 +123,6 @@ class LabeledDataTable(
       new LabeledDataTable(_dataWindow.addNewRow(),
         _allHeaderWidths,
         _sheet,
-        _sortColumn,
-        sortAscending,
         rebuild = true)
     }
     else {
