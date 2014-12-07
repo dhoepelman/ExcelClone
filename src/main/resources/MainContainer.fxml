@@ -41,6 +41,17 @@
                         </Menu>
                         <Menu mnemonicParsing="false" text="Edit">
                             <items>
+                                <MenuItem fx:id="menuUndoDelegate" text="Undo">
+                                    <accelerator>
+                                        <KeyCodeCombination alt="UP" code="Z" control="ANY" meta="ANY" shift="UP" shortcut="DOWN" />
+                                    </accelerator>
+                                </MenuItem>
+                                <MenuItem fx:id="menuRedoDelegate" text="Redo">
+                                    <accelerator>
+                                        <KeyCodeCombination alt="UP" code="Y" control="ANY" meta="ANY" shift="UP" shortcut="DOWN" />
+                                    </accelerator>
+                                </MenuItem>
+                                <SeparatorMenuItem />
                                 <MenuItem fx:id="menuCutDelegate" text="Cut">
                                     <accelerator>
                                         <KeyCodeCombination alt="UP" code="X" control="ANY" meta="ANY" shift="UP" shortcut="DOWN" />
@@ -61,11 +72,6 @@
                                         <KeyCodeCombination alt="ANY" code="DELETE" control="ANY" meta="ANY" shift="ANY" shortcut="ANY" />
                                     </accelerator>
                                 </MenuItem>
-                            </items>
-                        </Menu>
-                        <Menu mnemonicParsing="false" text="Help">
-                            <items>
-                                <MenuItem mnemonicParsing="false" text="About" />
                             </items>
                         </Menu>
                     </menus>
