@@ -91,8 +91,8 @@ class ViewManager extends jfxf.Initializable {
   // them into the model
 
   val onCellEdit = Subject[(CellPos, String)]()
-  val onBackgroundChange = Subject[(CellPos, Color)]()
-  val onColorChange = Subject[(CellPos, Color)]()
+  val onBackgroundChange = Subject[(Traversable[CellPos], Color)]()
+  val onColorChange = Subject[(Traversable[CellPos], Color)]()
   val onColumnSort = Subject[(Int, Boolean)]()
 
   def buildTableView(labeledTable: LabeledDataTable, model: Model): Unit = {
@@ -118,52 +118,35 @@ class ViewManager extends jfxf.Initializable {
     // forward edits
     streamTable.onCellEdit.subscribe(x => onCellEdit.onNext(x))
 
-    // A stream with the first selected cell
-    val singleSelectedCell = streamTable.onSelection
-      .filter(_.size == 1)
-      .map(_.head)
-
-    val sheetWithSelectedCell = model.sheet.combineLatest(singleSelectedCell)
+    val selectedCell =
+      streamTable.singleSelectedCellStream
+        .combineLatest(model.sheet)
 
     // Update the formula editor
-    sheetWithSelectedCell
-      .map({
-        case (sheet, pos) => sheet.cells.get(pos) match {
-        case Some(cell) => cell.f
-        case None => ""
-      }
-    })
+    selectedCell
+      .map({ case (selected, sheet) => sheet.getCell(selected).f })
       .distinctUntilChanged
       .subscribe(f => changeEditorText(f))
 
     // Update color pickers when selection changes
-    sheetWithSelectedCell
-      .map({
-        case (sheet, pos) => sheet.styles.get(pos) match {
-        case Some(style) => style
-        case None => Styles.DEFAULT
-      }
-    })
-      .distinctUntilChanged
-      .subscribe(s => {
-      changeBackgroundColorPicker(s.background)
-      changeFontColorPicker(s.color)
-    })
+    selectedCell
+      .map({ case (selected, sheet) => sheet.getCellStyle(selected)})
+      .subscribe({ s =>
+        changeBackgroundColorPicker(s.background)
+        changeFontColorPicker(s.color)
+      })
 
     // Changes on formula editor are pushed to the selected cell
-    singleSelectedCell.combineLatest(formulaEditorStream)
-      .distinctUntilChanged(_._2)
-      .subscribe(x => onCellEdit.onNext(x))
+    formulaEditorStream
+      .distinctUntilChanged
+      .withLatest(streamTable.singleSelectedCellStream)
+      .subscribe({x => onCellEdit.onNext(x) })
 
     // Changes on the ColorPickers are pushed to the model
-    streamTable.onSelection.combineLatest(backgroundColorStream)
-      .distinctUntilChanged(_._2)
-      .flatMap(x => Observable.from(x._1.map(i => (i, x._2))))
+    streamTable.withSelectedCells(backgroundColorStream)
       .subscribe(x => onBackgroundChange.onNext(x))
 
-    streamTable.onSelection.combineLatest(fontColorStream)
-      .distinctUntilChanged(_._2)
-      .flatMap(x => Observable.from(x._1.map(i => (i, x._2))))
+    streamTable.withSelectedCells(fontColorStream)
       .subscribe(x => onColorChange.onNext(x))
 
     // Load - Save
@@ -209,7 +192,7 @@ class ViewManager extends jfxf.Initializable {
       action match {
         case Cut | Copy => {
           contents.put(copyPasteFormat, (action, ps.head))
-          contents.putString(s.valueAt(ps.head).get.toString)
+          contents.putString(s.getValue(ps.head).toString)
           clipboard.setContent(contents)
         }
         case Paste => {
@@ -236,7 +219,7 @@ class ViewManager extends jfxf.Initializable {
       .subscribe(clipboardHandler)
 
     onSortButtonStream
-      .withLatest(singleSelectedCell)
+      .withLatest(streamTable.singleSelectedCellStream)
       .subscribe { s => s match {
         case ((x, y), asc) => onColumnSort.onNext((x, asc))
       }}

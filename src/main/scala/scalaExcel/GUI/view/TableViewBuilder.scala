@@ -66,6 +66,7 @@ class NumberedColumn extends TableColumn[DataRow, DataCell] {
 
 class StreamingTable(labeledTable: LabeledDataTable) {
 
+
   type TableColumns = ObservableBuffer[jfxc.TableColumn[DataRow, DataCell]]
 
   val table = new TableView[DataRow](labeledTable.data) {
@@ -78,22 +79,9 @@ class StreamingTable(labeledTable: LabeledDataTable) {
       labeledTable.headerWidths)
   }
 
-  val selectionModel = table.getSelectionModel
-  selectionModel.setCellSelectionEnabled(true)
-  selectionModel.setSelectionMode(SelectionMode.MULTIPLE)
-
-  val onSelection = Observable[List[CellPos]](o => {
-    selectionModel.getSelectedCells.onChange((source, _) => {
-      // first column is -1, because it's reserved for row numbers
-      val cells = source
-        .toList
-        .map { x => (x.getColumn - 1, x.getRow) }
-        .filter {
-          case (col, row) => col >= 0 && row >= 0
-        }
-      o.onNext(cells)
-    })
-  })
+  // Enable multiple selection
+  table.getSelectionModel.setCellSelectionEnabled(true)
+  table.getSelectionModel.setSelectionMode(SelectionMode.MULTIPLE)
 
   val onColumnReorder = Observable[Map[Int, Int]](o => {
     table.columns.onChange((cols, changes) => {
@@ -151,6 +139,8 @@ class StreamingTable(labeledTable: LabeledDataTable) {
     }))
     })
   })
+
+  val singleSelectedCellStream = selectedCellStream.map(_.head)
 
   /** Combine an observable with the current selected cells in the table */
   def withSelectedCells[T](o: Observable[T]): Observable[(List[CellPos], T)] = o.withLatest(selectedCellStream)

@@ -78,6 +78,8 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
     (new Sheet(cells, calcNewValue(pos, getCell(pos)), dependents, styles), dependentsOf(pos))
   }
 
+  def getCellStyle(pos : CellPos) = styles.getOrElse(pos, Styles.DEFAULT)
+
   /** Set the style of a cell */
   def setCellStyle(pos : CellPos, s: Styles) = {
     new Sheet(cells, values, dependents, styles + (pos -> s))
@@ -97,6 +99,8 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
 
   /** Get the Cell or return an empty cell */
   def getCell(pos : CellPos) : Cell = cells getOrElse(pos, Cell())
+
+  def getValue(pos : CellPos) : Value = values getOrElse(pos, VEmpty)
 
   private def calcNewValue(pos: CellPos, c: Cell) = {
     val value = c.eval(values)

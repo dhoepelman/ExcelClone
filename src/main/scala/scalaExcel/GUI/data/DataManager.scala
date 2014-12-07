@@ -59,12 +59,9 @@ class DataManager(val model: Model) {
       case (sheet, window) =>
         window.visibleIndexes.map(i => (
           i.swap,
-          sheet.cells.get(i) match {
-            case Some(c) => c.f
-            case None => ""
-          },
-          sheet.valueAt(i).getOrElse(VEmpty),
-          sheet.styles.getOrElse(i, Styles.DEFAULT)
+          sheet.getCell(i).f,
+          sheet.getValue(i),
+          sheet.getCellStyle(i)
         ))
     })
     .subscribe(contents => _tableMutationStream.onNext(new UpdateContents(contents)))

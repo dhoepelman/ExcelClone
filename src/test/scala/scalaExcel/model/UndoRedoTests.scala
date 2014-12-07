@@ -23,7 +23,7 @@ class UndoRedoTests {
     })
   }
 
-  @Test def noRedoAfterAnotherChange : Unit = {
+  @Test def noRedoAfterAnotherChange() : Unit = {
     assertEquals(100,
       zeroToFiveUndoToZero
       .next(100)
