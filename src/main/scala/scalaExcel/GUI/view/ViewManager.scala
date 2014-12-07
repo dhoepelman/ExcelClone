@@ -46,6 +46,11 @@ class ViewManager extends jfxf.Initializable {
   @jfxf.FXML private var menuSaveDelegate: jfxsc.MenuItem = _
   var menuSave: MenuItem = _
 
+  @jfxf.FXML private var menuUndoDelegate: jfxsc.MenuItem = _
+  var menuUndo : MenuItem = _
+  @jfxf.FXML private var menuRedoDelegate: jfxsc.MenuItem = _
+  var menuRedo : MenuItem = _
+
   @jfxf.FXML private var menuCutDelegate: jfxsc.MenuItem = _
   var menuCut: MenuItem = _
   @jfxf.FXML private var menuCopyDelegate: jfxsc.MenuItem = _
@@ -88,6 +93,8 @@ class ViewManager extends jfxf.Initializable {
   val onCellCut = Subject[(CellPos, CellPos)]()
   val onCellCopy = Subject[(CellPos, CellPos)]()
   val onLoad = Subject[java.io.File]()
+  val onUndo = Subject[Unit]()
+  val onRedo = Subject[Unit]()
 
   /**
    * Rx stream of changes to the visible table
@@ -257,6 +264,8 @@ class ViewManager extends jfxf.Initializable {
     formulaEditor = new TextField(formulaEditorDelegate)
     menuLoad = new MenuItem(menuLoadDelegate)
     menuSave = new MenuItem(menuSaveDelegate)
+    menuRedo = new MenuItem(menuRedoDelegate)
+    menuUndo = new MenuItem(menuUndoDelegate)
     menuCut = new MenuItem(menuCutDelegate)
     menuCopy = new MenuItem(menuCopyDelegate)
     menuPaste = new MenuItem(menuPasteDelegate)
@@ -271,28 +280,36 @@ class ViewManager extends jfxf.Initializable {
     // subscribe table to data changes
     labeledDataTable.subscribe(buildTableView _)
 
+    // handle adding of rows/columns
     newColumnButton.onAction = handle {
       // add new column at the end (position -1)
       tableMutations.onNext(new AddNewColumn(-1))
     }
-
     newRowButton.onAction = handle {
       // add new row at the end (position -1)
       tableMutations.onNext(new AddNewRow(-1))
     }
 
+    // handle changes on size of table container
     tableContainer.width.onChange {
       (_, _, newWidth) => {
         // re-render the table
         tableMutations.onNext(new LayOutTable())
       }
     }
-
     tableContainer.height.onChange {
       (_, _, newHeight) => {
         // re-render the table
         tableMutations.onNext(new LayOutTable())
       }
+    }
+
+    // handle undo/redo
+    menuUndo.onAction = handle {
+      onUndo.onNext(Unit)
+    }
+    menuRedo.onAction = handle {
+      onRedo.onNext(Unit)
     }
 
   }

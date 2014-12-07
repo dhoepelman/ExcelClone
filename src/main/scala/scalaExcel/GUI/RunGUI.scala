@@ -78,6 +78,16 @@ object RunGUI extends JFXApp {
     model.loadFrom(file)
   }
 
+  // when an action is undone
+  vm.onUndo.subscribe { _ =>
+    model.undo()
+  }
+
+  // when an action is redone
+  vm.onRedo.subscribe { _ =>
+    model.redo()
+  }
+
   stage = new PrimaryStage() {
     title = "Scala Excel"
     scene = new Scene(root, 800, 600) {
