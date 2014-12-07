@@ -79,7 +79,7 @@ class LabeledDataTable(
       dataCellFromTable)
 
   def updateContents(sheet: Sheet) = {
-    new LabeledDataTable(_dataWindow.expandTo(new Size(sheet.size._1, sheet.size._2)),
+    new LabeledDataTable(_dataWindow.expandTo(Size(sheet.size._1, sheet.size._2)),
       _allHeaderWidths,
       sheet,
       _sortColumn,
@@ -196,7 +196,7 @@ class LabeledDataTable(
    */
   def layOut(availableWidth: Double, availableHeight: Double) = {
     // move window to initial position, but with new size
-    slideWindowTo(new Bounds(0, fitColumns(availableWidth),0, fitRows(availableHeight)))
+    slideWindowTo(Bounds(0, fitColumns(availableWidth),0, fitRows(availableHeight)))
   }
 
   def saveTo(file: java.io.File) = _sheet.saveTo(file)

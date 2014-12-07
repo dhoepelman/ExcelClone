@@ -26,7 +26,7 @@ class DataWindow(val dataSize: Size,
   }
 
   def addBounds(b1: Bounds, b2: Bounds) =
-    new Bounds(b1.minColOffset + b2.minColOffset,
+    Bounds(b1.minColOffset + b2.minColOffset,
       b1.maxColOffset + b2.maxColOffset,
       b1.minRowOffset + b2.minRowOffset,
       b1.maxRowOffset + b2.maxRowOffset)
@@ -44,10 +44,10 @@ class DataWindow(val dataSize: Size,
   def addNewRow() =
     new DataWindow(
       // add one more column to maximum bounds
-      new Size(dataSize.columnCount, dataSize.rowCount + 1),
+      Size(dataSize.columnCount, dataSize.rowCount + 1),
       // if the column should be in view, slide the visibleBounds over it
       if (visibleBounds.maxRowOffset == dataSize.rowCount)
-        addBounds(new Bounds(0, 0, 1, 1), visibleBounds)
+        addBounds(Bounds(0, 0, 1, 1), visibleBounds)
       else
         visibleBounds
     )
@@ -55,16 +55,16 @@ class DataWindow(val dataSize: Size,
   def addNewColumn() =
     new DataWindow(
       // add one more column to maximum bounds
-      new Size(dataSize.columnCount + 1, dataSize.rowCount),
+      Size(dataSize.columnCount + 1, dataSize.rowCount),
       // if the row should be in view, slide the visibleBounds over it
       if (visibleBounds.maxColOffset == dataSize.columnCount)
-        addBounds(new Bounds(1, 1, 0, 0), visibleBounds)
+        addBounds(Bounds(1, 1, 0, 0), visibleBounds)
       else
         visibleBounds)
 
   def expandTo(size: Size) =
     new DataWindow(
-      new Size(Math.max(size.columnCount, dataSize.columnCount),
+      Size(Math.max(size.columnCount, dataSize.columnCount),
         Math.max(size.rowCount, dataSize.rowCount)
       ),
       visibleBounds
@@ -81,7 +81,7 @@ object DataWindow {
   case class Size(columnCount: Int, rowCount: Int)
 
   val DEFAULT = new DataWindow(
-    new Size(DefaultProperties.GRID_SIZE._1, DefaultProperties.GRID_SIZE._2),
-    new Bounds(0, DefaultProperties.GRID_SIZE._1, 0, DefaultProperties.GRID_SIZE._2)
+    Size(DefaultProperties.GRID_SIZE._1, DefaultProperties.GRID_SIZE._2),
+    Bounds(0, DefaultProperties.GRID_SIZE._1, 0, DefaultProperties.GRID_SIZE._2)
   )
 }

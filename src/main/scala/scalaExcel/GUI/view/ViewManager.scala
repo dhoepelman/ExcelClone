@@ -202,7 +202,7 @@ class ViewManager extends jfxf.Initializable {
 
     // re-subscribe column width listener on table
     streamTable.onColResize.subscribe(resize =>
-      tableMutations.onNext(new ResizeColumn(resize._1, resize._2)))
+      tableMutations.onNext(ResizeColumn(resize._1, resize._2)))
 
     // forward selection
     streamTable.onSelection.subscribe(onSelection.onNext _)
@@ -224,7 +224,7 @@ class ViewManager extends jfxf.Initializable {
       values._1,
       (newValue: Int) =>
       // slide table window horizontally by the difference
-        tableMutations.onNext(new SlideWindowBy(new Bounds(newValue - values._1, newValue - values._1, 0, 0))))
+        tableMutations.onNext(SlideWindowBy(Bounds(newValue - values._1, newValue - values._1, 0, 0))))
 
     if (verticalScroll != null)
       verticalScroll.unWatch()
@@ -233,7 +233,7 @@ class ViewManager extends jfxf.Initializable {
       values._2,
       (newValue: Int) =>
       // slide table window vertically by the difference
-        tableMutations.onNext(new SlideWindowBy(new Bounds(0, 0, newValue - values._2, newValue - values._2))))
+        tableMutations.onNext(SlideWindowBy(Bounds(0, 0, newValue - values._2, newValue - values._2))))
 
   }
 
@@ -242,7 +242,7 @@ class ViewManager extends jfxf.Initializable {
    * @param sheet the new data model sheet
    */
   def dataChanged(sheet: Sheet) =
-    tableMutations.onNext(new UpdateContents(sheet))
+    tableMutations.onNext(UpdateContents(sheet))
 
   /**
    * Called on initialization of the FXML controller
@@ -283,24 +283,24 @@ class ViewManager extends jfxf.Initializable {
     // handle adding of rows/columns
     newColumnButton.onAction = handle {
       // add new column at the end (position -1)
-      tableMutations.onNext(new AddNewColumn(-1))
+      tableMutations.onNext(AddNewColumn(-1))
     }
     newRowButton.onAction = handle {
       // add new row at the end (position -1)
-      tableMutations.onNext(new AddNewRow(-1))
+      tableMutations.onNext(AddNewRow(-1))
     }
 
     // handle changes on size of table container
     tableContainer.width.onChange {
       (_, _, newWidth) => {
         // re-render the table
-        tableMutations.onNext(new LayOutTable())
+        tableMutations.onNext(LayOutTable())
       }
     }
     tableContainer.height.onChange {
       (_, _, newHeight) => {
         // re-render the table
-        tableMutations.onNext(new LayOutTable())
+        tableMutations.onNext(LayOutTable())
       }
     }
 
