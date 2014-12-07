@@ -31,7 +31,7 @@ class LabeledDataTable(
 
   def headerWidths =
     _allHeaderWidths
-      .drop(_dataWindow.visibleBounds.minColOffset)
+      .drop(_dataWindow.visibleBounds.minCol)
       .take(_dataWindow.columnCount)
 
   def sortColumn = _dataWindow.absoluteToWindow((_sortColumn, 0))._1
@@ -40,7 +40,7 @@ class LabeledDataTable(
 
   def toTableIndex(index: CellPos) = {
     val tableIndex = _dataWindow.absoluteToWindow(index)
-    if(_dataWindow.isInBounds(tableIndex)) Some(tableIndex)
+    if (_dataWindow.isInBounds(tableIndex)) Some(tableIndex)
     else None
   }
 
@@ -152,13 +152,13 @@ class LabeledDataTable(
   def windowMaxOffsets =
     (_dataWindow.dataSize.columnCount - _dataWindow.columnCount,
       _dataWindow.dataSize.rowCount - _dataWindow.rowCount)
-  
+
   /**
    * Calculates the current offsets of the window
    */
   def windowOffsets =
-    (_dataWindow.visibleBounds.minColOffset,
-      _dataWindow.visibleBounds.minRowOffset)
+    (_dataWindow.visibleBounds.minCol,
+      _dataWindow.visibleBounds.minRow)
 
   /**
    * Calculates the maximum number of data columns that fit in a given table width
@@ -187,7 +187,7 @@ class LabeledDataTable(
     // truncate the number of rows at maximum row number (if applicable)
     Math.min(rows, _dataWindow.dataSize.rowCount)
   }
-  
+
   /**
    * Recalculates the data window to fit all columns and rows that can be seen
    * @param availableWidth  the width available to the table
