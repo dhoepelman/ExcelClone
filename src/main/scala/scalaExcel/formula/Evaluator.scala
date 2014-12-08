@@ -211,7 +211,7 @@ object Evaluator {
       case "COLUMNS" => evalCallColumns(args)
       case "COUNT"   => evalCallCount(ctx, desugarArgs(args))
       case "MATCH"   => evalCallMatch(ctx, args)
-      case "VLOOKUP" => evalVLookUp(ctx, args)
+      case "VLOOKUP" => evalCallVLookUp(ctx, args)
 
       case "IF"      => evalCallIf(ctx, args)
       case "OR"      => evalCallOr(ctx, desugarArgs(args))
@@ -300,11 +300,11 @@ object Evaluator {
     case _ => throw new Exception("Wrong number of arguments")
   }
 
-  def evalVLookUp(ctx: Ctx, args: List[Expr]): Value = args match {
+  def evalCallVLookUp(ctx: Ctx, args: List[Expr]): Value = args match {
     // value, array, index, exact
     // default exact to FALSE, which is the only type we implement here.
-    case List(v, a, i)           => evalVLookUp(ctx, args :+ Const(VBool(false)))
-    case List(v, c: Cell, i, e)  => evalVLookUp(ctx, List(v, Range(c, c), i, e))
+    case List(v, a, i)           => evalCallVLookUp(ctx, args :+ Const(VBool(false)))
+    case List(v, c: Cell, i, e)  => evalCallVLookUp(ctx, List(v, Range(c, c), i, e))
     case List(v, r: Range, i, e) => evalIn(ctx, i) match {
       case VDouble(index) => {
         val ((c1, r1), (c2, r2)) = getRangeBounds(r)
