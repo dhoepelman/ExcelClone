@@ -42,6 +42,7 @@ class ParserTests {
     case _ => e
   }
 
+  @Test def empty() = test(Const(VEmpty), "")
 
   val consts = List[Any](100, 2.5, -10, "foo", true)
 
@@ -95,7 +96,6 @@ class ParserTests {
     })
 
   @Test def strings() = Map(
-    "" -> "",
     "hello" -> "hello",
     "foo bar" -> "foo bar",
     "foo\"bar" -> "foo\"bar",
