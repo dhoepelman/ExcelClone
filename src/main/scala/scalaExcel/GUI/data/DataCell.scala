@@ -1,6 +1,6 @@
 package scalaExcel.GUI.data
 
-import scalaExcel.formula.{Value, VDouble, VBool, VString, VEmpty}
+import scalaExcel.formula._
 import scalaExcel.formula.Evaluator.boolToString
 import scalaExcel.GUI.util.CSSHelper
 import scalaExcel.model._
@@ -34,10 +34,29 @@ private class DataCellImpl(val expression: String,
                            val value: Value,
                            val styles: Styles) extends DataCell {
 
-  val styleString = (styles.align, value) match {
-    case (NoAlign, VDouble(_)) => CSSHelper.getCSSFromStyle(styles.setAlign(RightAlign))
-    case (NoAlign, VBool(_)) => CSSHelper.getCSSFromStyle(styles.setAlign(CenterAlign))
-    case _ => CSSHelper.getCSSFromStyle(styles)
+  val styleString = {
+    val aligned = styles.align match {
+      case NoAlign => value match {
+        case _ : VDouble => styles.setAlign(RightAlign)
+        case _ : VBool => styles.setAlign(CenterAlign)
+        case _ => styles
+      }
+      case _ => styles
+    }
+
+    value match {
+      case _ : VErr => CSSHelper.asError(aligned)
+      case _ => CSSHelper.getCSSFromStyle(aligned)
+    }
+  }
+
+  // CSS which makes an erroneous cell have a red triangle in it
+  private def errorStyle = {
+    println("Error style")
+    """"
+      |-fx-background-color: red;
+
+    """.stripMargin
   }
 
   override def toString = value match {
@@ -50,6 +69,7 @@ private class DataCellImpl(val expression: String,
       formatter format d
     case VString(s) => s
     case VBool(b) => boolToString(b)
+    case VErr(e) => e.expr
     case _ => value.toString
   }
 
