@@ -62,11 +62,13 @@ class Model {
             updateStyle(sheet, pos, s => s.setBackground(c))
           )
         )
-        case SetSheet(values) => ur.next(
-          values.foldLeft(new Sheet()) { case (sheet, (pos, value)) =>
-            sheet.setCell(pos, value)._1
-          }
-        )
+        case SetSheet(values, styles) => {
+          val styledSheet = new Sheet(Map(), Map(), Map(), styles)
+          ur.next(values.foldLeft(styledSheet) { case (sheet, (pos, value)) =>
+            val (s, updates) = sheet.setCell(pos, value)
+            updateSheet(s, updates, Set(pos))
+          })
+        }
         case SortColumn(x, asc) => ur.next(sheet.sort(x, asc))
         case Undo => ur.undo()
         case Redo => ur.redo()
@@ -94,8 +96,8 @@ class Model {
     sheetMutations.onNext(CutCell(from, to))
   }
 
-  def clearAndSet(values: Traversable[((Int,Int),String)]) {
-    sheetMutations.onNext(SetSheet(values))
+  def clearAndSet(values: Map[(Int,Int), String], styles: Map[(Int,Int), Styles]): Unit = {
+    sheetMutations.onNext(SetSheet(values, styles))
   }
 
   def changeFormula(pos : CellPos, f: String) {
