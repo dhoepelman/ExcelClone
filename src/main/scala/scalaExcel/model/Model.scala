@@ -143,4 +143,8 @@ class Model {
   def redo() = {
     sheetMutations.onNext(Redo)
   }
+
+  def fakeError() = {
+    _errors.onNext(new Exception("test"))
+  }
 }

@@ -117,8 +117,8 @@ object RunGUI extends JFXApp {
       }
     }
 
-    // Show dialog and wait till it is closed
-    dialogStage.showAndWait()
+    // Show dialog
+    dialogStage.show()
   }
 
   model.errors.subscribe({ e =>
