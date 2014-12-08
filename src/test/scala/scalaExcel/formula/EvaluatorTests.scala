@@ -14,11 +14,9 @@ import scalaExcel.formula.Values.{toVal => tv}
 @RunWith(value = classOf[Parameterized])
 class EvaluatorTests(name: String, e: Value, v: Any, ctx: Ctx) {
 
-  val p = new Parser()
-
   @Test def x() = v match {
     case v: Expr   => assertEquals(e, eval(ctx, v))
-    case v: String => assertEquals(e, eval(ctx, p parsing v))
+    case v: String => assertEquals(e, eval(ctx, Parser parsing v))
     case _ => throw new IllegalArgumentException("Can't test something else")
   }
 
@@ -27,8 +25,6 @@ class EvaluatorTests(name: String, e: Value, v: Any, ctx: Ctx) {
 object EvaluatorTests {
 
   type TestTuple = (String, Value, AnyRef, Ctx)
-
-  val p = new Parser
 
   val ectx = Map[ACell, Value]();
 
@@ -45,7 +41,7 @@ object EvaluatorTests {
     l map (x => (name, VErr(x._1), x._2, x._3))
 
   def newCtx(values: Map[String, Any]) = values map (x => {
-    (p parsing("=" + x._1) match {
+    (Parser parsing("=" + x._1) match {
       case c: Cell => desugarCell(c)
       case _ => throw new IllegalArgumentException("oops")
     }, tv(x._2))

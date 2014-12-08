@@ -7,18 +7,16 @@ import scalaExcel.formula.Values.{toVal => tv}
 
 class ParserTests {
 
-  val p = new Parser()
-
   def test(s1: String, s2: String) = {
-    val parsed1 = removeParentheses(p parsing s1)
-    val parsed2 = removeParentheses(p parsing s2)
+    val parsed1 = removeParentheses(Parser parsing s1)
+    val parsed2 = removeParentheses(Parser parsing s2)
     if(parsed1 != parsed2) {
       throw new AssertionError(s"Expected <$s1> and <$s2> to have identical AST, was <$parsed1> and <$parsed2>")
     }
   }
 
   def test(e: Expr, s: String) = {
-    val parsed = removeParentheses(p parsing s)
+    val parsed = removeParentheses(Parser parsing s)
     if (parsed != e){
       throw new AssertionError(s"Expected <$s> to parse to <$e>, but was <$parsed>")
     }
@@ -26,7 +24,7 @@ class ParserTests {
 
   private def assertFail(input: String) = {
     try {
-      p parsing input
+      Parser parsing input
       fail(s"Parsed <$input> which should've failed")
     } catch {
       case e: IllegalArgumentException =>
@@ -203,33 +201,33 @@ class ParserTests {
   @Test def callref1() = test(Call("SUM", List(cell(0, false, 0, false))), "=SUM(A1)")
 
   // The following formula's are from http://homepages.mcs.vuw.ac.nz/~elvis/db/Excel.shtml
-  @Test def example01() {p parsing("=1")}
-  @Test def example02() {p parsing("=1+1")}
-  @Test def example03() {p parsing("=A1")}
-  @Test def example04() {p parsing("=$B$2")}
-  @Test def example05() {p parsing("=SUM(B5:B15)")}
-  @Test def example06() {p parsing("=SUM(B5:B15,D5:D15)")}
+  @Test def example01() {Parser parsing("=1")}
+  @Test def example02() {Parser parsing("=1+1")}
+  @Test def example03() {Parser parsing("=A1")}
+  @Test def example04() {Parser parsing("=$B$2")}
+  @Test def example05() {Parser parsing("=SUM(B5:B15)")}
+  @Test def example06() {Parser parsing("=SUM(B5:B15,D5:D15)")}
   // Enable if we allow complex ranges
-  //@Test def example07() {p parsing("=SUM(B5:B15 A7:D7)")}
-  @Test def example08() {p parsing("=SUM(sheet1!$A$1:$B$2)")}
+  //@Test def example07() {Parser parsing("=SUM(B5:B15 A7:D7)")}
+  @Test def example08() {Parser parsing("=SUM(sheet1!$A$1:$B$2)")}
   // Enable if we allow cross-file references
-  //@Test def example09() {p parsing("=[data.xls]sheet1!$A$1")}
+  //@Test def example09() {Parser parsing("=[data.xls]sheet1!$A$1")}
   // Enable if we allow complex ranges
-  //@Test def example10() {p parsing("=SUM((A:A 1:1))")}
-  //@Test def example11() {p parsing("=SUM((A:A A1:B1))")}
-  //@Test def example12() {p parsing("=SUM((D9:D11,(E9:E11,F9:F11)))")}
-  @Test def example13() {p parsing("=IF(P5=1.0,\"NA\",IF(P5=2.0,\"A\",IF(P5=3.0,\"B\",IF(P5=4.0,\"C\",IF(P5=5.0,\"D\",IF(P5=6.0,\"E\",IF(P5=7.0,\"F\",IF(P5=8.0,\"G\"))))))))")}
+  //@Test def example10() {Parser parsing("=SUM((A:A 1:1))")}
+  //@Test def example11() {Parser parsing("=SUM((A:A A1:B1))")}
+  //@Test def example12() {Parser parsing("=SUM((D9:D11,(E9:E11,F9:F11)))")}
+  @Test def example13() {Parser parsing("=IF(P5=1.0,\"NA\",IF(P5=2.0,\"A\",IF(P5=3.0,\"B\",IF(P5=4.0,\"C\",IF(P5=5.0,\"D\",IF(P5=6.0,\"E\",IF(P5=7.0,\"F\",IF(P5=8.0,\"G\"))))))))")}
   // Enable if Array formula's are implemented
   //@Test def example14() {parsing("={SUM(B2:D2*B3:D3)}")}
 
   // The following formula's are from http://ewbi.blogs.com/develops/2004/12/excel_formula_p.html
   // Enable if Array formula's are implemented
-  //@Test def complex1() {p parsing("=IF(\"a\"={\"a\",\"b\";\"c\",#N/A;-1,TRUE}, \"yes\", \"no\") &   \"  more \"\"test\"\" text\"")}
+  //@Test def complex1() {Parser parsing("=IF(\"a\"={\"a\",\"b\";\"c\",#N/A;-1,TRUE}, \"yes\", \"no\") &   \"  more \"\"test\"\" text\"")}
   // Enable if structured references are implemented
-  //@Test def complex2() {p parsing("=IF(R13C3>DATE(2002,1,6),0,IF(ISERROR(R[41]C[2]),0,IF(R13C3>=R[41]C[2],0, IF(AND(R[23]C[11]>=55,R[24]C[11]>=20),R53C3,0))))")}
-  //@Test def complex3() {p parsing("=IF(R[39]C[11]>65,R[25]C[42],ROUND((R[11]C[11]*IF(OR(AND(R[39]C[11]>=55, R[40]C[11]>=20),AND(R[40]C[11]>=20,R11C3=\"YES\")),R[44]C[11],R[43]C[11]))+(R[14]C[11] *IF(OR(AND(R[39]C[11]>=55,R[40]C[11]>=20),AND(R[40]C[11]>=20,R11C3=\"YES\")), R[45]C[11],R[43]C[11])),0))")}
+  //@Test def complex2() {Parser parsing("=IF(R13C3>DATE(2002,1,6),0,IF(ISERROR(R[41]C[2]),0,IF(R13C3>=R[41]C[2],0, IF(AND(R[23]C[11]>=55,R[24]C[11]>=20),R53C3,0))))")}
+  //@Test def complex3() {Parser parsing("=IF(R[39]C[11]>65,R[25]C[42],ROUND((R[11]C[11]*IF(OR(AND(R[39]C[11]>=55, R[40]C[11]>=20),AND(R[40]C[11]>=20,R11C3=\"YES\")),R[44]C[11],R[43]C[11]))+(R[14]C[11] *IF(OR(AND(R[39]C[11]>=55,R[40]C[11]>=20),AND(R[40]C[11]>=20,R11C3=\"YES\")), R[45]C[11],R[43]C[11])),0))")}
 
-  @Test def whitespaces() {p parsing("=\n 1 \t + \t\t\n 4")}
+  @Test def whitespaces() {Parser parsing("=\n 1 \t + \t\t\n 4")}
 
   @Test def string1() = test(Const(VString("abc")), "abc")
   @Test def string2() = test(Const(VString("1 + 1")), "1 + 1")

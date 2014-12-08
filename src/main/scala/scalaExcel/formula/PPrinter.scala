@@ -5,12 +5,10 @@ package scalaExcel.formula
  */
 object PPrinter {
 
-  val parser = new Parser()
-
   /** Pretty print an AST  */
   def pprint(AST: Expr): String = AST match {
     // Test if a string parses to itself, if not force that by prepending '
-    case Const(VString(s)) => parser parsing s match {
+    case Const(VString(s)) => Parser parsing s match {
       case Const(VString(_)) => s
       case _ => "'" + s
     }

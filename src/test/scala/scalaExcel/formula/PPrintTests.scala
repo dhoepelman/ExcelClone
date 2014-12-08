@@ -11,10 +11,9 @@ import scalaExcel.formula.Evaluator._
 
 @RunWith(value = classOf[Parameterized])
 class PPrintTests(f : String) {
-  val p = new Parser()
   // Test if the formula equals its parsed and pretty-printed self
   @Test def test() = {
-    val ast = p parsing f
+    val ast = Parser parsing f
     val pped = PPrinter.pprint(ast)
     //println(s"$f => $ast => $pped")
     assertEquals(f, pped)
