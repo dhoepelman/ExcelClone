@@ -14,11 +14,10 @@ import scalaExcel.formula.PPrinter.pprint
 
 @RunWith(value = classOf[Parameterized])
 class DependencyModifierParameterizedTests(orf: String, from : CellPos, to : CellPos, cutf : String, copyf : String) {
-  val p = new Parser()
 
-  val or = p parsing orf
-  val cut = p parsing cutf
-  val copy = p parsing copyf
+  val or = Parser parsing orf
+  val cut = Parser parsing cutf
+  val copy = Parser parsing copyf
 
   @Test def testChangeDependency() = assertEquals(cut, changeDependency(from, to)(or))
 
@@ -45,14 +44,11 @@ object DependencyModifierParameterizedTests {
 
 class DependencyModifierTests {
 
-  val parser= new Parser()
-  def p = parser parsing _
-
   def change(s: String) =
     pprint(changeDependencyRows(Map(
       0 -> 4,
       1 -> 5
-    ))(p(s)))
+    ))(Parser parsing(s)))
 
   @Test def changeDependencyRowsTest() = {
     assertEquals("=A5", change("=A1"))

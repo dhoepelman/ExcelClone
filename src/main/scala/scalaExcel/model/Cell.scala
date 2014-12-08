@@ -8,7 +8,7 @@ import scalaExcel.formula._
 sealed trait Cell {
 
   /** Cell AST */
-  lazy val AST : Expr = Cell.parser.parsing(f)
+  lazy val AST : Expr = Parser parsing(f)
 
   /** Cell formula */
   lazy val f : String = PPrinter.pprint(AST)
@@ -29,8 +29,6 @@ object Cell {
   def apply() : Cell = EmptyCell
   def apply(f : String) : Cell = new FormulaCell(f)
   def apply(AST : Expr) : Cell = new ASTCell(AST)
-
-  val parser = new Parser()
 
   private object EmptyCell extends Cell {
     override lazy val f = ""

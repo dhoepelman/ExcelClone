@@ -54,12 +54,10 @@ class LabeledDataTable(
   def dataCellFromSheet(index: CellPos) = {
     // build a DataCell with the contents of the sheet at that position
     DataCell.newEvaluated(
-      _sheet.cells.get(index) match {
-        case Some(c) => c.f
-        case None => ""
-      },
-      _sheet.valueAt(index).getOrElse(VEmpty),
-      _sheet.styles.getOrElse(index, Styles.DEFAULT))
+      _sheet.getCell(index).f,
+      _sheet.getValue(index),
+      _sheet.getCellStyle(index)
+    )
   }
 
   /**

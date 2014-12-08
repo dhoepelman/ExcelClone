@@ -5,7 +5,7 @@ import scala.util.parsing.combinator._
 /**
  * Excel LL grammar based on https://github.com/whatupdave/CilociFormulaEngine/blob/master/Excel.grammar
  */
-class Parser extends RegexParsers {
+object Parser extends RegexParsers {
   /**
    * Start parser, this will parse any valid cell value
    **/

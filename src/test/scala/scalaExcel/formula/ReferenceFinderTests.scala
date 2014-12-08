@@ -10,14 +10,12 @@ import scalaExcel.formula.Values.{toVal => tv}
 
 class ReferenceFinderTests {
 
-  val p = new Parser
-
   def test(expect: List[String], f: String) = assertEquals(
-    expect map (x => p parsing("=" + x) match {
+    expect map (x => Parser parsing("=" + x) match {
       case Cell(ColRef(c, _), RowRef(r, _)) => ACell((c, r))
       case _ => throw new IllegalArgumentException("Cell should parse to a cell")
     }),
-    findRefCells(p parsing f)
+    findRefCells(Parser parsing f)
   )
 
   @Test def findBinOp1() = test(List("A1", "A2"), "=A1+A2")
