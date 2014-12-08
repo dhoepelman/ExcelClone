@@ -2,6 +2,7 @@
 package scalaExcel.formula
 
 import scalaExcel.CellPos
+
 import math.{min, max, pow, abs}
 
 object Evaluator {
@@ -212,6 +213,7 @@ object Evaluator {
       case "COUNT"   => evalCallCount(ctx, desugarArgs(args))
       case "MATCH"   => evalCallMatch(ctx, args)
       case "VLOOKUP" => evalCallVLookUp(ctx, args)
+      case "ADDRESS" => evalCallAddress(ctx, args)
 
       case "IF"      => evalCallIf(ctx, args)
       case "OR"      => evalCallOr(ctx, desugarArgs(args))
@@ -321,6 +323,23 @@ object Evaluator {
       case _ => VErr(InvalidValue)
     }
     case List(v, a, i, e) => VErr(InvalidValue)
+    case _ => throw new Exception("Wrong number of arguments")
+  }
+
+  def evalCallAddress(ctx: Ctx, args: List[Expr]): Value = args match {
+    case List(row, col) => evalCallAddress(ctx, List(row, col, Const(VDouble(1))))
+    case List(row, col, abs) => (args map (evalIn(ctx, _))) match {
+      case List(VDouble(row), VDouble(col), VDouble(abs)) => {
+        if (row < 1 || col < 1 || abs < 1 || abs > 4) VErr(InvalidValue)
+        else VString(
+          "" ++ (if (abs == 1 || abs == 3) "$" else "") ++
+          numToCol(col.toInt - 1) ++
+          (if (abs == 1 || abs == 2) "$" else "") ++
+          row.toInt.toString
+        )
+      }
+      case List(r, c, a) => VErr(InvalidValue)
+    }
     case _ => throw new Exception("Wrong number of arguments")
   }
 

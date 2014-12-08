@@ -361,6 +361,19 @@ object EvaluatorTests {
         (InvalidRef,   """=VLOOKUP(2, A1:A3, 2)""",   newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3))),
         (InvalidValue, """=VLOOKUP(2, A1:A3, "A")""", newCtx(Map("A1" -> 1))),
         (InvalidValue, """=VLOOKUP(2, 1, 1)""",       newCtx(Map("A1" -> 1)))
+      )) ++ lst("function ADDRESS", List(
+        ("$A$1", "=ADDRESS(1,1)"),
+        ("$A$1", "=ADDRESS(1,1)"),
+        ("$E$3", "=ADDRESS(3,5)"),
+        ("$E$3", "=ADDRESS(3,5,1)"),
+        ("E$3",  "=ADDRESS(3,5,2)"),
+        ("$E3",  "=ADDRESS(3,5,3)"),
+        ("E3",   "=ADDRESS(3,5,4)")
+      )) ++ lstErr("function VLOOKUP invalids", List(
+        (InvalidValue, "=ADDRESS(0,1)"),
+        (InvalidValue, "=ADDRESS(1,0)"),
+        (InvalidValue, "=ADDRESS(1,1,0)"),
+        (InvalidValue, "=ADDRESS(1,1,5)")
       )) ++ lst("function IF", List(
         (true, "=IF(TRUE)"),
         (false, "=IF(FALSE)"),
