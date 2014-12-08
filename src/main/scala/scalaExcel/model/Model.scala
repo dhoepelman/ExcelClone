@@ -14,10 +14,9 @@ class Model {
   /** This is a stream of inputs from 'the world' that will effect the state of the sheet model */
   val sheetMutations = BehaviorSubject[ModelMutations](Refresh)
 
-  private val _modelErrors = PublishSubject[Throwable]()
+  private val _errors = PublishSubject[Exception]()
   /** This is a stream of errors that happen when while updating the model */
-  val modelErrors = _modelErrors.observeOn(NewThreadScheduler())
-
+  val errors : Observable[Exception] = _errors
 
   /**
    * function to propagate updates to dependent cells
@@ -82,8 +81,8 @@ class Model {
           case Refresh => ur
         }
       } catch {
-        case e =>
-          _modelErrors.onNext(e)
+        case e : Exception =>
+          _errors.onNext(e)
           ur // Do not modify the sheet
       }
   }

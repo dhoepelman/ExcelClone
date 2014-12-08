@@ -46,3 +46,12 @@ case object InvalidValue extends ErrType("#VALUE!")
  */
 case object CircularRef extends ErrType("#CIRCULAR!")
 
+/**
+ * #PARSE! Custom error type for parse errors
+ */
+case object ParserErr extends ErrType("#PARSE!")
+
+/**
+ * #ARGS! Custom error type for argument number/type errors
+ */
+case object FunctionsArgs extends ErrType("#ARGS!")

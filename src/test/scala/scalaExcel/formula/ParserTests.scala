@@ -23,13 +23,7 @@ class ParserTests {
   }
 
   private def assertFail(input: String) = {
-    try {
-      Parser parsing input
-      fail(s"Parsed <$input> which should've failed")
-    } catch {
-      case e: IllegalArgumentException =>
-      case e: Exception => fail(e.getMessage)
-    }
+    assertEquals(Const(VErr(ParserErr)), Parser parsing input)
   }
 
   private def removeParentheses(e : Expr) : Expr = e match {
