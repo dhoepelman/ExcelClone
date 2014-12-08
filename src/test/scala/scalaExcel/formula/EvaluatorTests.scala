@@ -68,6 +68,9 @@ object EvaluatorTests {
         ("evalConst", VString("hi"), Const(tv("hi")), ectx),
         ("evalConst", VString("hi"), "=\"hi\"", ectx),
         ("evalConst Err", VErr(NA), Const(VErr(NA)), ectx)
+      )) ++ lstCtx("eval VEmpty", List(
+        ("", "", (_ => VEmpty)),
+        (0, "=A1", (_ => VEmpty))
       )) ++ lst("binop =", List(
         (true, "=TRUE = TRUE"),
         (false, "=FALSE = TRUE"),
