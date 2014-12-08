@@ -65,7 +65,8 @@ class Model {
         case SetSheet(values, styles) => {
           val styledSheet = new Sheet(Map(), Map(), Map(), styles)
           ur.next(values.foldLeft(styledSheet) { case (sheet, (pos, value)) =>
-            sheet.setCell(pos, value)._1
+            val (s, updates) = sheet.setCell(pos, value)
+            updateSheet(s, updates, Set(pos))
           })
         }
         case SortColumn(x, asc) => ur.next(sheet.sort(x, asc))
