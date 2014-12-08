@@ -143,13 +143,20 @@ class LabeledDataTable(
       _dataWindow.visibleBounds.minRow)
 
   /**
+   * Returns the column width such that the number of the last row fits inside
+   * the cell
+   */
+  def calculateColWidth =
+    _dataWindow.visibleBounds.maxRow.toString.length * DefaultProperties.NUMBERED_COLUMN_WIDTH
+
+  /**
    * Calculates the maximum number of data columns that fit in a given table width
    * @param availableWidth  the width available to the table
    * @return                number of columns that fit
    */
   def fitColumns(availableWidth: Double) = {
     // all header widths (including numbered column)
-    val widths = _allHeaderWidths.::(DefaultProperties.NUMBERED_COLUMN_WIDTH.toDouble)
+    val widths = _allHeaderWidths.::(calculateColWidth.toDouble)
     // number of columns that fit in the table container
     val cols = widths.scan(0.0)((acc, w) => acc + w).drop(2).takeWhile(_ < availableWidth).length
     // truncate the number at maximum column number (if applicable)
