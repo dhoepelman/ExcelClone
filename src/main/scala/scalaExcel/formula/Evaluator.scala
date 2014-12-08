@@ -225,6 +225,13 @@ object Evaluator {
       case "LOWER"   => evalCallLower(ctx, args)
       case "LEN"     => evalCallLen(ctx, args)
       case "TRIM"    => evalCallTrim(ctx, args)
+
+      case "ISBLANK"   => evalCallIsBlank(ctx, desugarArgs(args))
+      case "ISERROR"   => evalCallIsError(ctx, desugarArgs(args))
+      case "ISNA"      => evalCallIsNA(ctx, desugarArgs(args))
+      case "ISLOGICAL" => evalCallIsLogical(ctx, desugarArgs(args))
+      case "ISNUMBER"  => evalCallIsNumber(ctx, desugarArgs(args))
+      case "ISTEXT"    => evalCallIsText(ctx, desugarArgs(args))
       case _ => VErr(InvalidName)
     }
 
@@ -413,5 +420,42 @@ object Evaluator {
   def evalCallLen = evalWithString(str => VDouble(str.length)) _
 
   def evalCallTrim = evalWithString(str => VString(str.trim)) _
+
+  // IS functions
+
+  def evalIsTrueFor(f: Value => Boolean)(ctx: Ctx, args: List[Expr]) = args match {
+    case List(value) => VBool(f(evalIn(ctx, value)))
+    case _ => VBool(false)
+  }
+
+  def evalCallIsBlank = evalIsTrueFor {
+    case VEmpty => true
+    case _ => false
+  } _
+
+  def evalCallIsError = evalIsTrueFor {
+    case VErr(e) => true
+    case _ => false
+  } _
+
+  def evalCallIsNA = evalIsTrueFor {
+    case VErr(NA) => true
+    case _ => false
+  } _
+
+  def evalCallIsLogical = evalIsTrueFor {
+    case VBool(_) => true
+    case _ => false
+  } _
+
+  def evalCallIsNumber = evalIsTrueFor {
+    case VDouble(_) => true
+    case _ => false
+  } _
+
+  def evalCallIsText = evalIsTrueFor {
+    case VString(_) => true
+    case _ => false
+  } _
 
 }

@@ -466,6 +466,49 @@ object EvaluatorTests {
         ("123", "=TRIM(123)")
       )) ++ lstCtx("TRIM empty", List(
         ("", "=TRIM(A1)", (_ => VEmpty))
+      )) ++ lstCtx("IS function ISBLANK", List(
+        (true,  "=ISBLANK(A1)", (_ => VEmpty)),
+        (false, "=ISBLANK(A1)", (_ => VBool(true))),
+        (false, "=ISBLANK(A1)", (_ => VBool(false))),
+        (false, "=ISBLANK(A1)", (_ => VString(""))),
+        (false, "=ISBLANK(A1)", (_ => VDouble(0))),
+        (false, "=ISBLANK(A1)", (_ => VErr(InvalidValue)))
+      )) ++ lstCtx("IS function ISERROR", List(
+        (false, "=ISERROR(A1)", (_ => VEmpty)),
+        (false, "=ISERROR(A1)", (_ => VBool(true))),
+        (false, "=ISERROR(A1)", (_ => VString(""))),
+        (false, "=ISERROR(A1)", (_ => VDouble(0))),
+        (true,  "=ISERROR(A1)", (_ => VErr(InvalidValue))),
+        (true,  "=ISERROR(A1)", (_ => VErr(NA)))
+      )) ++ lstCtx("IS function ISNA", List(
+        (false, "=ISNA(A1)", (_ => VEmpty)),
+        (false, "=ISNA(A1)", (_ => VBool(true))),
+        (false, "=ISNA(A1)", (_ => VString(""))),
+        (false, "=ISNA(A1)", (_ => VDouble(0))),
+        (false, "=ISNA(A1)", (_ => VErr(InvalidValue))),
+        (true,  "=ISNA(A1)", (_ => VErr(NA)))
+      )) ++ lstCtx("IS function ISLOGICAL", List(
+        (false, "=ISLOGICAL(A1)", (_ => VEmpty)),
+        (true,  "=ISLOGICAL(A1)", (_ => VBool(true))),
+        (true,  "=ISLOGICAL(A1)", (_ => VBool(true))),
+        (false, "=ISLOGICAL(A1)", (_ => VString(""))),
+        (false, "=ISLOGICAL(A1)", (_ => VDouble(0))),
+        (false, "=ISLOGICAL(A1)", (_ => VErr(InvalidValue)))
+      )) ++ lstCtx("IS function ISNUMBER", List(
+        (false, "=ISNUMBER(A1)", (_ => VEmpty)),
+        (false, "=ISNUMBER(A1)", (_ => VBool(true))),
+        (false, "=ISNUMBER(A1)", (_ => VString(""))),
+        (true,  "=ISNUMBER(A1)", (_ => VDouble(-40))),
+        (true,  "=ISNUMBER(A1)", (_ => VDouble(0))),
+        (true,  "=ISNUMBER(A1)", (_ => VDouble(123.4))),
+        (false, "=ISNUMBER(A1)", (_ => VErr(InvalidValue)))
+      )) ++ lstCtx("IS function ISTEXT", List(
+        (false, "=ISTEXT(A1)", (_ => VEmpty)),
+        (false, "=ISTEXT(A1)", (_ => VBool(true))),
+        (true,  "=ISTEXT(A1)", (_ => VString(""))),
+        (true,  "=ISTEXT(A1)", (_ => VString("abc"))),
+        (false, "=ISTEXT(A1)", (_ => VDouble(0))),
+        (false, "=ISTEXT(A1)", (_ => VErr(InvalidValue)))
       )) ++ lst("grouping", List(
         (10, "=(1 + 4) * 2"),
         (5, "=(2+3)")
