@@ -8,12 +8,13 @@ import scalaExcel.CellPos
 import scalaExcel.GUI.data.LabeledDataTable.DataRow
 import scalaExcel.GUI.data.{DataCell, LabeledDataTable}
 import scalaExcel.util.DefaultProperties
+import scalaExcel.rx.operators.WithLatest._
 
 import scalafx.Includes._
 import scalafx.beans.property.ObjectProperty
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.control._
-import scalafx.scene.input.{MouseButton, MouseEvent}
+import scalafx.scene.input.{MouseButton, MouseEvent, KeyEvent, KeyCode}
 import scalafx.scene.control.TableColumn.CellEditEvent
 
 class DataCellColumn(onCellEdit: ((CellPos, String)) => Unit,
@@ -84,18 +85,19 @@ class StreamingTable(labeledTable: LabeledDataTable) {
   selectionModel.setCellSelectionEnabled(true)
   selectionModel.setSelectionMode(SelectionMode.MULTIPLE)
 
-  val onSelection = Observable[List[CellPos]](o => {
+  val onRawSelection = Observable[List[CellPos]](o => {
     selectionModel.getSelectedCells.onChange((source, _) => {
       // first column is -1, because it's reserved for row numbers
       val cells = source
         .toList
-        .map { x => (x.getColumn - 1, x.getRow) }
-        .filter {
-          case (col, row) => col >= 0 && row >= 0
-        }
+        .map { x => (x.getColumn, x.getRow) }
       o.onNext(cells)
     })
-  }).map(_ map labeledTable.toSheetIndex)
+  })
+
+  val onSelection = onRawSelection
+    .map { _ map (c => (c._1 - 1, c._2)) filter (c => c._1 >= 0 && c._2 >= 0) }
+    .map { _ map labeledTable.toSheetIndex }
 
   val onColumnReorder = Observable[Map[Int, Int]](o => {
     table.columns.onChange((cols, changes) => {
@@ -124,6 +126,21 @@ class StreamingTable(labeledTable: LabeledDataTable) {
 
   val onRightClick = onClick
     .filter(_.getButton.compareTo(MouseButton.SECONDARY) == 0)
+
+  val onKeyPressed = Observable[KeyEvent](o => {
+    table.onKeyPressed = (e: KeyEvent) => o.onNext(e)
+  })
+
+  onKeyPressed.map(_.code)
+    .filter(code => !code.isWhitespaceKey() &&
+      !code.isNavigationKey() &&
+      !code.isModifierKey() &&
+      !code.isMediaKey() &&
+      !code.isFunctionKey())
+    .withLatest(onRawSelection.filter(_.size >= 1).map(_.head))
+    .subscribe { _ match {
+      case ((col, row), key) => table.edit(row, table.columns.get(col))
+    }}
 
   private def buildColumns(headers: List[String],
                             widths: List[Double]): TableColumns = {
