@@ -184,8 +184,7 @@ object Evaluator {
   def boolLte = boolCmp(c => VBool(c <= 0)) _
 
   def doubleDiv(lhs: Value, rhs: Value) = applyToDoubles(_ / _)(lhs, rhs) match {
-    case VDouble(d) =>  if (d.isInfinity) VErr(DivBy0)
-                        else VDouble(d)
+    case VDouble(d) if (d.isInfinity) => VErr(DivBy0)
     case x => x
   }
 
@@ -349,15 +348,13 @@ object Evaluator {
   def evalCallAddress(ctx: Ctx, args: List[Expr]): Value = args match {
     case List(row, col) => evalCallAddress(ctx, List(row, col, Const(VDouble(1))))
     case List(row, col, abs) => (args map (evalIn(ctx, _))) match {
-      case List(VDouble(row), VDouble(col), VDouble(abs)) => {
-        if (row < 1 || col < 1 || abs < 1 || abs > 4) VErr(InvalidValue)
-        else VString(
+      case List(VDouble(row), VDouble(col), VDouble(abs))
+        if (row >= 1 && col >= 1 && abs >= 1 && abs <= 4) => VString(
           "" ++ (if (abs == 1 || abs == 3) "$" else "") ++
           numToCol(col.toInt - 1) ++
           (if (abs == 1 || abs == 2) "$" else "") ++
           row.toInt.toString
         )
-      }
       case List(r, c, a) => VErr(InvalidValue)
     }
     case _ => throw new Exception("Wrong number of arguments")
