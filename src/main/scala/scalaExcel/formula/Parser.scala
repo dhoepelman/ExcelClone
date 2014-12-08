@@ -108,17 +108,11 @@ object Parser extends RegexParsers {
     }
   }
 
-  def ErrorExpression : Parser[Const]= """(?i)(#[a-z/]+(!|\?)?)""".r^^ {
-    case "#DIV/0!" => Const(VErr(DivBy0))
-    case "#N/A"    => Const(VErr(NA))
-    case "#NAME?"  => Const(VErr(InvalidName))
-    case "#NUM!"   => Const(VErr(NotNumeric))
-    case "#NULL!"  => Const(VErr(Null))
-    case "#REF!"   => Const(VErr(InvalidRef))
-    case "#VALUE!" => Const(VErr(InvalidValue))
-    case "#CIRCULAR!" => Const(VErr(CircularRef))
-    case "#PARSE!" => Const(VErr(ParserErr))
-    case s => Const(VString(s))
+  def ErrorExpression : Parser[Const]= """(?i)(#[a-z/]+(!|\?)?)""".r^^ { s =>
+    Const(ErrType.fromString(s) match {
+      case Some(e) => VErr(e)
+      case None => VString(s)
+    })
   }
 
   //****************************

@@ -33,8 +33,7 @@ class DataCellView extends TextFieldTableCell[DataRow, DataCell](new DataCellVie
     (_, _, newCell) =>
       // apply cell customization
       if (newCell != null) {
-        val newstyle = newCell.styleString
-        style = newstyle
+        style = newCell.styleString
       }
   }
 }

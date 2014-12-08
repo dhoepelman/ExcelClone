@@ -200,7 +200,7 @@ object Evaluator {
     case _ => VErr(InvalidValue)
   }
 
-  def evalCall(ctx: Ctx, fn: String, args: List[Expr]) : Value =
+  def evalCall(ctx: Ctx, fn: String, args: List[Expr]) =
     fn match {
       case "SUM"     => reduce(ctx, applyToDoubles(_ + _), VDouble(0), desugarArgs(args))
       case "AVERAGE" => evalCallAverage(ctx, desugarArgs(args))

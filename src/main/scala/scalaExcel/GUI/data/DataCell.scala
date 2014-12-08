@@ -50,15 +50,6 @@ private class DataCellImpl(val expression: String,
     }
   }
 
-  // CSS which makes an erroneous cell have a red triangle in it
-  private def errorStyle = {
-    println("Error style")
-    """"
-      |-fx-background-color: red;
-
-    """.stripMargin
-  }
-
   override def toString = value match {
     case VEmpty => ""
     case VDouble(d) =>
