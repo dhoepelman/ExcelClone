@@ -3,7 +3,7 @@ package scalaExcel.formula
 
 import scalaExcel.CellPos
 
-import math.{min, max, pow, abs}
+import math.{min, max, pow, abs, round}
 
 object Evaluator {
 
@@ -205,6 +205,7 @@ object Evaluator {
       case "SUM"     => reduce(ctx, applyToDoubles(_ + _), VDouble(0), desugarArgs(args))
       case "AVERAGE" => evalCallAverage(ctx, desugarArgs(args))
       case "POWER"   => evalCallPower(ctx, args)
+      case "ROUND"   => evalCallRound(ctx, args)
 
       case "ROW"     => evalCallRow(args)
       case "ROWS"    => evalCallRows(args)
@@ -234,6 +235,18 @@ object Evaluator {
 
   def evalCallPower(ctx: Ctx, args: List[Expr]) = args match {
     case List(num, exp) => evalIn(ctx, BinOp(Expon(), num, exp))
+    case _ => throw new Exception("Wrong number of arguments")
+  }
+
+  def evalCallRound(ctx: Ctx, args: List[Expr]): Value = args match {
+    case List(num) => evalCallRound(ctx, List(num, Const(VDouble(0))))
+    case List(num, digits) => (args map (evalIn(ctx, _))) match {
+      case List(VDouble(num), VDouble(dig)) => {
+        val s = pow(10, dig.toInt)
+        VDouble(round(num * s) / s)
+      }
+      case _ => VErr(InvalidValue)
+    }
     case _ => throw new Exception("Wrong number of arguments")
   }
 

@@ -311,6 +311,16 @@ object EvaluatorTests {
         (3, "=AVERAGE(A1:A5)", sparseCtx)
       )) ++ lst("function POWER", List(
         (16, "=POWER(2,4)")
+      )) ++ lst("function ROUND", List(
+        (123,     "=ROUND(123.456)"),
+        (123.5,   "=ROUND(123.456, 1)"),
+        (123.46,  "=ROUND(123.456, 2)"),
+        (123.456, "=ROUND(123.456, 4)"),
+        (120,     "=ROUND(123.456, -1)"),
+        (100,     "=ROUND(123.456, -2)")
+      )) ++ lstErr("function ROUND", List(
+        (InvalidValue, """=ROUND("A")"""),
+        (InvalidValue, """=ROUND(1, "A")""")
       )) ++ lst("function ROW", List(
         (2, "=ROW(A2)"),
         (31, "=ROW(B31:B66)"),
