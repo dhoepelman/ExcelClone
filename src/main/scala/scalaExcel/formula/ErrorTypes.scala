@@ -1,10 +1,30 @@
 
 package scalaExcel.formula
 
+// TODO: An enumeration would probably be a better fit for this
 /**
  * @param expr What users see when this error is encountered
  */
 sealed abstract class ErrType(val expr: String)
+
+object ErrType {
+  private val values : Set[ErrType] = Set(
+    DivBy0,
+    NA,
+    InvalidName,
+    NotNumeric,
+    Null,
+    InvalidRef,
+    InvalidValue,
+    CircularRef,
+    ParserErr,
+    FunctionsArgs
+  )
+
+  private val map : Map[String, ErrType] = values.map(e => e.expr -> e).toMap
+
+  def fromString(s : String) = map.get(s)
+}
 
 /**
  * #DIV/0! Trying to divide by 0
@@ -46,3 +66,12 @@ case object InvalidValue extends ErrType("#VALUE!")
  */
 case object CircularRef extends ErrType("#CIRCULAR!")
 
+/**
+ * #PARSE! Custom error type for parse errors
+ */
+case object ParserErr extends ErrType("#PARSE!")
+
+/**
+ * #ARGS! Custom error type for argument number/type errors
+ */
+case object FunctionsArgs extends ErrType("#ARGS!")

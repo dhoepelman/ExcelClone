@@ -242,7 +242,7 @@ object Evaluator {
 
   def evalCallPower(ctx: Ctx, args: List[Expr]) = args match {
     case List(num, exp) => evalIn(ctx, BinOp(Expon(), num, exp))
-    case _ => throw new Exception("Wrong number of arguments")
+    case _ => VErr(FunctionsArgs)
   }
 
   def evalCallRound(ctx: Ctx, args: List[Expr]): Value = args match {
@@ -254,7 +254,7 @@ object Evaluator {
       }
       case _ => VErr(InvalidValue)
     }
-    case _ => throw new Exception("Wrong number of arguments")
+    case _ => VErr(FunctionsArgs)
   }
 
   // Cell functions
@@ -268,10 +268,10 @@ object Evaluator {
       ((min(c1, c2), min(r1, r2)), (max(c1, c2), max(r1, r2)))
   }
 
-  private def execForRangeArg[T](f: (CellPos, CellPos) => T)(args: List[Expr]) = args match {
+  private def execForRangeArg(f: (CellPos, CellPos) => Value)(args: List[Expr]) = args match {
     case List(c: Cell)  => f tupled getRangeBounds(c)
     case List(r: Range) => f tupled getRangeBounds(r)
-    case _ => throw new Exception("Wrong number of arguments")
+    case _ => VErr(FunctionsArgs)
   }
 
   def evalCallRow     = execForRangeArg((c1, c2) => VDouble(c1._2 + 1)) _
@@ -319,7 +319,7 @@ object Evaluator {
 
     }
     case List(v, a, t) => VErr(InvalidValue)
-    case _ => throw new Exception("Wrong number of arguments")
+    case _ => VErr(FunctionsArgs)
   }
 
   def evalCallVLookUp(ctx: Ctx, args: List[Expr]): Value = args match {
@@ -343,7 +343,7 @@ object Evaluator {
       case _ => VErr(InvalidValue)
     }
     case List(v, a, i, e) => VErr(InvalidValue)
-    case _ => throw new Exception("Wrong number of arguments")
+    case _ => VErr(FunctionsArgs)
   }
 
   def evalCallAddress(ctx: Ctx, args: List[Expr]): Value = args match {
@@ -358,7 +358,7 @@ object Evaluator {
         )
       case List(r, c, a) => VErr(InvalidValue)
     }
-    case _ => throw new Exception("Wrong number of arguments")
+    case _ => VErr(FunctionsArgs)
   }
 
   // Logical functions
@@ -374,7 +374,7 @@ object Evaluator {
       case VBool(b) => evalIn(ctx, if (b) trueValue else falseValue)
       case _ => VErr(InvalidValue)
     }
-    case _ => throw new Exception("Wrong number of arguments")
+    case _ => VErr(FunctionsArgs)
   }
 
   def evalCallOr(ctx: Ctx, args: List[Expr]) = {
@@ -396,7 +396,7 @@ object Evaluator {
       case VBool(v) => VBool(!v)
       case _ => VErr(InvalidValue)
     }
-    case _ => throw new Exception("Wrong number of arguments")
+    case _ => VErr(FunctionsArgs)
   }
 
   // String functions
@@ -407,7 +407,7 @@ object Evaluator {
         case VString(str) => f(str)
         case x => x
       }
-      case _ => throw new Exception("Wrong number of arguments")
+      case _ => VErr(FunctionsArgs)
     }
   }
 

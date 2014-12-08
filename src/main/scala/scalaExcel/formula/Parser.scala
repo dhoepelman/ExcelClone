@@ -108,15 +108,11 @@ object Parser extends RegexParsers {
     }
   }
 
-  def ErrorExpression : Parser[Const]= """(?i)(#DIV/0!)|(#N/A)|(#NAME?)|(#NUM!)|(#NULL!)|(#REF!)|(#VALUE!)|(#CIRCULAR!)""".r^^ {
-    case "#DIV/0!" => Const(VErr(DivBy0))
-    case "#N/A"    => Const(VErr(NA))
-    case "#NAME?"  => Const(VErr(InvalidName))
-    case "#NUM!"   => Const(VErr(NotNumeric))
-    case "#NULL!"  => Const(VErr(Null))
-    case "#REF!"   => Const(VErr(InvalidRef))
-    case "#VALUE!" => Const(VErr(InvalidValue))
-    case "#CIRCULAR!" => Const(VErr(CircularRef))
+  def ErrorExpression : Parser[Const]= """(?i)(#[a-z/]+(!|\?)?)""".r^^ { s =>
+    Const(ErrType.fromString(s) match {
+      case Some(e) => VErr(e)
+      case None => VString(s)
+    })
   }
 
   //****************************
@@ -161,11 +157,6 @@ object Parser extends RegexParsers {
 
   def parse(s: String) = parseAll(Start, s)
 
-  def parsing(s: String) = parseAll(Start, s) match {
-    case Success (t, _) => t
-    case NoSuccess(msg, _) => throw new IllegalArgumentException(s"Unable to parse $s: $msg")
-  }
-
-
+  def parsing(s: String) = parseAll(Start, s).getOrElse(Const(VErr(ParserErr)))
 
 }
