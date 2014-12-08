@@ -23,7 +23,7 @@ class Parser extends RegexParsers {
   def ForceStr      : Parser[Const]   = "'" ~> """.*""".r ^^ {s => Const(VString(s))}
   // This String is outside of formula, everything that is not anything else is a string
   def Str           : Parser[Const]   = """[^=].*""".r    ^^ {s => Const(VString(s))}
-  def Empty         : Parser[Expr]    = ""               ^^^ Const(VString(""))
+  def Empty         : Parser[Expr]    = ""               ^^^ Const(VEmpty)
 
   // This string literal can be used inside formula's
   val striReg = """\"(\"\"|[^\"])*\"""".r
