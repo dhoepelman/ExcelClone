@@ -1,7 +1,5 @@
 package scalaExcel.model
 
-import rx.lang.scala.schedulers.NewThreadScheduler
-
 import scalafx.scene.paint.Color
 import rx.lang.scala.Observable
 import rx.lang.scala.subjects.BehaviorSubject
@@ -70,9 +68,11 @@ class Model {
               updateStyle(sheet, pos, s => s.setBackground(c))
             )
           )
-          case SetSheet(values) => ur.next(
-            values.foldLeft(new Sheet()) { case (sheet, (pos, value)) =>
-              sheet.setCell(pos, value)._1
+          case SetSheet(values, styles) => ur.next(
+            values.foldLeft(new Sheet(Map(), Map(), Map(), styles)) {
+              case (sheet, (pos, value)) =>
+                val (s, updates) = sheet.setCell(pos, value)
+                updateSheet(s, updates, Set(pos))
             }
           )
           case SortColumn(x, asc) => ur.next(sheet.sort(x, asc))
@@ -108,16 +108,12 @@ class Model {
     sheetMutations.onNext(CutCell(from, to))
   }
 
-  def clearAndSet(values: Traversable[((Int,Int),String)]) {
-    sheetMutations.onNext(SetSheet(values))
+  def clearAndSet(values: Map[(Int,Int), String], styles: Map[(Int,Int), Styles]): Unit = {
+    sheetMutations.onNext(SetSheet(values, styles))
   }
 
   def changeFormula(pos : CellPos, f: String) {
-    try {
-      sheetMutations.onNext(SetFormula(pos, f))
-    } catch {
-      case e => println("Caught a nasty exception")
-    }
+    sheetMutations.onNext(SetFormula(pos, f))
   }
 
   def changeBackground(pos : CellPos, c: Color) {

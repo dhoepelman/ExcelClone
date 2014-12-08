@@ -5,7 +5,8 @@ import scalafx.scene.paint.Color
 
 object CSSHelper {
 
-  private def colorToWeb(c: Color): String =
+  /** Convert scalafx.scene.paint.Color to #RRGGBB */
+  def colorToWeb(c: Color): String =
     "#%02X%02X%02X".format(
       (c.red * 255).asInstanceOf[Int],
       (c.green * 255).asInstanceOf[Int],

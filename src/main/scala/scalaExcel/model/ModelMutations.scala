@@ -17,4 +17,4 @@ case class SortColumn(x: Int, asc: Boolean) extends ModelMutations
 case object Redo extends ModelMutations
 case object Undo extends ModelMutations
 case object Refresh extends ModelMutations
-case class SetSheet(values: Traversable[((Int,Int),String)]) extends ModelMutations
+case class SetSheet(values: Map[(Int,Int),String], styles: Map[(Int,Int), Styles]) extends ModelMutations

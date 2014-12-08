@@ -66,6 +66,11 @@ object Evaluator {
 
   def doubleToVBool(d: Double) = VBool(d != 0)
 
+  def emptyToZero(v: Value) = v match {
+    case VEmpty => VDouble(0)
+    case _ => v
+  }
+
   def valueToVBool(v: Value) = v match {
     case b: VBool => b
     case VDouble(d) => doubleToVBool(d)
@@ -120,6 +125,7 @@ object Evaluator {
   def eval(ctx: Ctx, e: Expr) =
     desugar(e) match {
       case ARange(_) => VErr(InvalidValue)
+      case Const(VEmpty) => VString("")
       case x => evalIn_(ctx, x) match {
         case VEmpty => VDouble(0)
         case v => v
@@ -166,11 +172,6 @@ object Evaluator {
   def concat(lhs: Value, rhs: Value): Value = (valueToVString(lhs), valueToVString(rhs)) match {
     case (VString(s1), VString(s2)) => VString(s1 + s2)
     case es => pickError(es, NA)
-  }
-
-  private def emptyToZero(v: Value) = v match {
-    case VEmpty => VDouble(0)
-    case _ => v
   }
 
   private def boolCmp[T](cmp: (Int => T))(lhs: Value, rhs: Value) =
