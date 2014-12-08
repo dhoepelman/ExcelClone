@@ -132,7 +132,11 @@ class StreamingTable(labeledTable: LabeledDataTable) {
   })
 
   onKeyPressed.map(_.code)
-    .filter(code => code.isDigitKey || code.isLetterKey || code == KeyCode.EQUALS)
+    .filter(code => !code.isWhitespaceKey() &&
+      !code.isNavigationKey() &&
+      !code.isModifierKey() &&
+      !code.isMediaKey() &&
+      !code.isFunctionKey())
     .withLatest(onRawSelection.filter(_.size >= 1).map(_.head))
     .subscribe { _ match {
       case ((col, row), key) => table.edit(row, table.columns.get(col))
