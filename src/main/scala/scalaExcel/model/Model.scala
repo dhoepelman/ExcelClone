@@ -12,10 +12,6 @@ class Model {
   /** This is a stream of inputs from 'the world' that will effect the state of the sheet model */
   val sheetMutations = BehaviorSubject[ModelMutations](Refresh)
 
-  private val _errors = PublishSubject[Exception]()
-  /** This is a stream of errors that happen when while updating the model */
-  val errors : Observable[Exception] = _errors
-
   /**
    * function to propagate updates to dependent cells
    * @param alreadyUpdated Set of cells that were already updated, to detect cycles
@@ -40,55 +36,64 @@ class Model {
   def updateStyle(sheet: Sheet, pos : CellPos, f: Styles => Styles) =
     sheet.setCellStyle(pos, f(sheet.getCellStyle(pos)))
 
+  /** Perform a modification on the sheet */
+  private def modifySheet(ur : UndoRedo[Sheet], action : ModelMutations) = {
+    val sheet = ur.current
+    action match {
+      case SetFormula(pos, f) =>
+        val (s, updates) = sheet.setCell(pos, f)
+        ur.next(updateSheet(s, updates, Set(pos)))
+      case EmptyCell(poss) => ur.next(
+        poss.foldLeft(sheet)((sheet, pos) =>
+          updateSheet(sheet.deleteCell(pos))
+        )
+      )
+      case CopyCell(from, to) => ur.next(updateSheet(sheet.copyCell(from, to)))
+      case CutCell(from, to) => ur.next(updateSheet(sheet.cutCell(from, to)))
+      case SetColor(poss, c) => ur.next(
+        poss.foldLeft(sheet)((sheet, pos) =>
+          updateStyle(sheet, pos, s => s.setColor(c))
+        )
+      )
+      case SetBackground(poss, c) => ur.next(
+        poss.foldLeft(sheet)((sheet, pos) =>
+          updateStyle(sheet, pos, s => s.setBackground(c))
+        )
+      )
+      case SetSheet(values, styles) => ur.next(
+        values.foldLeft(new Sheet(Map(), Map(), Map(), styles)) {
+          case (sheet, (pos, value)) =>
+            val (s, updates) = sheet.setCell(pos, value)
+            updateSheet(s, updates, Set(pos))
+        }
+      )
+      case SortColumn(x, asc) => ur.next(sheet.sort(x, asc))
+      case Undo => ur.undo()
+      case Redo => ur.redo()
+      case Refresh => ur
+    }
+  }
+
   // this combines the initial Sheet with all input mutations from the outside
   // world
-  private val undoRedoSheet = sheetMutations.scan(new UndoRedo(new Sheet()))({
-    case (ur, action) =>
-      try {
-        val sheet = ur.current
-        // Calculate new sheet
-        action match {
-          case SetFormula(pos, f) =>
-            val (s, updates) = sheet.setCell(pos, f)
-            ur.next(updateSheet(s, updates, Set(pos)))
-          case EmptyCell(poss) => ur.next(
-            poss.foldLeft(sheet)((sheet, pos) =>
-              updateSheet(sheet.deleteCell(pos))
-            )
-          )
-          case CopyCell(from, to) => ur.next(updateSheet(sheet.copyCell(from, to)))
-          case CutCell(from, to) => ur.next(updateSheet(sheet.cutCell(from, to)))
-          case SetColor(poss, c) => ur.next(
-            poss.foldLeft(sheet)((sheet, pos) =>
-              updateStyle(sheet, pos, s => s.setColor(c))
-            )
-          )
-          case SetBackground(poss, c) => ur.next(
-            poss.foldLeft(sheet)((sheet, pos) =>
-              updateStyle(sheet, pos, s => s.setBackground(c))
-            )
-          )
-          case SetSheet(values, styles) => ur.next(
-            values.foldLeft(new Sheet(Map(), Map(), Map(), styles)) {
-              case (sheet, (pos, value)) =>
-                val (s, updates) = sheet.setCell(pos, value)
-                updateSheet(s, updates, Set(pos))
-            }
-          )
-          case SortColumn(x, asc) => ur.next(sheet.sort(x, asc))
-          case Undo => ur.undo()
-          case Redo => ur.redo()
-          case Refresh => ur
+  private val undoRedoSheet =
+    sheetMutations.scan(None: Option[Exception], new UndoRedo(new Sheet()))({
+      case ((_, ur), action) =>
+        try {
+          (None, modifySheet(ur, action))
+        } catch {
+          case e: Exception =>
+            // Do not modify the sheet
+            (Some(e), ur)
         }
-      } catch {
-        case e : Exception =>
-          _errors.onNext(e)
-          ur // Do not modify the sheet
-      }
-  }
-  )
+    }
+    )
 
-  val sheet = undoRedoSheet.map({a => a.current})
+  val errors = undoRedoSheet
+    .filter({_._1.nonEmpty})
+    .map({_._1.get})
+  val sheet = undoRedoSheet
+    .map({_._2.current})
 
   def refresh() = sheetMutations.onNext(Refresh)
 
@@ -142,9 +147,5 @@ class Model {
 
   def redo() = {
     sheetMutations.onNext(Redo)
-  }
-
-  def fakeError() = {
-    _errors.onNext(new Exception("test"))
   }
 }
