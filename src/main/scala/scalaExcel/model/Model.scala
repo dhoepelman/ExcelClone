@@ -3,7 +3,6 @@ package scalaExcel.model
 import scalafx.scene.paint.Color
 import rx.lang.scala.Observable
 import rx.lang.scala.subjects.BehaviorSubject
-import rx.lang.scala.subjects.PublishSubject
 import scalaExcel.model.Sorter.SheetSorter
 import scalaExcel.model.OperationHelpers._
 import scalaExcel.CellPos
@@ -86,8 +85,7 @@ class Model {
             // Do not modify the sheet
             (Some(e), ur)
         }
-    }
-    )
+    })
 
   val errors = undoRedoSheet
     .filter({_._1.nonEmpty})
