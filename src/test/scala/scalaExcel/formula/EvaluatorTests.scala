@@ -183,6 +183,7 @@ object EvaluatorTests {
         ("abc", "=\"ab\"& \"c\""),
         ("ab1", "=\"ab\"& 1"),
         ("1ab", "=1 & \"ab\""),
+        ("1.5ab", "=1.5 & \"ab\""),
         ("TRUEab", "=TRUE & \"ab\""),
         ("12", "=1 & 2"),
         ("TRUEFALSE", "=TRUE & FALSE")
