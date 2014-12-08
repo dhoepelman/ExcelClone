@@ -31,16 +31,17 @@ object EvaluatorTests {
   val p = new Parser
 
   val ectx = Map[ACell, Value]();
+
   def lst(name: String, l: List[Tuple2[Any, String]]) =
     lstCtx(name, l map (x => (x._1, x._2, ectx)))
+
+  def lstErr(name: String, l: List[Tuple2[ErrType, String]]): List[TestTuple] =
+    lstErrCtx(name, l map (x => (x._1, x._2, ectx)))
 
   def lstCtx(name: String, l: List[Tuple3[Any, String, Ctx]]) =
     l map (x => (name, tv(x._1), x._2, x._3))
 
-  def lstErr(name: String, l: List[Tuple2[ErrType, String]]): List[TestTuple] =
-    l map (x => (name, VErr(x._1), x._2, ectx))
-
-  def lstErrCtx(name: String, l: List[Tuple3[ErrType, String, Ctx]]): List[TestTuple] =
+  def lstErrCtx(name: String, l: List[Tuple3[ErrType, String, Ctx]]) =
     l map (x => (name, VErr(x._1), x._2, x._3))
 
   def newCtx(values: Map[String, Any]) = values map (x => {
@@ -280,6 +281,13 @@ object EvaluatorTests {
       )) ++ lstErr("unop", List(
         (InvalidValue, "=-\"A\""),
         (InvalidValue, "=\"A\"%")
+      )) ++ lstCtx("cell reference", List(
+        (4, "=A1", Map(ACell((0, 0)) -> VDouble(4))),
+        (8, "=A1*2", Map(ACell((0, 0)) -> VDouble(4)))
+      )) ++ lstErr("just a range", List(
+        (InvalidValue, "=A1:A3"),
+        (InvalidValue, "=2 + A1:A3"),
+        (InvalidValue, "=A1:A3%")
       )) ++ lstErr("call unknown function", List(
         (InvalidName, "=FOOBAR11()")
       )) ++ lst("call SUM", List(
@@ -288,9 +296,6 @@ object EvaluatorTests {
         (10, "=SUM(1,2,3,4)")
       )) ++ lstErr("call SUM invalids", List(
         (InvalidValue, "=SUM(\"A\")")
-      )) ++ lstCtx("cell reference", List(
-        (4, "=A1", Map(ACell((0, 0)) -> VDouble(4))),
-        (8, "=A1*2", Map(ACell((0, 0)) -> VDouble(4)))
       )) ++ lstCtx("a range of cells", List(
         (4, "=A1:A1", newCtx(Map("A1" -> 4))),
         (6, "=2+A1:A1", newCtx(Map("A1" -> 4))),
@@ -299,15 +304,39 @@ object EvaluatorTests {
         (6, "=SUM(A1:A2,1+2)", newCtx(Map("A1" -> 1, "A2" -> 2))),
         (6, "=SUM(A1:C1)", newCtx(Map("A1" -> 1, "B1" -> 2, "C1" -> 3))),
         (10, "=SUM(A1:B2)", newCtx(Map("A1" -> 1, "B1" -> 2, "A2" -> 3, "B2" -> 4)))
-      )) ++ lstErr("just a range", List(
-        (InvalidValue, "=A1:A3"),
-        (InvalidValue, "=2 + A1:A3"),
-        (InvalidValue, "=A1:A3%")
+      )) ++ lstCtx("function AVERAGE", List(
+        (5, "=AVERAGE(A1:A2)", newCtx(Map("A1" -> 3, "A2" -> 7))),
+        (2.5, "=AVERAGE(3, 1, 4, 2)", ectx),
+        (5, "=AVERAGE(5, A1:A2)", newCtx(Map("A1" -> 3, "A2" -> 7))),
+        (3, "=AVERAGE(A1:A5)", sparseCtx)
+      )) ++ lst("function POWER", List(
+        (16, "=POWER(2,4)")
+      )) ++ lst("function ROUND", List(
+        (123,     "=ROUND(123.456)"),
+        (123.5,   "=ROUND(123.456, 1)"),
+        (123.46,  "=ROUND(123.456, 2)"),
+        (123.456, "=ROUND(123.456, 4)"),
+        (120,     "=ROUND(123.456, -1)"),
+        (100,     "=ROUND(123.456, -2)")
+      )) ++ lstErr("function ROUND", List(
+        (InvalidValue, """=ROUND("A")"""),
+        (InvalidValue, """=ROUND(1, "A")""")
+      )) ++ lst("function ROW", List(
+        (2, "=ROW(A2)"),
+        (31, "=ROW(B31:B66)"),
+        (5, "=ROW(A14:A5)")
       )) ++ lst("function ROWS", List(
+        (1, "=ROWS(A2)"),
         (4, "=ROWS(A2:A5)"),
         (1, "=ROWS(B31:B31)"),
         (10, "=ROWS(A14:A5)")
+      )) ++ lst("function COLUMN", List(
+        (1, "=COLUMN(A2)"),
+        (3, "=COLUMN(C1:Z1)"),
+        (27, "=COLUMN(ZZ31:AA31)"),
+        (2, "=COLUMN(E14:B5)")
       )) ++ lst("function COLUMNS", List(
+        (1, "=COLUMNS(A2)"),
         (3, "=COLUMNS(A1:C1)"),
         (27, "=COLUMNS(A31:AA31)"),
         (4, "=COLUMNS(E14:B5)")
@@ -315,11 +344,46 @@ object EvaluatorTests {
         (3, "=COUNT(TRUE, 1/0, 1, \"abc\", 10, 0)")
       )) ++ lstCtx("function COUNT", List(
         (2, "=COUNT(A1:A5)", sparseCtx)
-      )) ++ lstCtx("function AVG", List(
-        (5, "=AVERAGE(A1:A2)", newCtx(Map("A1" -> 3, "A2" -> 7))),
-        (2.5, "=AVERAGE(3, 1, 4, 2)", ectx),
-        (5, "=AVERAGE(5, A1:A2)", newCtx(Map("A1" -> 3, "A2" -> 7))),
-        (3, "=AVERAGE(A1:A5)", sparseCtx)
+      )) ++ lstCtx("function MATCH", List(
+        (1, "=MATCH(4, B6)", newCtx(Map("B6" -> 4))),
+        (1, "=MATCH(4, A1:A3)", newCtx(Map("A1" -> 4, "A2" -> 5, "A3" -> 6))),
+        (2, "=MATCH(5, A1:A3)", newCtx(Map("A1" -> 4, "A2" -> 5, "A3" -> 6))),
+        (3, "=MATCH(6, A1:A3)", newCtx(Map("A1" -> 4, "A2" -> 5, "A3" -> 6))),
+        (3, "=MATCH(6, C1:E1)", newCtx(Map("C1" -> 4, "D1" -> 5, "E1" -> 6))),
+        (3, "=MATCH(6, A3:A1)", newCtx(Map("A1" -> 4, "A2" -> 5, "A3" -> 6))),
+        (3, "=MATCH(6, E1:C1)", newCtx(Map("C1" -> 4, "D1" -> 5, "E1" -> 6)))
+      )) ++ lstErrCtx("function MATCH invalids", List(
+        (NA,           """=MATCH(4, A1:A3, 0)""", newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3))),
+        (NA,           """=MATCH(1, A1:B3, 0)""", newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3))),
+        (InvalidValue, """=MATCH(1, "A", 0)""",   newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3)))
+      )) ++ lstCtx("function VLOOKUP", List(
+        (1, "=VLOOKUP(1, A1:A3, 1)", newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3))),
+        (2, "=VLOOKUP(2, A1:A3, 1)", newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3))),
+        (3, "=VLOOKUP(3, A1:A3, 1)", newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3))),
+        (4, "=VLOOKUP(1, A1:B3, 2)", newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3, "B1" -> 4))),
+        (4, "=VLOOKUP(1, B3:A1, 2)", newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3, "B1" -> 4))),
+        (3, "=VLOOKUP(3, B5, 1)",    newCtx(Map("B5" -> 3))),
+        (3, "=VLOOKUP(3, B5, 1.6)",  newCtx(Map("B5" -> 3))),
+        (3, "=VLOOKUP(A1, B5, 1)",   newCtx(Map("A1" -> 3, "B5" -> 3)))
+      )) ++ lstErrCtx("function VLOOKUP invalids", List(
+        (NA,           """=VLOOKUP(4, A1:A3, 1)""",   newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3))),
+        (NA,           """=VLOOKUP(4, A1:A3, 2)""",   newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3))),
+        (InvalidRef,   """=VLOOKUP(2, A1:A3, 2)""",   newCtx(Map("A1" -> 1, "A2" -> 2, "A3" -> 3))),
+        (InvalidValue, """=VLOOKUP(2, A1:A3, "A")""", newCtx(Map("A1" -> 1))),
+        (InvalidValue, """=VLOOKUP(2, 1, 1)""",       newCtx(Map("A1" -> 1)))
+      )) ++ lst("function ADDRESS", List(
+        ("$A$1", "=ADDRESS(1,1)"),
+        ("$A$1", "=ADDRESS(1,1)"),
+        ("$E$3", "=ADDRESS(3,5)"),
+        ("$E$3", "=ADDRESS(3,5,1)"),
+        ("E$3",  "=ADDRESS(3,5,2)"),
+        ("$E3",  "=ADDRESS(3,5,3)"),
+        ("E3",   "=ADDRESS(3,5,4)")
+      )) ++ lstErr("function VLOOKUP invalids", List(
+        (InvalidValue, "=ADDRESS(0,1)"),
+        (InvalidValue, "=ADDRESS(1,0)"),
+        (InvalidValue, "=ADDRESS(1,1,0)"),
+        (InvalidValue, "=ADDRESS(1,1,5)")
       )) ++ lst("function IF", List(
         (true, "=IF(TRUE)"),
         (false, "=IF(FALSE)"),
@@ -369,8 +433,6 @@ object EvaluatorTests {
         (false, "=NOT(1)")
       )) ++ lstCtx("NOT with empty", List(
         (true, "=NOT(B1)", (_ => VEmpty))
-      )) ++ lst("function POWER", List(
-        (16, "=POWER(2,4)")
       )) ++ lst("function UPPER", List(
         ("ABC", "=UPPER(\"abc\")"),
         ("ABC", "=UPPER(\"aBc\")"),
@@ -404,6 +466,49 @@ object EvaluatorTests {
         ("123", "=TRIM(123)")
       )) ++ lstCtx("TRIM empty", List(
         ("", "=TRIM(A1)", (_ => VEmpty))
+      )) ++ lstCtx("IS function ISBLANK", List(
+        (true,  "=ISBLANK(A1)", (_ => VEmpty)),
+        (false, "=ISBLANK(A1)", (_ => VBool(true))),
+        (false, "=ISBLANK(A1)", (_ => VBool(false))),
+        (false, "=ISBLANK(A1)", (_ => VString(""))),
+        (false, "=ISBLANK(A1)", (_ => VDouble(0))),
+        (false, "=ISBLANK(A1)", (_ => VErr(InvalidValue)))
+      )) ++ lstCtx("IS function ISERROR", List(
+        (false, "=ISERROR(A1)", (_ => VEmpty)),
+        (false, "=ISERROR(A1)", (_ => VBool(true))),
+        (false, "=ISERROR(A1)", (_ => VString(""))),
+        (false, "=ISERROR(A1)", (_ => VDouble(0))),
+        (true,  "=ISERROR(A1)", (_ => VErr(InvalidValue))),
+        (true,  "=ISERROR(A1)", (_ => VErr(NA)))
+      )) ++ lstCtx("IS function ISNA", List(
+        (false, "=ISNA(A1)", (_ => VEmpty)),
+        (false, "=ISNA(A1)", (_ => VBool(true))),
+        (false, "=ISNA(A1)", (_ => VString(""))),
+        (false, "=ISNA(A1)", (_ => VDouble(0))),
+        (false, "=ISNA(A1)", (_ => VErr(InvalidValue))),
+        (true,  "=ISNA(A1)", (_ => VErr(NA)))
+      )) ++ lstCtx("IS function ISLOGICAL", List(
+        (false, "=ISLOGICAL(A1)", (_ => VEmpty)),
+        (true,  "=ISLOGICAL(A1)", (_ => VBool(true))),
+        (true,  "=ISLOGICAL(A1)", (_ => VBool(true))),
+        (false, "=ISLOGICAL(A1)", (_ => VString(""))),
+        (false, "=ISLOGICAL(A1)", (_ => VDouble(0))),
+        (false, "=ISLOGICAL(A1)", (_ => VErr(InvalidValue)))
+      )) ++ lstCtx("IS function ISNUMBER", List(
+        (false, "=ISNUMBER(A1)", (_ => VEmpty)),
+        (false, "=ISNUMBER(A1)", (_ => VBool(true))),
+        (false, "=ISNUMBER(A1)", (_ => VString(""))),
+        (true,  "=ISNUMBER(A1)", (_ => VDouble(-40))),
+        (true,  "=ISNUMBER(A1)", (_ => VDouble(0))),
+        (true,  "=ISNUMBER(A1)", (_ => VDouble(123.4))),
+        (false, "=ISNUMBER(A1)", (_ => VErr(InvalidValue)))
+      )) ++ lstCtx("IS function ISTEXT", List(
+        (false, "=ISTEXT(A1)", (_ => VEmpty)),
+        (false, "=ISTEXT(A1)", (_ => VBool(true))),
+        (true,  "=ISTEXT(A1)", (_ => VString(""))),
+        (true,  "=ISTEXT(A1)", (_ => VString("abc"))),
+        (false, "=ISTEXT(A1)", (_ => VDouble(0))),
+        (false, "=ISTEXT(A1)", (_ => VErr(InvalidValue)))
       )) ++ lst("grouping", List(
         (10, "=(1 + 4) * 2"),
         (5, "=(2+3)")

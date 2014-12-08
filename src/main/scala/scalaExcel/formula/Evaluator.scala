@@ -1,7 +1,9 @@
 
 package scalaExcel.formula
 
-import math.{pow, abs}
+import scalaExcel.CellPos
+
+import math.{min, max, pow, abs, round}
 
 object Evaluator {
 
@@ -182,8 +184,7 @@ object Evaluator {
   def boolLte = boolCmp(c => VBool(c <= 0)) _
 
   def doubleDiv(lhs: Value, rhs: Value) = applyToDoubles(_ / _)(lhs, rhs) match {
-    case VDouble(d) =>  if (d.isInfinity) VErr(DivBy0)
-                        else VDouble(d)
+    case VDouble(d) if (d.isInfinity) => VErr(DivBy0)
     case x => x
   }
 
@@ -202,37 +203,83 @@ object Evaluator {
     fn match {
       case "SUM"     => reduce(ctx, applyToDoubles(_ + _), VDouble(0), desugarArgs(args))
       case "AVERAGE" => evalCallAverage(ctx, desugarArgs(args))
+      case "POWER"   => evalCallPower(ctx, args)
+      case "ROUND"   => evalCallRound(ctx, args)
+
+      case "ROW"     => evalCallRow(args)
       case "ROWS"    => evalCallRows(args)
+      case "COLUMN"  => evalCallColumn(args)
       case "COLUMNS" => evalCallColumns(args)
       case "COUNT"   => evalCallCount(ctx, desugarArgs(args))
+      case "MATCH"   => evalCallMatch(ctx, args)
+      case "VLOOKUP" => evalCallVLookUp(ctx, args)
+      case "ADDRESS" => evalCallAddress(ctx, args)
+
       case "IF"      => evalCallIf(ctx, args)
       case "OR"      => evalCallOr(ctx, desugarArgs(args))
       case "AND"     => evalCallAnd(ctx, desugarArgs(args))
       case "NOT"     => evalCallNot(ctx, args)
-      case "POWER"   => evalCallPower(ctx, args)
+
       case "UPPER"   => evalCallUpper(ctx, args)
       case "LOWER"   => evalCallLower(ctx, args)
       case "LEN"     => evalCallLen(ctx, args)
       case "TRIM"    => evalCallTrim(ctx, args)
+
+      case "ISBLANK"   => evalCallIsBlank(ctx, desugarArgs(args))
+      case "ISERROR"   => evalCallIsError(ctx, desugarArgs(args))
+      case "ISNA"      => evalCallIsNA(ctx, desugarArgs(args))
+      case "ISLOGICAL" => evalCallIsLogical(ctx, desugarArgs(args))
+      case "ISNUMBER"  => evalCallIsNumber(ctx, desugarArgs(args))
+      case "ISTEXT"    => evalCallIsText(ctx, desugarArgs(args))
       case _ => VErr(InvalidName)
     }
+
+  // Numeric functions
 
   def evalCallAverage(ctx: Ctx, args: List[Expr]) =
     evalIn(ctx, BinOp(Div(), Call("SUM", args), Call("COUNT", args)))
 
-  def evalCallRows(args: List[Expr]) = args match {
-    case List(Range(Cell(_, RowRef(r1, _)), Cell(_, RowRef(r2, _)))) => {
-      VDouble(abs(r2 - r1) + 1)
+  def evalCallPower(ctx: Ctx, args: List[Expr]) = args match {
+    case List(num, exp) => evalIn(ctx, BinOp(Expon(), num, exp))
+    case _ => throw new Exception("Wrong number of arguments")
+  }
+
+  def evalCallRound(ctx: Ctx, args: List[Expr]): Value = args match {
+    case List(num) => evalCallRound(ctx, List(num, Const(VDouble(0))))
+    case List(num, digits) => (args map (evalIn(ctx, _))) match {
+      case List(VDouble(num), VDouble(dig)) => {
+        val s = pow(10, dig.toInt)
+        VDouble(round(num * s) / s)
+      }
+      case _ => VErr(InvalidValue)
     }
     case _ => throw new Exception("Wrong number of arguments")
   }
 
-  def evalCallColumns(args: List[Expr]) = args match {
-    case List(Range(Cell(ColRef(c1, _), _), Cell(ColRef(c2, _), _))) => {
-      VDouble(abs(c2 - c1) + 1)
-    }
+  // Cell functions
+
+  private def getRangeBounds(e: Cell) = e match {
+    case Cell(ColRef(c, _), RowRef(r, _)) => ((c, r), (c, r))
+  }
+
+  private def getRangeBounds(e: Range) = e match {
+    case Range(Cell(ColRef(c1, _), RowRef(r1, _)), Cell(ColRef(c2, _), RowRef(r2, _))) =>
+      ((min(c1, c2), min(r1, r2)), (max(c1, c2), max(r1, r2)))
+  }
+
+  private def execForRangeArg[T](f: (CellPos, CellPos) => T)(args: List[Expr]) = args match {
+    case List(c: Cell)  => f tupled getRangeBounds(c)
+    case List(r: Range) => f tupled getRangeBounds(r)
     case _ => throw new Exception("Wrong number of arguments")
   }
+
+  def evalCallRow     = execForRangeArg((c1, c2) => VDouble(c1._2 + 1)) _
+
+  def evalCallRows    = execForRangeArg((c1, c2) => VDouble(c2._2 - c1._2 + 1)) _
+
+  def evalCallColumn  = execForRangeArg((c1, c2) => VDouble(c1._1 + 1)) _
+
+  def evalCallColumns = execForRangeArg((c1, c2) => VDouble(c2._1 - c1._1 + 1)) _
 
   def evalCallCount(ctx: Ctx, args: List[Expr]) =
     VDouble(args
@@ -241,6 +288,79 @@ object Evaluator {
         case _ => 0
       })
       .fold(0)(_+_))
+
+  def evalCallMatch(ctx: Ctx, args: List[Expr]): Value = args match {
+    // value, array, type
+    // Default to exact match type = 0 (1 in excel), but 0 makes most sense
+    // Type 1: largest value that is >= v
+    // Type 0: exactly v
+    // Type -1: smallest value <= v
+    case List(v, a)           => evalCallMatch(ctx, List(v, a, Const(VDouble(0))))
+    case List(v, c: Cell, t)  => evalCallMatch(ctx, List(v, Range(c, c), t))
+    case List(v, r: Range, t) => {
+
+      val ((c1, r1), (c2, r2)) = getRangeBounds(r)
+
+      val positions =
+        if (r1 == r2) (c1 to c2) map {(_, r1)}
+        else if (c1 == c2) (r1 to r2) map {(c1, _)}
+        else List()
+
+      lazy val value = evalIn(ctx, v)
+      val pos = positions.zipWithIndex.find {
+        case (p, i) => value == ctx(ACell(p))
+      }
+
+      pos match {
+        case Some((p, i)) => VDouble(i + 1)
+        case None => VErr(NA)
+      }
+
+    }
+    case List(v, a, t) => VErr(InvalidValue)
+    case _ => throw new Exception("Wrong number of arguments")
+  }
+
+  def evalCallVLookUp(ctx: Ctx, args: List[Expr]): Value = args match {
+    // value, array, index, exact
+    // default exact to FALSE, which is the only type we implement here.
+    case List(v, a, i)           => evalCallVLookUp(ctx, args :+ Const(VBool(false)))
+    case List(v, c: Cell, i, e)  => evalCallVLookUp(ctx, List(v, Range(c, c), i, e))
+    case List(v, r: Range, i, e) => evalIn(ctx, i) match {
+      case VDouble(index) => {
+        val ((c1, r1), (c2, r2)) = getRangeBounds(r)
+        lazy val value = evalIn(ctx, v)
+        val lookupCol = c1 + index.toInt - 1
+        val row = (r1 to r2) find { ri => value == ctx(ACell((c1, ri))) }
+        row match {
+          case Some(r) =>
+            if (lookupCol > c2) VErr(InvalidRef)
+            else ctx(ACell((lookupCol, r)))
+          case None => VErr(NA)
+        }
+      }
+      case _ => VErr(InvalidValue)
+    }
+    case List(v, a, i, e) => VErr(InvalidValue)
+    case _ => throw new Exception("Wrong number of arguments")
+  }
+
+  def evalCallAddress(ctx: Ctx, args: List[Expr]): Value = args match {
+    case List(row, col) => evalCallAddress(ctx, List(row, col, Const(VDouble(1))))
+    case List(row, col, abs) => (args map (evalIn(ctx, _))) match {
+      case List(VDouble(row), VDouble(col), VDouble(abs))
+        if (row >= 1 && col >= 1 && abs >= 1 && abs <= 4) => VString(
+          "" ++ (if (abs == 1 || abs == 3) "$" else "") ++
+          numToCol(col.toInt - 1) ++
+          (if (abs == 1 || abs == 2) "$" else "") ++
+          row.toInt.toString
+        )
+      case List(r, c, a) => VErr(InvalidValue)
+    }
+    case _ => throw new Exception("Wrong number of arguments")
+  }
+
+  // Logical functions
 
   def evalCallIf(ctx: Ctx, args: List[Expr]) = (args match {
     // Normalize length of arguments to 3
@@ -278,10 +398,7 @@ object Evaluator {
     case _ => throw new Exception("Wrong number of arguments")
   }
 
-  def evalCallPower(ctx: Ctx, args: List[Expr]) = args match {
-    case List(num, exp) => evalIn(ctx, BinOp(Expon(), num, exp))
-    case _ => throw new Exception("Wrong number of arguments")
-  }
+  // String functions
 
   def evalWithString(f: String => Value)(ctx: Ctx, args: List[Expr]) = {
     args match {
@@ -300,5 +417,42 @@ object Evaluator {
   def evalCallLen = evalWithString(str => VDouble(str.length)) _
 
   def evalCallTrim = evalWithString(str => VString(str.trim)) _
+
+  // IS functions
+
+  def evalIsTrueFor(f: Value => Boolean)(ctx: Ctx, args: List[Expr]) = args match {
+    case List(value) => VBool(f(evalIn(ctx, value)))
+    case _ => VBool(false)
+  }
+
+  def evalCallIsBlank = evalIsTrueFor {
+    case VEmpty => true
+    case _ => false
+  } _
+
+  def evalCallIsError = evalIsTrueFor {
+    case VErr(e) => true
+    case _ => false
+  } _
+
+  def evalCallIsNA = evalIsTrueFor {
+    case VErr(NA) => true
+    case _ => false
+  } _
+
+  def evalCallIsLogical = evalIsTrueFor {
+    case VBool(_) => true
+    case _ => false
+  } _
+
+  def evalCallIsNumber = evalIsTrueFor {
+    case VDouble(_) => true
+    case _ => false
+  } _
+
+  def evalCallIsText = evalIsTrueFor {
+    case VString(_) => true
+    case _ => false
+  } _
 
 }
