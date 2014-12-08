@@ -1,8 +1,11 @@
 package scalaExcel.model
 
+import rx.lang.scala.schedulers.NewThreadScheduler
+
 import scalafx.scene.paint.Color
 import rx.lang.scala.Observable
 import rx.lang.scala.subjects.BehaviorSubject
+import rx.lang.scala.subjects.PublishSubject
 import scalaExcel.model.Sorter.SheetSorter
 import scalaExcel.model.OperationHelpers._
 import scalaExcel.CellPos
@@ -10,6 +13,11 @@ import scalaExcel.CellPos
 class Model {
   /** This is a stream of inputs from 'the world' that will effect the state of the sheet model */
   val sheetMutations = BehaviorSubject[ModelMutations](Refresh)
+
+  private val _modelErrors = PublishSubject[Throwable]()
+  /** This is a stream of errors that happen when while updating the model */
+  val modelErrors = _modelErrors.observeOn(NewThreadScheduler())
+
 
   /**
    * function to propagate updates to dependent cells
@@ -39,40 +47,47 @@ class Model {
   // world
   private val undoRedoSheet = sheetMutations.scan(new UndoRedo(new Sheet()))({
     case (ur, action) =>
-      val sheet = ur.current
-      // Calculate new sheet
-      action match {
-        case SetFormula(pos, f) =>
-          val (s, updates) = sheet.setCell(pos, f)
-          ur.next(updateSheet(s, updates, Set(pos)))
-        case EmptyCell(poss) => ur.next(
-          poss.foldLeft(sheet)( (sheet, pos) =>
-            updateSheet(sheet.deleteCell(pos))
+      try {
+        val sheet = ur.current
+        // Calculate new sheet
+        action match {
+          case SetFormula(pos, f) =>
+            val (s, updates) = sheet.setCell(pos, f)
+            ur.next(updateSheet(s, updates, Set(pos)))
+          case EmptyCell(poss) => ur.next(
+            poss.foldLeft(sheet)((sheet, pos) =>
+              updateSheet(sheet.deleteCell(pos))
+            )
           )
-        )
-        case CopyCell(from, to) => ur.next(updateSheet(sheet.copyCell(from, to)))
-        case CutCell(from, to) => ur.next(updateSheet(sheet.cutCell(from, to)))
-        case SetColor(poss, c) => ur.next(
-          poss.foldLeft(sheet)( (sheet, pos) =>
-            updateStyle(sheet, pos, s => s.setColor(c))
+          case CopyCell(from, to) => ur.next(updateSheet(sheet.copyCell(from, to)))
+          case CutCell(from, to) => ur.next(updateSheet(sheet.cutCell(from, to)))
+          case SetColor(poss, c) => ur.next(
+            poss.foldLeft(sheet)((sheet, pos) =>
+              updateStyle(sheet, pos, s => s.setColor(c))
+            )
           )
-        )
-        case SetBackground(poss, c) => ur.next(
-          poss.foldLeft(sheet)( (sheet, pos) =>
-            updateStyle(sheet, pos, s => s.setBackground(c))
+          case SetBackground(poss, c) => ur.next(
+            poss.foldLeft(sheet)((sheet, pos) =>
+              updateStyle(sheet, pos, s => s.setBackground(c))
+            )
           )
-        )
-        case SetSheet(values) => ur.next(
-          values.foldLeft(new Sheet()) { case (sheet, (pos, value)) =>
-            sheet.setCell(pos, value)._1
-          }
-        )
-        case SortColumn(x, asc) => ur.next(sheet.sort(x, asc))
-        case Undo => ur.undo()
-        case Redo => ur.redo()
-        case Refresh => ur
+          case SetSheet(values) => ur.next(
+            values.foldLeft(new Sheet()) { case (sheet, (pos, value)) =>
+              sheet.setCell(pos, value)._1
+            }
+          )
+          case SortColumn(x, asc) => ur.next(sheet.sort(x, asc))
+          case Undo => ur.undo()
+          case Redo => ur.redo()
+          case Refresh => ur
+        }
+      } catch {
+        case e =>
+          _modelErrors.onNext(e)
+          ur // Do not modify the sheet
       }
-  })
+  }
+  )
 
   val sheet = undoRedoSheet.map({a => a.current})
 
@@ -99,7 +114,11 @@ class Model {
   }
 
   def changeFormula(pos : CellPos, f: String) {
-    sheetMutations.onNext(SetFormula(pos, f))
+    try {
+      sheetMutations.onNext(SetFormula(pos, f))
+    } catch {
+      case e => println("Caught a nasty exception")
+    }
   }
 
   def changeBackground(pos : CellPos, c: Color) {

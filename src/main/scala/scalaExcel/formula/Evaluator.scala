@@ -121,6 +121,7 @@ object Evaluator {
     desugar(e) match {
       case ARange(_) => VErr(InvalidValue)
       case x => evalIn_(ctx, x) match {
+        case VDouble(666.0) => throw new RuntimeException("You asked for it")
         case VEmpty => VDouble(0)
         case v => v
       }
