@@ -1,8 +1,9 @@
 package scalaExcel.GUI.data
 
 import scalaExcel.formula.{Value, VDouble, VBool, VString, VEmpty}
-import scalaExcel.model._
+import scalaExcel.formula.Evaluator.boolToString
 import scalaExcel.GUI.util.CSSHelper
+import scalaExcel.model._
 
 sealed trait DataCell {
   val expression: String
@@ -48,6 +49,7 @@ private class DataCellImpl(val expression: String,
         else "%1.2f"
       formatter format d
     case VString(s) => s
+    case VBool(b) => boolToString(b)
     case _ => value.toString
   }
 

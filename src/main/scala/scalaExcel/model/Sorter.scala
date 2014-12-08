@@ -24,7 +24,7 @@ object Sorter {
       val rowMutations =
         (0 to rows - 1)
         .map { y =>
-          ((x, y), sheet.values.get((x, y)))
+          ((x, y), sheet.valueAt((x, y)))
         }
         .sortWith(ascOrDescCompare)
         .zip(0 to rows - 1)

@@ -1,7 +1,5 @@
 package scalaExcel.GUI.view
 
-import javafx.event.EventHandler
-import javafx.scene.input.{MouseButton, MouseEvent}
 import javafx.scene.{control => jfxc}
 
 import rx.lang.scala.{Observable, Subject}
@@ -10,12 +8,13 @@ import scalaExcel.CellPos
 import scalaExcel.GUI.data.LabeledDataTable.DataRow
 import scalaExcel.GUI.data.{DataCell, LabeledDataTable}
 import scalaExcel.util.DefaultProperties
-import scalaExcel.rx.operators.WithLatest._
 
 import scalafx.Includes._
 import scalafx.beans.property.ObjectProperty
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.control._
+import scalafx.scene.input.{MouseButton, MouseEvent}
+import scalafx.scene.control.TableColumn.CellEditEvent
 
 class DataCellColumn(onCellEdit: ((CellPos, String)) => Unit,
                      onColResize: ((Int, Double)) => Unit,
@@ -36,30 +35,30 @@ class DataCellColumn(onCellEdit: ((CellPos, String)) => Unit,
   }
 
   // listen for cell edits
-  onEditCommit = new EventHandler[jfxc.TableColumn.CellEditEvent[DataRow, DataCell]] {
-    override def handle(e: jfxc.TableColumn.CellEditEvent[DataRow, DataCell]) = {
+  onEditCommit = (e: CellEditEvent[DataRow, DataCell]) => {
       val text = e.getNewValue.expression
       // account for numbered column
       val col = e.getTablePosition.getColumn - 1
       val row = e.getTablePosition.getRow
       onCellEdit(((col, row), text))
-    }
   }
 
 }
 
-class NumberedColumn extends TableColumn[DataRow, DataCell] {
+class NumberedColumn(indexConverter: (Int) => Int) extends TableColumn[DataRow, DataCell] {
   text = DefaultProperties.NUMBERED_COLUMN_HEADER
   id = "-1"
   cellValueFactory = _ => ObjectProperty(DataCell.newEmpty())
   cellFactory = _ => new TableCell[DataRow, DataCell] {
     item.onChange {
       (_, _, _) =>
-        text = (tableRow.value.getIndex + 1).toString
+        // row index must be converted to sheet row index
+        text = (indexConverter(tableRow.value.getIndex) + 1).toString
         style = "-fx-alignment: CENTER;"
     }
   }
-  prefWidth = DefaultProperties.NUMBERED_COLUMN_WIDTH
+  minWidth = DefaultProperties.NUMBERED_COLUMN_WIDTH
+  maxWidth = DefaultProperties.NUMBERED_COLUMN_WIDTH
   editable = false
   sortable = false
 }
@@ -70,9 +69,12 @@ class StreamingTable(labeledTable: LabeledDataTable) {
 
   val table = new TableView[DataRow](labeledTable.data) {
     editable = true
+    fixedCellSize = DefaultProperties.FIXED_ROW_HEIGHT
 
     // the first column is special
-    columns += new NumberedColumn
+    columns += new NumberedColumn(index =>
+        //convert table row index to sheet row index
+        labeledTable.toSheetIndex((0, index))._2)
     // add the rest of the columns in the order given by the LabeledDataTable
     columns ++= buildColumns(labeledTable.headers,
       labeledTable.headerWidths)
@@ -93,7 +95,7 @@ class StreamingTable(labeledTable: LabeledDataTable) {
         }
       o.onNext(cells)
     })
-  })
+  }).map(_ map labeledTable.toSheetIndex)
 
   val onColumnReorder = Observable[Map[Int, Int]](o => {
     table.columns.onChange((cols, changes) => {
@@ -116,48 +118,30 @@ class StreamingTable(labeledTable: LabeledDataTable) {
   val onColResize = Subject[(Int, Double)]()
 
   val onClick = Observable[MouseEvent](o => {
-    table.onMouseClicked = new EventHandler[MouseEvent] {
-      override def handle(event: MouseEvent) {
-        o.onNext(event)
-      }
-    }
+    table.onMouseClicked =
+      (event: MouseEvent) => o.onNext(event)
   })
 
   val onRightClick = onClick
-    .filter(event => {
-    (event.getButton.compareTo(MouseButton.SECONDARY) == 0)
-  })
+    .filter(_.getButton.compareTo(MouseButton.SECONDARY) == 0)
 
-  private def buildColumns(
-                            headers: List[String],
+  private def buildColumns(headers: List[String],
                             widths: List[Double]): TableColumns = {
-
     headers.view
       .zip(widths)
       .foldLeft(new TableColumns())((cols, data) => {
       cols += new DataCellColumn(
-        (onCellEdit.onNext(_)),
-        (onColResize.onNext(_)),
-        cols.length,
-        data._1,
-        data._2)
+      {case (pos, formula) =>
+          // convert table index to sheet index
+          onCellEdit.onNext((labeledTable.toSheetIndex(pos), formula))},
+      {case (index, w) =>
+          // convert table column index to sheet column index
+          onColResize.onNext((labeledTable.toSheetIndex((index, 0))._1, w))},
+      cols.length,
+      data._1,
+      data._2)
     })
   }
-
-  /** Observable of selected cells in the table */
-  val selectedCellStream = Observable[List[CellPos]]({ o =>
-    table.selectionModel.value.getSelectedCells.onChange({ (poss, _) => o.onNext(poss.toList map ({
-      pos => (pos.getColumn - 1, pos.getRow)
-    }))
-    })
-  })
-
-  /** Combine an observable with the current selected cells in the table */
-  def withSelectedCells[T](o: Observable[T]): Observable[(List[CellPos], T)] = o.withLatest(selectedCellStream)
-
-  // Grumble grumble JVM type erasure can't overload on Observable[Unit] and Observable[T] grumble grumble
-  def withSelectedCellsOnly(o: Observable[Any]): Observable[List[CellPos]] = withSelectedCells(o).map({ case (ps,_) => ps })
-
 }
 
 object TableViewBuilder {

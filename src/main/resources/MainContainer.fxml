@@ -41,6 +41,17 @@
                         </Menu>
                         <Menu mnemonicParsing="false" text="Edit">
                             <items>
+                                <MenuItem fx:id="menuUndoDelegate" text="Undo">
+                                    <accelerator>
+                                        <KeyCodeCombination alt="UP" code="Z" control="ANY" meta="ANY" shift="UP" shortcut="DOWN" />
+                                    </accelerator>
+                                </MenuItem>
+                                <MenuItem fx:id="menuRedoDelegate" text="Redo">
+                                    <accelerator>
+                                        <KeyCodeCombination alt="UP" code="Y" control="ANY" meta="ANY" shift="UP" shortcut="DOWN" />
+                                    </accelerator>
+                                </MenuItem>
+                                <SeparatorMenuItem />
                                 <MenuItem fx:id="menuCutDelegate" text="Cut">
                                     <accelerator>
                                         <KeyCodeCombination alt="UP" code="X" control="ANY" meta="ANY" shift="UP" shortcut="DOWN" />
@@ -61,11 +72,6 @@
                                         <KeyCodeCombination alt="ANY" code="DELETE" control="ANY" meta="ANY" shift="ANY" shortcut="ANY" />
                                     </accelerator>
                                 </MenuItem>
-                            </items>
-                        </Menu>
-                        <Menu mnemonicParsing="false" text="Help">
-                            <items>
-                                <MenuItem mnemonicParsing="false" text="About" />
                             </items>
                         </Menu>
                     </menus>
@@ -130,12 +136,12 @@
                         </AnchorPane>
                         <AnchorPane GridPane.columnIndex="4">
                             <children>
-                                <Button alignment="CENTER" mnemonicParsing="false" text="Button" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" GridPane.halignment="CENTER" />
+                                <Button fx:id="newRowDelegate" alignment="CENTER" mnemonicParsing="false" text="+ Row" wrapText="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" GridPane.halignment="CENTER" />
                             </children>
                         </AnchorPane>
                         <AnchorPane GridPane.columnIndex="5">
                             <children>
-                                <Button alignment="CENTER" mnemonicParsing="false" text="Button" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" GridPane.halignment="CENTER" />
+                                <Button fx:id="newColumnDelegate" alignment="CENTER" mnemonicParsing="false" text="+ Column" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" GridPane.halignment="CENTER" />
                             </children>
                         </AnchorPane>
                         <AnchorPane GridPane.columnIndex="6">
@@ -143,6 +149,11 @@
                                 <Button alignment="CENTER" mnemonicParsing="false" text="Button" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" GridPane.halignment="CENTER" />
                             </children>
                         </AnchorPane>
+                  <AnchorPane layoutX="10.0" layoutY="10.0" GridPane.columnIndex="7">
+                     <children>
+                        <Button alignment="CENTER" mnemonicParsing="false" text="Button" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" GridPane.halignment="CENTER" />
+                     </children>
+                  </AnchorPane>
                     </children>
                     <columnConstraints>
                         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -152,6 +163,7 @@
                         <ColumnConstraints hgrow="SOMETIMES" maxWidth="94.0" minWidth="10.0" prefWidth="68.0" />
                         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                     </columnConstraints>
                     <rowConstraints>
                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
@@ -179,11 +191,20 @@
                     <tabs>
                         <Tab text="Untitled Tab 1">
                             <content>
-                                <AnchorPane fx:id="tableContainerDelegate" minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                                    <children>
-                                    <!--<TableView fx:id="tableDelegate" layoutX="110.0" layoutY="14.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">-->
-                                    <!--</TableView>-->
-                                    </children>
+                                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                           <children>
+                              <BorderPane prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                 <bottom>
+                                    <ScrollBar fx:id="horizontalScrollDelegate" BorderPane.alignment="CENTER" />
+                                 </bottom>
+                                 <right>
+                                    <ScrollBar fx:id="verticalScrollDelegate" orientation="VERTICAL" BorderPane.alignment="CENTER" />
+                                 </right>
+                                 <center>
+                                    <AnchorPane fx:id="tableContainerDelegate" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
+                                 </center>
+                              </BorderPane>
+                           </children>
                                 </AnchorPane>
                             </content>
                         </Tab>

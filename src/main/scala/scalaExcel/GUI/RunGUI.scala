@@ -8,8 +8,8 @@ import java.io.IOException
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.scene.Scene
 import scalaExcel.GUI.view.ViewManager
-import scalaExcel.GUI.data.DataManager
 import scalaExcel.model.Model
+import scalaExcel.model.Filer._
 
 object RunGUI extends JFXApp {
 
@@ -22,36 +22,71 @@ object RunGUI extends JFXApp {
   val loader = new jfxf.FXMLLoader(resource)
   val root = loader.load[jfxs.Parent]
 
+  /**
+   * The data model
+   */
   val model = new Model()
 
+  /**
+   * The view
+   */
   val vm = loader.getController[ViewManager]
-  val dm = new DataManager(model)
+
+  // notify ViewManager of modifications in the model
+  model.sheet.subscribe(vm.dataChanged _)
 
   // Putting events from the GUI into the model
   // This should be the only place where that ever happens
 
   // when the user somehow changes the cell
   vm.onCellEdit.subscribe { edit =>
-      model.changeFormula(edit._1, edit._2)
+    model.changeFormula(edit._1, edit._2)
   }
 
   // when the background color of a cell is selected
   vm.onBackgroundChange.subscribe { edit =>
-      model.changeBackground(edit._1, edit._2)
+    model.changeBackground(edit._1, edit._2)
   }
 
   // when the front color of a cell is selected
   vm.onColorChange.subscribe { edit =>
-      model.changeColor(edit._1, edit._2)
+    model.changeColor(edit._1, edit._2)
   }
 
   // when a column is sorted
   vm.onColumnSort.subscribe { s =>
-      model.sortColumn(s._1, s._2)
+    model.sortColumn(s._1, s._2)
   }
 
-  // re-render table after data/resize/scroll/sort changes
-  dm.labeledDataTable.subscribe(table => vm.buildTableView(table, model))
+  // when a cell is emptied
+  vm.onCellEmpty.subscribe { pos =>
+    model.emptyCell(pos)
+  }
+
+  // when a cell is copied
+  vm.onCellCopy.subscribe { exchange =>
+    model.copyCell(exchange._1, exchange._2)
+  }
+
+  // when a cell is cut
+  vm.onCellCut.subscribe { exchange =>
+    model.cutCell(exchange._1, exchange._2)
+  }
+
+  // when a file is loaded
+  vm.onLoad.subscribe { file =>
+    model.loadFrom(file)
+  }
+
+  // when an action is undone
+  vm.onUndo.subscribe { _ =>
+    model.undo()
+  }
+
+  // when an action is redone
+  vm.onRedo.subscribe { _ =>
+    model.redo()
+  }
 
   stage = new PrimaryStage() {
     title = "Scala Excel"

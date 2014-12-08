@@ -1,59 +1,93 @@
 package scalaExcel.GUI.data
 
+import scala.math.max
+
 import scalaExcel.CellPos
 import scalaExcel.GUI.data.DataWindow._
+import scalaExcel.util.DefaultProperties
+import scalaExcel.formula.numToCol
 
-class DataWindow(val maxBounds: (MinX, MaxX, MinY, MaxY),
-                 val visibleBounds: (MinX, MaxX, MinY, MaxY)) {
+class DataWindow(val dataSize: Size,
+                 val visibleBounds: Bounds) {
 
-  def addToVisibleBound(f: (Bounds) => Int, add: (Int, Int) => Int)(x: Int) = add(x, f(visibleBounds))
 
-  def windowToAbsoluteColumn = addToVisibleBound(_._3, _ + _) _
-  def absoluteToWindowColumn = addToVisibleBound(_._3, _ - _) _
-  def windowToAbsoluteRow = addToVisibleBound(_._1, _ + _) _
-  def absoluteToWindowRow = addToVisibleBound(_._1, _ - _) _
+  def windowToAbsolute(index: CellPos) =
+    (index._1 + visibleBounds.minCol, index._2 + visibleBounds.minRow)
 
-  def windowToAbsolute(index: (Int, Int)): (Int, Int) =
-    (windowToAbsoluteRow(index._1), windowToAbsoluteColumn(index._2))
+  def absoluteToWindow(index: CellPos) =
+    (index._1 - visibleBounds.minCol, index._2 - visibleBounds.minRow)
 
-  def absoluteToWindow(index: (Int, Int)): (Int, Int) =
-    (absoluteToWindowRow(index._1), absoluteToWindowColumn(index._2))
+  def isInBounds(index: CellPos) = visibleBounds.includes(index)
 
-  def isInBounds(index: CellPos) = {
-    if (index._1 >= visibleBounds._1 && index._1 < visibleBounds._2 &&
-        index._2 >= visibleBounds._3 && index._2 < visibleBounds._4)
-      true
-    else
-      false
+  def slideBy(offsets: Bounds) = {
+    new DataWindow(dataSize, offsets.add(visibleBounds))
   }
 
-  def slideBy(offsets: (Int, Int, Int, Int)) = {
-    val bounds = (visibleBounds._1 + offsets._1,
-      visibleBounds._2 + offsets._2,
-      visibleBounds._3 + offsets._3,
-      visibleBounds._4 + offsets._4)
-    new DataWindow(maxBounds, bounds)
-  }
+  def slideTo(bounds: Bounds) = new DataWindow(dataSize, bounds)
 
-  def slideTo(bounds: (Int, Int, Int, Int)) = {
-    new DataWindow(maxBounds, bounds)
-  }
+  def columnCount = visibleBounds.maxCol - visibleBounds.minCol
 
-  def columnCount = visibleBounds._2 - visibleBounds._1
+  def rowCount = visibleBounds.maxRow - visibleBounds.minRow
 
-  def rowCount = visibleBounds._4 - visibleBounds._3
+  def addNewRow() =
+    new DataWindow(
+      // add one more column to maximum bounds
+      Size(dataSize.columnCount, dataSize.rowCount + 1),
+      // if the column should be in view, slide the visibleBounds over it
+      if (visibleBounds.maxRow == dataSize.rowCount)
+        (Bounds(0, 0, 1, 1) add visibleBounds)
+      else
+        visibleBounds
+    )
 
-  lazy val visibleIndexes =
-    List.range(visibleBounds._1, visibleBounds._2).flatMap(c =>
-      List.range(visibleBounds._3, visibleBounds._4).map(r => (c, r)))
+  def addNewColumn() =
+    new DataWindow(
+      // add one more column to maximum bounds
+      Size(dataSize.columnCount + 1, dataSize.rowCount),
+      // if the row should be in view, slide the visibleBounds over it
+      if (visibleBounds.maxCol == dataSize.columnCount)
+        (Bounds(1, 1, 0, 0) add visibleBounds)
+      else
+        visibleBounds)
+
+  def expandTo(size: Size) =
+    new DataWindow(
+      Size(
+        max(size.columnCount, dataSize.columnCount),
+        max(size.rowCount, dataSize.rowCount)),
+      visibleBounds
+    )
+
+  def visibleHeaders =
+    List.range(visibleBounds.minCol, visibleBounds.maxCol) map numToCol
 
 }
 
 object DataWindow {
-  type MinX = Int
-  type MaxX = Int
-  type MinY = Int
-  type MaxY = Int
 
-  type Bounds = (MinX, MaxX, MinY, MaxY)
+  case class Bounds(
+      val minCol: Int,
+      val maxCol: Int,
+      val minRow: Int,
+      val maxRow: Int) {
+
+    def add(b2: Bounds) =
+      Bounds(minCol + b2.minCol,
+             maxCol + b2.maxCol,
+             minRow + b2.minRow,
+             maxRow + b2.maxRow)
+
+    def includes(pos: CellPos) =
+      pos._1 >= minCol && pos._1 < maxCol &&
+        pos._2 >= minRow && pos._2 < maxRow
+
+  }
+
+  case class Size(val columnCount: Int, val rowCount: Int)
+
+  val DEFAULT = new DataWindow(
+    Size(DefaultProperties.GRID_SIZE._1, DefaultProperties.GRID_SIZE._2),
+    Bounds(0, DefaultProperties.GRID_SIZE._1, 0, DefaultProperties.GRID_SIZE._2)
+  )
+
 }

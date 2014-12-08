@@ -1,7 +1,7 @@
 package scalaExcel.model
 
-import scalafx.beans.value
 import scalafx.scene.paint.Color
+import rx.lang.scala.Observable
 import rx.lang.scala.subjects.BehaviorSubject
 import scalaExcel.model.Sorter.SheetSorter
 import scalaExcel.model.OperationHelpers._
@@ -33,36 +33,58 @@ class Model {
   }
 
   def updateStyle(sheet: Sheet, pos : CellPos, f: Styles => Styles) =
-    sheet.setCellStyle(pos, f(sheet.styles.getOrElse(pos, Styles.DEFAULT)))
-
-  private def setSheet(values: Map[(Int,Int),String], styles: Map[(Int,Int),Styles]): Sheet = {
-    val styledSheet = new Sheet(Map(), Map(), Map(), styles)
-    values.foldLeft(styledSheet) { case (sheet, ((r, c), value)) =>
-      val (s, updates) = sheet.setCell((c, r), value)
-      s
-    }
-  }
+    sheet.setCellStyle(pos, f(sheet.getCellStyle(pos)))
 
   // this combines the initial Sheet with all input mutations from the outside
   // world
-  val sheet = sheetMutations.scan(new Sheet())((sheet, action) => action match {
-    case SetFormula(pos, f) =>
-      val (s, updates) = sheet.setCell(pos, f)
-      updateSheet(s, updates, Set(pos))
-    case EmptyCell(pos) => updateSheet(sheet.deleteCell(pos))
-    case CopyCell(from, to) => updateSheet(sheet.copyCell(from, to))
-    case CutCell(from, to) => updateSheet(sheet.cutCell(from, to))
-    case SetColor(pos, c) => updateStyle(sheet, pos, s => s.setColor(c))
-    case SetBackground(pos, c) => updateStyle(sheet, pos, s => s.setBackground(c))
-    case SetSheet(values, styles) => setSheet(values, styles)
-    case SortColumn(x, asc) => sheet.sort(x, asc)
-    case Refresh => sheet
+  private val undoRedoSheet = sheetMutations.scan(new UndoRedo(new Sheet()))({
+    case (ur, action) =>
+      val sheet = ur.current
+      // Calculate new sheet
+      action match {
+        case SetFormula(pos, f) =>
+          val (s, updates) = sheet.setCell(pos, f)
+          ur.next(updateSheet(s, updates, Set(pos)))
+        case EmptyCell(poss) => ur.next(
+          poss.foldLeft(sheet)( (sheet, pos) =>
+            updateSheet(sheet.deleteCell(pos))
+          )
+        )
+        case CopyCell(from, to) => ur.next(updateSheet(sheet.copyCell(from, to)))
+        case CutCell(from, to) => ur.next(updateSheet(sheet.cutCell(from, to)))
+        case SetColor(poss, c) => ur.next(
+          poss.foldLeft(sheet)( (sheet, pos) =>
+            updateStyle(sheet, pos, s => s.setColor(c))
+          )
+        )
+        case SetBackground(poss, c) => ur.next(
+          poss.foldLeft(sheet)( (sheet, pos) =>
+            updateStyle(sheet, pos, s => s.setBackground(c))
+          )
+        )
+        case SetSheet(values, styles) => {
+          val styledSheet = new Sheet(Map(), Map(), Map(), styles)
+          ur.next(values.foldLeft(styledSheet) { case (sheet, (pos, value)) =>
+            sheet.setCell(pos, value)._1
+          })
+        }
+        case SortColumn(x, asc) => ur.next(sheet.sort(x, asc))
+        case Undo => ur.undo()
+        case Redo => ur.redo()
+        case Refresh => ur
+      }
   })
+
+  val sheet = undoRedoSheet.map({a => a.current})
 
   def refresh() = sheetMutations.onNext(Refresh)
 
-  def emptyCell(pos : CellPos)  {
-    sheetMutations.onNext(EmptyCell(pos))
+  def emptyCell(pos : CellPos) {
+    emptyCell(List(pos))
+  }
+
+  def emptyCell(poss : Traversable[CellPos]) {
+    sheetMutations.onNext(EmptyCell(poss))
   }
 
   def copyCell(from : CellPos, to : CellPos) {
@@ -81,16 +103,31 @@ class Model {
     sheetMutations.onNext(SetFormula(pos, f))
   }
 
-  def changeBackground(pos : CellPos, c: Color): Unit = {
-    sheetMutations.onNext(SetBackground(pos, c))
+  def changeBackground(pos : CellPos, c: Color) {
+    changeBackground(List(pos), c)
   }
 
-  def changeColor(pos : CellPos, c: Color): Unit = {
-    sheetMutations.onNext(SetColor(pos, c))
+  def changeBackground(poss : Traversable[CellPos], c: Color) {
+    sheetMutations.onNext(SetBackground(poss, c))
+  }
+
+  def changeColor(pos : CellPos, c: Color) {
+    changeColor(List(pos),c)
+  }
+
+  def changeColor(poss : Traversable[CellPos], c: Color): Unit = {
+    sheetMutations.onNext(SetColor(poss, c))
   }
 
   def sortColumn(x: Int, asc: Boolean) = {
     sheetMutations.onNext(SortColumn(x, asc))
   }
 
+  def undo() = {
+    sheetMutations.onNext(Undo)
+  }
+
+  def redo() = {
+    sheetMutations.onNext(Redo)
+  }
 }
