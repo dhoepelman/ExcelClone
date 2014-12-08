@@ -157,11 +157,6 @@ object Parser extends RegexParsers {
 
   def parse(s: String) = parseAll(Start, s)
 
-  def parsing(s: String) = parseAll(Start, s) match {
-    case Success (t, _) => t
-    case NoSuccess(msg, _) => Const(VErr(ParserErr))
-  }
-
-
+  def parsing(s: String) = parseAll(Start, s).getOrElse(Const(VErr(ParserErr)))
 
 }
