@@ -45,7 +45,7 @@ class DataCellColumn(onCellEdit: ((CellPos, String)) => Unit,
 
 }
 
-class NumberedColumn(indexConverter: (Int) => Int) extends TableColumn[DataRow, DataCell] {
+class NumberedColumn(indexConverter: (Int) => Int, colWidth: Int) extends TableColumn[DataRow, DataCell] {
   text = DefaultProperties.NUMBERED_COLUMN_HEADER
   id = "-1"
   cellValueFactory = _ => ObjectProperty(DataCell.newEmpty())
@@ -57,8 +57,8 @@ class NumberedColumn(indexConverter: (Int) => Int) extends TableColumn[DataRow, 
         style = "-fx-alignment: CENTER;"
     }
   }
-  minWidth = DefaultProperties.NUMBERED_COLUMN_WIDTH
-  maxWidth = DefaultProperties.NUMBERED_COLUMN_WIDTH
+  minWidth = colWidth
+  maxWidth = colWidth
   editable = false
   sortable = false
 }
@@ -72,9 +72,11 @@ class StreamingTable(labeledTable: LabeledDataTable) {
     fixedCellSize = DefaultProperties.FIXED_ROW_HEIGHT
 
     // the first column is special
-    columns += new NumberedColumn(index =>
-        //convert table row index to sheet row index
-        labeledTable.toSheetIndex((0, index))._2)
+    columns += new NumberedColumn(
+      //convert table row index to sheet row index
+      {index => labeledTable.toSheetIndex((0, index))._2},
+      labeledTable.calculateColWidth)
+
     // add the rest of the columns in the order given by the LabeledDataTable
     columns ++= buildColumns(labeledTable.headers,
       labeledTable.headerWidths)
