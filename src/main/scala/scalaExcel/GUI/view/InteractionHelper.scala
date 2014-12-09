@@ -7,8 +7,13 @@ import scalaExcel._
 import scalaExcel.GUI.data.DataCell
 import scalafx.scene.input.{DataFormat, ClipboardContent, Clipboard}
 import scalaExcel.rx.operators.WithLatest._
-import scalafx.scene.control.ScrollBar
+import scalafx.scene.control._
 import javafx.scene.{control => jfxsc}
+import scalafx.scene.layout.{Priority, VBox, HBox, AnchorPane}
+import scalafx.collections.ObservableBuffer
+import scalafx.stage.{Modality, Stage, Window}
+import scalafx.scene.{Node, Scene}
+import scalafx.geometry.{Pos, Insets}
 
 object InteractionHelper {
 
@@ -190,4 +195,94 @@ object InteractionHelper {
 
   val copyPasteFormat = new DataFormat("x-excelClone/cutcopy")
 
+  def showContextMenu(forRows: Boolean,
+                      parent: Node,
+                      position: (Double, Double),
+                      addHandler: (Int, Int) => Unit,
+                      deleteHandler: () => Unit) = {
+    val itemType = "row"
+    new ContextMenu(
+      new MenuItem("Add " + itemType + " after") {
+        onAction = handle{
+          addHandler(1, 1)
+        }
+      },
+      new MenuItem("Add " + itemType + "(s)...") {
+        onAction = handle{
+          showAddDialog(forRows, parent.scene.value.window.value, addHandler)
+        }
+      },
+      new MenuItem("Remove " + itemType) {
+        onAction = handle {
+          deleteHandler()
+        }
+      }
+    ).show(parent, position._1, position._2)
+  }
+
+  def showAddDialog(forRows: Boolean, dialogOwner: Window, addHandler: (Int, Int) => Unit) = {
+    val radioToggle = new ToggleGroup()
+    val countInput = new TextField(){
+      text = "10"; prefColumnCount = 5
+    }
+    val itemType = if(forRows) "Row" else "Column"
+    new Stage(){
+      title = "Add " + itemType +"(s)"
+      initModality(Modality.APPLICATION_MODAL)
+      initOwner(dialogOwner)
+      scene = new Scene(
+        new VBox(20){
+          padding = Insets.apply(10, 10, 10, 10)
+          spacing = 10
+          content = ObservableBuffer(
+            new Label(itemType + "s", countInput)
+            {
+              contentDisplay = ContentDisplay.Right
+            },
+            new Label("Insert position", new VBox(2){
+              content = ObservableBuffer(
+                new RadioButton("Before"){
+                  toggleGroup = radioToggle
+                  selected = true
+                  userData = "0"
+                },
+                new RadioButton("After") {
+                  toggleGroup = radioToggle
+                  userData = "1"
+                }
+              )
+              spacing = 5
+            })
+            {
+              contentDisplay = ContentDisplay.Right
+            },
+            new AnchorPane(){
+              content = new HBox(2) {
+                content = ObservableBuffer(
+                  new Button("Add") {
+                    onAction = handle {
+                      val data = radioToggle.selectedToggle.value.userData.asInstanceOf[String]
+                      addHandler(countInput.text.value.toInt, data.toInt)
+                      scene.value.getWindow.hide()
+                    }
+                  },
+                  new Button("Cancel") {
+                    onAction = handle {
+                      scene.value.getWindow.hide()
+                    }
+                  }
+                )
+                spacing = 5
+                alignment = Pos.BottomRight
+              }
+              vgrow = Priority.Always
+              AnchorPane.setAnchors(content.get(0), 0, 0, 0, 0)
+            }
+          )
+        },
+        300,
+        200
+      )
+    }.show()
+  }
 }

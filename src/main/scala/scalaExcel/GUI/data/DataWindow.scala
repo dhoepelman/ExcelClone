@@ -29,26 +29,45 @@ class DataWindow(val dataSize: Size,
 
   def rowCount = visibleBounds.maxRow - visibleBounds.minRow
 
-  def addNewRow() =
+  def addNewRows(count: Int, inView: Boolean) =
     new DataWindow(
-      // add one more column to maximum bounds
-      Size(dataSize.columnCount, dataSize.rowCount + 1),
-      // if the column should be in view, slide the visibleBounds over it
-      if (visibleBounds.maxRow == dataSize.rowCount)
-        (Bounds(0, 0, 1, 1) add visibleBounds)
-      else
-        visibleBounds
-    )
-
-  def addNewColumn() =
-    new DataWindow(
-      // add one more column to maximum bounds
-      Size(dataSize.columnCount + 1, dataSize.rowCount),
-      // if the row should be in view, slide the visibleBounds over it
-      if (visibleBounds.maxCol == dataSize.columnCount)
-        (Bounds(1, 1, 0, 0) add visibleBounds)
+      // add count rows to maximum bounds
+      Size(dataSize.columnCount, dataSize.rowCount + count),
+      // if they should be in view, slide the visibleBounds over them
+      if (inView)
+        visibleBounds.add(Bounds(0, 0, count, count))
       else
         visibleBounds)
+
+  def addNewColumns(count: Int, inView: Boolean) =
+    new DataWindow(
+      // add count columns to maximum bounds
+      Size(dataSize.columnCount + count, dataSize.rowCount),
+      // if they should be in view, slide the visibleBounds over them
+      if (inView)
+        visibleBounds.add(Bounds(count, count, 0, 0))
+      else
+        visibleBounds)
+
+  def removeRows(count: Int) = {
+    val rowNum = dataSize.rowCount - count
+    val offset = Math.min(visibleBounds.maxRow,  rowNum) - visibleBounds.maxRow
+    new DataWindow(
+      // remove count rows from maximum bounds
+      Size(dataSize.columnCount, rowNum),
+      // if the rows were in view, slide the visibleBounds before them
+      visibleBounds.add(Bounds(0, 0, offset, offset)))
+  }
+
+  def removeColumns(count: Int) = {
+    val colNum = dataSize.columnCount - count
+    val offset = Math.min(visibleBounds.maxCol, colNum) - visibleBounds.maxCol
+    new DataWindow(
+      // remove count columns from maximum bounds
+      Size(dataSize.columnCount - count, dataSize.rowCount),
+      // if the columns were in view, slide the visibleBounds before them
+      visibleBounds.add(Bounds(offset, offset, 0, 0)))
+  }
 
   def expandTo(size: Size) =
     new DataWindow(
@@ -65,12 +84,7 @@ class DataWindow(val dataSize: Size,
 
 object DataWindow {
 
-  case class Bounds(
-      val minCol: Int,
-      val maxCol: Int,
-      val minRow: Int,
-      val maxRow: Int) {
-
+  case class Bounds(minCol: Int, maxCol: Int, minRow: Int, maxRow: Int) {
     def add(b2: Bounds) =
       Bounds(minCol + b2.minCol,
              maxCol + b2.maxCol,
@@ -83,7 +97,7 @@ object DataWindow {
 
   }
 
-  case class Size(val columnCount: Int, val rowCount: Int)
+  case class Size(columnCount: Int, rowCount: Int)
 
   val DEFAULT = new DataWindow(
     Size(DefaultProperties.GRID_SIZE._1, DefaultProperties.GRID_SIZE._2),

@@ -67,10 +67,6 @@ class ViewManager extends jfxf.Initializable {
   private var testButtonDelegate: jfxsc.Button = _
   private var testButton: Button = _
 
-  @jfxf.FXML private var newColumnDelegate: jfxsc.Button = _
-  private var newColumnButton: Button = _
-  @jfxf.FXML private var newRowDelegate: jfxsc.Button = _
-  private var newRowButton: Button = _
   @jfxf.FXML private var horizontalScrollDelegate: jfxsc.ScrollBar = _
   private var horizontalScroll: WatchableScrollBar = _
   @jfxf.FXML private var verticalScrollDelegate: jfxsc.ScrollBar = _
@@ -95,6 +91,8 @@ class ViewManager extends jfxf.Initializable {
   val onLoad = Subject[java.io.File]()
   val onUndo = Subject[Unit]()
   val onRedo = Subject[Unit]()
+  val onAddRows = Subject[(Int, Int)]()
+  val onAddColumns = Subject[(Int, Int)]()
 
   /**
    * Rx stream of changes to the visible table
@@ -108,8 +106,10 @@ class ViewManager extends jfxf.Initializable {
     action match {
       case SlideWindowBy(offsets) => dataTable.slideWindowBy(offsets)
       case SlideWindowTo(bounds) => dataTable.slideWindowTo(bounds)
-      case AddNewColumn(index) => dataTable.addNewColumn(index)
-      case AddNewRow(index) => dataTable.addNewRow(index)
+      case AddColumns(count, index) => dataTable.addColumns(count, index)
+      case AddRows(count, index) => dataTable.addRows(count, index)
+      case RemoveColumns(count, index) => dataTable.removeColumns(count, index)
+      case RemoveRows(count, index) => dataTable.removeRows(count, index)
       case UpdateContents(newSheet) => dataTable.updateContents(newSheet)
       case UpdateColumnOrder(permutations) => dataTable.updateColumnOrder(permutations)
       case ResizeColumn(columnIndex, width) =>
@@ -208,6 +208,26 @@ class ViewManager extends jfxf.Initializable {
     streamTable.onSelection.subscribe(onSelection.onNext _)
     // forward edits
     streamTable.onCellEdit.subscribe(onCellEdit.onNext _)
+    // forward additions
+    streamTable.onAdd.subscribe(_ match{
+        case (true, count, index) =>
+          println("Adding rows "+count+" " +index)
+          tableMutations.onNext(AddRows(count, index))
+        case (false, count, index) =>
+          println("Adding cols "+count+" " +index)
+          tableMutations.onNext(AddColumns(count, index))
+      }
+    )
+    // forward removals
+    streamTable.onRemove.subscribe(_ match{
+      case (true, count, index) =>
+        println("Removing rows "+count+" " +index)
+        tableMutations.onNext(RemoveRows(count, index))
+      case (false, count, index) =>
+        println("Removing cols "+count+" " +index)
+        tableMutations.onNext(RemoveColumns(count, index))
+    }
+    )
 
     //
     // Re-initialize scroll bars
@@ -271,24 +291,11 @@ class ViewManager extends jfxf.Initializable {
     menuPaste = new MenuItem(menuPasteDelegate)
     menuDelete = new MenuItem(menuDeleteDelegate)
 
-    newColumnButton = new Button(newColumnDelegate)
-    newRowButton = new Button(newRowDelegate)
-
     // initialize interaction streams
     InteractionHelper.initializeInteractionStreams(this)
 
     // subscribe table to data changes
     labeledDataTable.subscribe(buildTableView _)
-
-    // handle adding of rows/columns
-    newColumnButton.onAction = handle {
-      // add new column at the end (position -1)
-      tableMutations.onNext(AddNewColumn(-1))
-    }
-    newRowButton.onAction = handle {
-      // add new row at the end (position -1)
-      tableMutations.onNext(AddNewRow(-1))
-    }
 
     // handle changes on size of table container
     tableContainer.width.onChange {

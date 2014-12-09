@@ -136,12 +136,12 @@
                         </AnchorPane>
                         <AnchorPane GridPane.columnIndex="4">
                             <children>
-                                <Button fx:id="newRowDelegate" alignment="CENTER" mnemonicParsing="false" text="+ Row" wrapText="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" GridPane.halignment="CENTER" />
+                                <Button alignment="CENTER" mnemonicParsing="false" text="Button" wrapText="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" GridPane.halignment="CENTER" />
                             </children>
                         </AnchorPane>
                         <AnchorPane GridPane.columnIndex="5">
                             <children>
-                                <Button fx:id="newColumnDelegate" alignment="CENTER" mnemonicParsing="false" text="+ Column" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" GridPane.halignment="CENTER" />
+                                <Button alignment="CENTER" mnemonicParsing="false" text="Button" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" GridPane.halignment="CENTER" />
                             </children>
                         </AnchorPane>
                         <AnchorPane GridPane.columnIndex="6">

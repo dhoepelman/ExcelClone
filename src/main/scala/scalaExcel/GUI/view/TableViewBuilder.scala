@@ -46,11 +46,31 @@ class DataCellColumn(onCellEdit: ((CellPos, String)) => Unit,
 
 }
 
-class NumberedColumn(indexConverter: (Int) => Int, colWidth: Int) extends TableColumn[DataRow, DataCell] {
+class NumberedColumn(indexConverter: (Int) => Int,
+                     colWidth: Int,
+                     onAdd: ((Boolean, Int, Int)) => Unit,
+                     onRemove: ((Boolean, Int, Int)) => Unit) extends TableColumn[DataRow, DataCell] {
   text = DefaultProperties.NUMBERED_COLUMN_HEADER
   id = "-1"
   cellValueFactory = _ => ObjectProperty(DataCell.newEmpty())
   cellFactory = _ => new TableCell[DataRow, DataCell] {
+    onMouseClicked = (event: MouseEvent) => {
+      val rowNumber = text.value.toInt - 1
+      if(event.button == MouseButton.SECONDARY){
+        InteractionHelper.showContextMenu(forRows = true,
+          this,
+          (event.screenX, event.screenY),
+          (count: Int, offset: Int) => onAdd((true, count, rowNumber + offset)),
+          () => onRemove((true, 1, rowNumber))
+        )
+      }
+      else {
+        val table = tableView.value
+        val selection = table.getSelectionModel
+        selection.clearSelection()
+        table.columns.foreach (c => selection.select(rowNumber, c))
+      }
+    }
     item.onChange {
       (_, _, _) =>
         // row index must be converted to sheet row index
@@ -68,15 +88,25 @@ class StreamingTable(labeledTable: LabeledDataTable) {
 
   type TableColumns = ObservableBuffer[jfxc.TableColumn[DataRow, DataCell]]
 
+  val onCellEdit = Subject[(CellPos, String)]()
+
+  val onColResize = Subject[(Int, Double)]()
+
+  val onAdd = Subject[(Boolean, Int, Int)]()
+
+  val onRemove = Subject[(Boolean, Int, Int)]()
+
   val table = new TableView[DataRow](labeledTable.data) {
     editable = true
     fixedCellSize = DefaultProperties.FIXED_ROW_HEIGHT
 
     // the first column is special
-    columns += new NumberedColumn(
-      //convert table row index to sheet row index
-      {index => labeledTable.toSheetIndex((0, index))._2},
-      labeledTable.calculateColWidth)
+    columns += new NumberedColumn(index =>
+    //convert table row index to sheet row index
+      labeledTable.toSheetIndex((0, index))._2,
+      labeledTable.calculateColWidth,
+      onAdd.onNext,
+      onRemove.onNext)
 
     // add the rest of the columns in the order given by the LabeledDataTable
     columns ++= buildColumns(labeledTable.headers,
@@ -117,28 +147,16 @@ class StreamingTable(labeledTable: LabeledDataTable) {
     })
   })
 
-  val onCellEdit = Subject[(CellPos, String)]()
-
-  val onColResize = Subject[(Int, Double)]()
-
-  val onClick = Observable[MouseEvent](o => {
-    table.onMouseClicked =
-      (event: MouseEvent) => o.onNext(event)
-  })
-
-  val onRightClick = onClick
-    .filter(_.getButton.compareTo(MouseButton.SECONDARY) == 0)
-
   val onKeyPressed = Observable[KeyEvent](o => {
     table.onKeyPressed = (e: KeyEvent) => o.onNext(e)
   })
 
   onKeyPressed.map(_.code)
-    .filter(code => !code.isWhitespaceKey() &&
-      !code.isNavigationKey() &&
-      !code.isModifierKey() &&
-      !code.isMediaKey() &&
-      !code.isFunctionKey())
+    .filter(code => !code.isWhitespaceKey &&
+      !code.isNavigationKey &&
+      !code.isModifierKey &&
+      !code.isMediaKey &&
+      !code.isFunctionKey)
     .withLatest(onRawSelection.filter(_.size >= 1).map(_.head))
     .subscribe { _ match {
       case ((col, row), key) => table.edit(row, table.columns.get(col))

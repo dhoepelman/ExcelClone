@@ -104,29 +104,33 @@ class LabeledDataTable(
       rebuild = false)
   }
 
-  def addNewColumn(index: Int) = {
-    if (index == -1) {
-      new LabeledDataTable(_dataWindow.addNewColumn(),
-        _allHeaderWidths :+ DefaultProperties.COLUMN_WIDTH.toDouble,
-        _sheet,
-        rebuild = true)
-    }
-    else {
-      this // TODO: if the column is added in the middle, columns need to be reordered
-    }
-  }
+  def addColumns(count: Int, index: Int) =
+    new LabeledDataTable(_dataWindow.addNewColumns(count,
+      index == _dataWindow.dataSize.columnCount),
+      _allHeaderWidths.take(index) ++
+        List.fill(count)(DefaultProperties.COLUMN_WIDTH.toDouble) ++
+        _allHeaderWidths.drop(index),
+      _sheet,
+      rebuild = true)
 
-  def addNewRow(index: Int) = {
-    if (index == -1) {
-      new LabeledDataTable(_dataWindow.addNewRow(),
-        _allHeaderWidths,
-        _sheet,
-        rebuild = true)
-    }
-    else {
-      this // TODO: if the row is added in the middle, rows need to be reordered
-    }
-  }
+  def addRows(count: Int, index: Int) =
+    new LabeledDataTable(_dataWindow.addNewRows(count,
+      index == _dataWindow.dataSize.rowCount),
+      _allHeaderWidths,
+      _sheet,
+      rebuild = true)
+
+  def removeColumns(count: Int, index: Int) =
+    new LabeledDataTable(_dataWindow.removeColumns(count),
+      _allHeaderWidths.take(index) ++ _allHeaderWidths.drop(index + 1),
+      _sheet,
+      rebuild = true)
+
+  def removeRows(count: Int, index: Int) =
+    new LabeledDataTable(_dataWindow.removeRows(count),
+      _allHeaderWidths,
+      _sheet,
+      rebuild = true)
 
   /**
    * Calculates the maximum horizontal and vertical offsets the window can have
