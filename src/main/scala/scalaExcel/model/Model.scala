@@ -69,8 +69,10 @@ class Model {
             updateSheet(s, updates, Set(pos))
           })
         case SortColumn(x, asc) => ur.next(sheet.sort(x, asc))
-        case Add(toRows, count, index) => ur.next(sheet.slide(forward = true, toRows, count, index))
-        case Remove(fromRows, count, index) => ur.next(sheet.slide(forward = false, fromRows, count, index))
+        case Add(toRows, count, index) =>
+          ur.next(updateSheet(sheet.slide(forward = true, toRows, count, index)))
+        case Remove(fromRows, count, index) =>
+          ur.next(updateSheet(sheet.slide(forward = false, fromRows, count, index)))
         case Undo => ur.undo()
         case Redo => ur.redo()
         case Refresh => ur

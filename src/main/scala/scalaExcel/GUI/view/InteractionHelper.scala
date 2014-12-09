@@ -201,7 +201,7 @@ object InteractionHelper {
                       parent: Node,
                       position: (Double, Double),
                       addHandler: (Int, Int) => Unit,
-                      deleteHandler: () => Unit) = {
+                      deleteHandler: (Int, Int) => Unit) = {
     val itemType = if(forRows) "row" else "column"
     new ContextMenu(
       new MenuItem("Add " + itemType + " after") {
@@ -216,7 +216,7 @@ object InteractionHelper {
       },
       new MenuItem("Remove " + itemType) {
         onAction = handle {
-          deleteHandler()
+          deleteHandler(1, 0)
         }
       }
     ).show(parent, position._1, position._2)
@@ -302,7 +302,7 @@ object InteractionHelper {
           parent,
           (event.screenX, event.screenY),
           (count: Int, offset: Int) => onAdd(count, index + offset),
-          () => onRemove(1, index)
+          (count: Int, offset: Int) => onRemove(1, index + offset)
         )
       }
       else
