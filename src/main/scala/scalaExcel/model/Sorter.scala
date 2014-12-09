@@ -13,10 +13,9 @@ object Sorter {
       val rows = sheet.rows
 
       type CellValue = (CellPos, Option[Value])
-      def ascOrDescCompare(a: CellValue, b: CellValue) = (a, b) match {
-        case ((_, Some(a)), (_, Some(b))) => {
+      def ascOrDescCompare(va: CellValue, vb: CellValue) = (va, vb) match {
+        case ((_, Some(a)), (_, Some(b))) =>
           (a.compare(b) * (if (ascending) 1 else -1)) < 0
-        }
         case ((_, None), (_, _)) => false
         case ((_, _), (_, None)) => true
       }
