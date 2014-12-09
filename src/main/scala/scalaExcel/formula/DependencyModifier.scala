@@ -14,16 +14,8 @@ object DependencyModifier {
    * @example (=A1, (0,0), (1,2)) becomes =B3
    * @example (=SUM(A1:A5), (0,0), (1,2)) stays =SUM(A1:A5)
    */
-  def changeDependency(from: CellPos, to: CellPos) = applyToAST(e => e match {
-      case c: Cell =>
-          if (cellToPos(c) == from)
-            changeCellPos(c, to)
-          else
-            e
-      // Easily possible, but probably indicates a mistake elsewhere
-      case inv: ACell => throw new IllegalArgumentException("Invalid AST type")
-      case _ => e
-    }) _
+  def changeDependency(from: CellPos, to: CellPos): (Expr) => Expr =
+    changeDependency((pos: CellPos) => if(pos == from) to else pos)
 
   private def cellToPos(c: Cell): CellPos = c match {
     case Cell(ColRef(c2, _), RowRef(r, _)) => (c2, r)
@@ -95,18 +87,17 @@ object DependencyModifier {
   }
 
   /**
-   * Change the dependencies of formulas when sorting rows, so if A1 is referred
-   * but A1 will be moved to row 5, this will move all A1 references to A5
+   * Change the dependencies of formulas by applying a given repositioning
+   * function on each cell reference
    *
-   * Use this when sorting rows
-   * @example ((A1, A3), Map(0 -> 4)) results into (A5, A3)
+   * Use this as a general dependency modifier for single dependencies,
+   * not in ranges
+   * @example ((A1, A3), ((0, 0) => (2, 4), (0, 2) => (1, 3))) results into (C5, B4)
    */
-  def changeDependencyRows(muts: Map[Int, Int]) = applyToAST(e => e match {
-    case c: Cell => {
-      val (col, row) = cellToPos(c)
-      val row2 = muts.get(row).getOrElse(row)
-      changeCellPos(c, (col, row2))
-    }
+  def changeDependency(repositioner: (CellPos) => CellPos) = applyToAST(e => e match {
+    case c: Cell =>
+      changeCellPos(c, repositioner(cellToPos(c)))
+    // Easily possible, but probably indicates a mistake elsewhere
     case inv: ACell => throw new IllegalArgumentException("Invalid AST type")
     case _ => e
   }) _

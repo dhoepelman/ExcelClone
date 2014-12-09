@@ -88,6 +88,16 @@ object RunGUI extends JFXApp {
     model.redo()
   }
 
+  // when something is added
+  vm.onAdd.subscribe { addition =>
+    model.add(addition._1, addition._2, addition._3)
+  }
+
+  // when something is removed
+  vm.onRemove.subscribe { removal =>
+    model.remove(removal._1, removal._2, removal._3)
+  }
+
   stage = new PrimaryStage() {
     title = "Scala Excel"
     scene = new Scene(root, 800, 600) {

@@ -9,7 +9,7 @@ import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
 
 import scalaExcel.CellPos
-import scalaExcel.formula.DependencyModifier.{changeDependency, moveDependencies, changeDependencyRows}
+import scalaExcel.formula.DependencyModifier.{changeDependency, moveDependencies}
 import scalaExcel.formula.PPrinter.pprint
 
 @RunWith(value = classOf[Parameterized])
@@ -45,16 +45,17 @@ object DependencyModifierParameterizedTests {
 class DependencyModifierTests {
 
   def change(s: String) =
-    pprint(changeDependencyRows(Map(
-      0 -> 4,
-      1 -> 5
-    ))(Parser parsing(s)))
+    pprint(changeDependency((pos: CellPos) => pos match {
+      case (0, y) => (2, y)
+      case (x, 0) => (x, 4)
+      case p => p
+    })(Parser parsing(s)))
 
-  @Test def changeDependencyRowsTest() = {
-    assertEquals("=A5", change("=A1"))
-    assertEquals("=A6", change("=A2"))
-    assertEquals("=A5 + A6", change("=A1 + A2"))
-    assertEquals("=A4", change("=A4"))
+  @Test def changeDependencyWithModifierTest() = {
+    assertEquals("=C1", change("=A1"))
+    assertEquals("=B5", change("=B1"))
+    assertEquals("=C1 + B5", change("=A1 + B1"))
+    assertEquals("=C4", change("=C4"))
   }
 
 }

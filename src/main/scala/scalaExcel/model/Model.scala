@@ -132,4 +132,12 @@ class Model {
   def redo() = {
     sheetMutations.onNext(Redo)
   }
+
+  def add(toRows: Boolean, count: Int, index: Int) = {
+    sheetMutations.onNext(Add(toRows, count, index))
+  }
+
+  def remove(fromRows: Boolean, count: Int, index: Int) = {
+    sheetMutations.onNext(Remove(fromRows, count, index))
+  }
 }
