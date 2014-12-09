@@ -14,14 +14,20 @@ import scalafx.Includes._
 import scalafx.beans.property.ObjectProperty
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.control._
-import scalafx.scene.input.{MouseButton, MouseEvent, KeyEvent, KeyCode}
+import scalafx.scene.input.KeyEvent
 import scalafx.scene.control.TableColumn.CellEditEvent
+import scalafx.geometry.Pos
+import scalafx.scene.text.TextAlignment
+import scalafx.scene.layout.StackPane
 
 class DataCellColumn(onCellEdit: ((CellPos, String)) => Unit,
                      onColResize: ((Int, Double)) => Unit,
                      colIndex: Int,
                      header: String,
-                     headerWidth: Double) extends TableColumn[DataRow, DataCell] {
+                     headerWidth: Double,
+                     onAdd: ((Boolean, Int, Int)) => Unit,
+                     onRemove: ((Boolean, Int, Int)) => Unit,
+                     onBulkSelect: ((Boolean, Int)) => Unit) extends TableColumn[DataRow, DataCell] {
 
   text = header
   id = colIndex.toString
@@ -29,6 +35,29 @@ class DataCellColumn(onCellEdit: ((CellPos, String)) => Unit,
   cellFactory = _ => new DataCellView
   prefWidth = headerWidth
   sortable = false
+
+  val columnObject = this
+  graphic = new StackPane() {
+    prefWidth.bind(columnObject.width.subtract(5))
+    val stackObject = this
+    content = new Label(text.value) {
+      style = "-fx-padding: 8px;"
+      alignment = Pos.Center
+      textAlignment = TextAlignment.Center
+      prefWidth.bind(stackObject.width)
+      onMouseClicked = InteractionHelper.bulkOperationsInitiator(forRows = false,
+        this,
+        (count:Int, index:Int) => onAdd((false, count, index)),
+        (count:Int, index:Int) => onRemove((false, count, index)),
+        (index: Int) => {
+          val table = tableView.value
+          val selection = table.getSelectionModel
+          selection.clearSelection()
+          Range(0, table.items.value.size).foreach(r => selection.select(r, columnObject))
+          onBulkSelect((false, index))
+        })
+    }
+  }
 
   // listen for column width changes
   width.onChange {
@@ -49,28 +78,23 @@ class DataCellColumn(onCellEdit: ((CellPos, String)) => Unit,
 class NumberedColumn(indexConverter: (Int) => Int,
                      colWidth: Int,
                      onAdd: ((Boolean, Int, Int)) => Unit,
-                     onRemove: ((Boolean, Int, Int)) => Unit) extends TableColumn[DataRow, DataCell] {
+                     onRemove: ((Boolean, Int, Int)) => Unit,
+                     onBulkSelect: ((Boolean, Int)) => Unit) extends TableColumn[DataRow, DataCell] {
   text = DefaultProperties.NUMBERED_COLUMN_HEADER
   id = "-1"
   cellValueFactory = _ => ObjectProperty(DataCell.newEmpty())
   cellFactory = _ => new TableCell[DataRow, DataCell] {
-    onMouseClicked = (event: MouseEvent) => {
-      val rowNumber = text.value.toInt - 1
-      if(event.button == MouseButton.SECONDARY){
-        InteractionHelper.showContextMenu(forRows = true,
-          this,
-          (event.screenX, event.screenY),
-          (count: Int, offset: Int) => onAdd((true, count, rowNumber + offset)),
-          () => onRemove((true, 1, rowNumber))
-        )
-      }
-      else {
+    onMouseClicked = InteractionHelper.bulkOperationsInitiator(forRows = true,
+      this,
+      (count:Int, index:Int) => onAdd((true, count, index)),
+      (count:Int, index:Int) => onRemove((true, count, index)),
+      (index: Int) => {
         val table = tableView.value
         val selection = table.getSelectionModel
         selection.clearSelection()
-        table.columns.foreach (c => selection.select(rowNumber, c))
-      }
-    }
+        table.columns.foreach (c => selection.select(tableRow.value.getIndex, c))
+        onBulkSelect((true, index))
+      })
     item.onChange {
       (_, _, _) =>
         // row index must be converted to sheet row index
@@ -96,6 +120,8 @@ class StreamingTable(labeledTable: LabeledDataTable) {
 
   val onRemove = Subject[(Boolean, Int, Int)]()
 
+  val onBulkSelection = Subject[(Boolean, Int)]()
+
   val table = new TableView[DataRow](labeledTable.data) {
     editable = true
     fixedCellSize = DefaultProperties.FIXED_ROW_HEIGHT
@@ -106,7 +132,8 @@ class StreamingTable(labeledTable: LabeledDataTable) {
       labeledTable.toSheetIndex((0, index))._2,
       labeledTable.calculateColWidth,
       onAdd.onNext,
-      onRemove.onNext)
+      onRemove.onNext,
+      onBulkSelection.onNext)
 
     // add the rest of the columns in the order given by the LabeledDataTable
     columns ++= buildColumns(labeledTable.headers,
@@ -176,7 +203,10 @@ class StreamingTable(labeledTable: LabeledDataTable) {
           onColResize.onNext((labeledTable.toSheetIndex((index, 0))._1, w))},
       cols.length,
       data._1,
-      data._2)
+      data._2,
+      onAdd.onNext,
+      onRemove.onNext,
+      onBulkSelection.onNext)
     })
   }
 }

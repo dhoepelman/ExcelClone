@@ -132,6 +132,8 @@ class LabeledDataTable(
       _sheet,
       rebuild = true)
 
+  def gridSize = _dataWindow.dataSize
+
   /**
    * Calculates the maximum horizontal and vertical offsets the window can have
    */

@@ -5,7 +5,7 @@ import scalafx.Includes._
 import scalafx.scene.paint.Color
 import scalaExcel._
 import scalaExcel.GUI.data.DataCell
-import scalafx.scene.input.{DataFormat, ClipboardContent, Clipboard}
+import scalafx.scene.input._
 import scalaExcel.rx.operators.WithLatest._
 import scalafx.scene.control._
 import javafx.scene.{control => jfxsc}
@@ -14,6 +14,8 @@ import scalafx.collections.ObservableBuffer
 import scalafx.stage.{Modality, Stage, Window}
 import scalafx.scene.{Node, Scene}
 import scalafx.geometry.{Pos, Insets}
+import scalaExcel.formula._
+import scala.Range
 
 object InteractionHelper {
 
@@ -187,9 +189,9 @@ object InteractionHelper {
         o.onNext(false)
       }
     })
-    .withLatest(controller.onSingleCellSelected)
-    .subscribe(s => s match {
-      case (((c, r), _), asc) => controller.onColumnSort.onNext((c, asc))
+    .withLatest(controller.onSelection)
+    .subscribe(_ match {
+      case (list, asc) => controller.onColumnSort.onNext((list.head._1, asc))
     })
   }
 
@@ -200,7 +202,7 @@ object InteractionHelper {
                       position: (Double, Double),
                       addHandler: (Int, Int) => Unit,
                       deleteHandler: () => Unit) = {
-    val itemType = "row"
+    val itemType = if(forRows) "row" else "column"
     new ContextMenu(
       new MenuItem("Add " + itemType + " after") {
         onAction = handle{
@@ -285,4 +287,26 @@ object InteractionHelper {
       )
     }.show()
   }
+
+  def bulkOperationsInitiator(forRows: Boolean,
+                             parent: Labeled,
+                             onAdd: (Int, Int) => Unit,
+                             onRemove: (Int, Int) => Unit,
+                             onSelect: (Int) => Unit) =
+    (event: MouseEvent) => {
+      val index =
+        if(forRows) parent.text.value.toInt - 1
+        else colToNum(parent.text.value)
+      if(event.button == MouseButton.SECONDARY){
+        InteractionHelper.showContextMenu(forRows,
+          parent,
+          (event.screenX, event.screenY),
+          (count: Int, offset: Int) => onAdd(count, index + offset),
+          () => onRemove(1, index)
+        )
+      }
+      else
+        onSelect(index)
+  }
+
 }

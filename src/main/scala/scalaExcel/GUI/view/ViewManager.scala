@@ -206,6 +206,16 @@ class ViewManager extends jfxf.Initializable {
 
     // forward selection
     streamTable.onSelection.subscribe(onSelection.onNext _)
+    //forward bulk selection
+    streamTable.onBulkSelection.subscribe(s => {
+      val indexes = s match{
+        case (true, index) =>
+          List.range(0, labeledTable.gridSize.columnCount).map(c => (c, index))
+        case (false, index) =>
+          List.range(0, labeledTable.gridSize.rowCount).map(r => (index, r))
+      }
+      onSelection.onNext(indexes)
+    })
     // forward edits
     streamTable.onCellEdit.subscribe(onCellEdit.onNext _)
     // forward additions
@@ -216,18 +226,16 @@ class ViewManager extends jfxf.Initializable {
         case (false, count, index) =>
           println("Adding cols "+count+" " +index)
           tableMutations.onNext(AddColumns(count, index))
-      }
-    )
+      })
     // forward removals
     streamTable.onRemove.subscribe(_ match{
-      case (true, count, index) =>
-        println("Removing rows "+count+" " +index)
-        tableMutations.onNext(RemoveRows(count, index))
-      case (false, count, index) =>
-        println("Removing cols "+count+" " +index)
-        tableMutations.onNext(RemoveColumns(count, index))
-    }
-    )
+        case (true, count, index) =>
+          println("Removing rows "+count+" " +index)
+          tableMutations.onNext(RemoveRows(count, index))
+        case (false, count, index) =>
+          println("Removing cols "+count+" " +index)
+          tableMutations.onNext(RemoveColumns(count, index))
+      })
 
     //
     // Re-initialize scroll bars
