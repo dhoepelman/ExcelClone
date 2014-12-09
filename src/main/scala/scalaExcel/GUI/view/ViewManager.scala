@@ -91,8 +91,8 @@ class ViewManager extends jfxf.Initializable {
   val onLoad = Subject[java.io.File]()
   val onUndo = Subject[Unit]()
   val onRedo = Subject[Unit]()
-  val onAddRows = Subject[(Int, Int)]()
-  val onAddColumns = Subject[(Int, Int)]()
+  val onAdd = Subject[(Boolean, Int, Int)]()
+  val onRemove = Subject[(Boolean, Int, Int)]()
 
   /**
    * Rx stream of changes to the visible table
@@ -119,7 +119,7 @@ class ViewManager extends jfxf.Initializable {
           newTable.layOut(availableWidth, tableContainer.height.value)
         else
           newTable
-      case LayOutTable() =>
+      case LayOutTable =>
         dataTable.layOut(tableContainer.width.value, tableContainer.height.value)
     })
 
@@ -219,22 +219,24 @@ class ViewManager extends jfxf.Initializable {
     // forward edits
     streamTable.onCellEdit.subscribe(onCellEdit.onNext _)
     // forward additions
-    streamTable.onAdd.subscribe(_ match{
+    streamTable.onAdd.subscribe(s => {
+      s match {
         case (true, count, index) =>
-          println("Adding rows "+count+" " +index)
           tableMutations.onNext(AddRows(count, index))
         case (false, count, index) =>
-          println("Adding cols "+count+" " +index)
           tableMutations.onNext(AddColumns(count, index))
+      }
+      onAdd.onNext(s)
       })
     // forward removals
-    streamTable.onRemove.subscribe(_ match{
+    streamTable.onRemove.subscribe(s => {
+      s match {
         case (true, count, index) =>
-          println("Removing rows "+count+" " +index)
           tableMutations.onNext(RemoveRows(count, index))
         case (false, count, index) =>
-          println("Removing cols "+count+" " +index)
           tableMutations.onNext(RemoveColumns(count, index))
+      }
+      onRemove.onNext(s)
       })
 
     //
@@ -309,13 +311,13 @@ class ViewManager extends jfxf.Initializable {
     tableContainer.width.onChange {
       (_, _, newWidth) => {
         // re-render the table
-        tableMutations.onNext(LayOutTable())
+        tableMutations.onNext(LayOutTable)
       }
     }
     tableContainer.height.onChange {
       (_, _, newHeight) => {
         // re-render the table
-        tableMutations.onNext(LayOutTable())
+        tableMutations.onNext(LayOutTable)
       }
     }
 

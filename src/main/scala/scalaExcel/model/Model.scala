@@ -1,9 +1,9 @@
 package scalaExcel.model
 
 import scalafx.scene.paint.Color
-import rx.lang.scala.Observable
 import rx.lang.scala.subjects.BehaviorSubject
-import scalaExcel.model.Sorter.SheetSorter
+import scalaExcel.model.Sorter._
+import scalaExcel.model.Slider._
 import scalaExcel.model.OperationHelpers._
 import scalaExcel.CellPos
 
@@ -62,14 +62,15 @@ class Model {
             updateStyle(sheet, pos, s => s.setBackground(c))
           )
         )
-        case SetSheet(values, styles) => {
+        case SetSheet(values, styles) =>
           val styledSheet = new Sheet(Map(), Map(), Map(), styles)
-          ur.next(values.foldLeft(styledSheet) { case (sheet, (pos, value)) =>
+          ur.next(values.foldLeft(styledSheet) { case (crtSheet, (pos, value)) =>
             val (s, updates) = sheet.setCell(pos, value)
             updateSheet(s, updates, Set(pos))
           })
-        }
         case SortColumn(x, asc) => ur.next(sheet.sort(x, asc))
+        case Add(toRows, count, index) => ur.next(sheet.slide(forward = true, toRows, count, index))
+        case Remove(fromRows, count, index) => ur.next(sheet.slide(forward = false, fromRows, count, index))
         case Undo => ur.undo()
         case Redo => ur.redo()
         case Refresh => ur

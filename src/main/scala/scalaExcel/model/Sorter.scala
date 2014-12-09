@@ -2,6 +2,7 @@ package scalaExcel.model
 
 import scalaExcel.formula._
 import scalaExcel.CellPos
+import scalaExcel.model.OperationHelpers._
 
 object Sorter {
 
@@ -33,44 +34,8 @@ object Sorter {
         }
         .toMap
 
-      val cellModifier = DependencyModifier.changeDependencyRows(rowMutations)
-
-      // reposition all the cells
-      val cells =
-        sheet.cells
-        .map {
-          case ((x, y), cell) => {
-            val p2 = (x, rowMutations.get(y).get)
-            (p2, Cell(cellModifier(cell.AST)))
-          }
-        }
-
-      // Move the values to the new positions
-      val values =
-        sheet.values
-        .map {
-          case ((x, y), v) => ((x, rowMutations.get(y).get), v)
-        }
-
-      // update dependents
-      val dependents =
-        sheet.dependents
-        .map {
-          case ((x, y), deps) => (
-            (x, rowMutations.get(y).getOrElse(y)),
-            deps.map(a => (a._1, rowMutations.get(a._2).getOrElse(a._2))))
-        }
-
-      // move styles
-      val styles =
-        sheet.styles
-        .map {
-          case ((x, y), s) => ((x, rowMutations.get(y).getOrElse(y)), s)
-        }
-
-      new Sheet(cells, values, dependents, styles)
+      sheet.applyPermutations(onRows = true, rowMutations)
     }
-
   }
 
 }

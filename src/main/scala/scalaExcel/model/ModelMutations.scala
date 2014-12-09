@@ -18,3 +18,5 @@ case object Redo extends ModelMutations
 case object Undo extends ModelMutations
 case object Refresh extends ModelMutations
 case class SetSheet(values: Map[(Int,Int),String], styles: Map[(Int,Int), Styles]) extends ModelMutations
+case class Add(toRows: Boolean, count: Int, index: Int) extends ModelMutations
+case class Remove(fromRows: Boolean, count: Int, index: Int) extends ModelMutations

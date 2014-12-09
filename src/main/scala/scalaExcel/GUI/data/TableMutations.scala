@@ -5,7 +5,7 @@ import scalaExcel.GUI.data.DataWindow.Bounds
 
 abstract class TableMutations
 
-case class LayOutTable() extends TableMutations
+case object LayOutTable extends TableMutations
 case class AddColumns(count: Int, index: Int) extends TableMutations
 case class AddRows(count: Int, index: Int) extends TableMutations
 case class RemoveColumns(count: Int, index: Int) extends TableMutations
