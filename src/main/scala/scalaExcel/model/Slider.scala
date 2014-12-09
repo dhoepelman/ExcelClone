@@ -24,12 +24,10 @@ object Slider {
                 List.range(0, sheet.cols).map(c => (c, i))
               else
                 List.range(0, sheet.rows).map(r => (i, r)))
-          println(toBeDeleted)
           toBeDeleted.foldLeft((sheet, List[CellPos]()))({
             case ((crtSheet, crtUpdates), pos) => crtSheet.deleteCell(pos)
           })
         }
-      println(newSheet.cells)
       (newSheet.applyPermutations(onRows, permutations), updates)
     }
   }

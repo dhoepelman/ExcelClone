@@ -201,7 +201,7 @@ object InteractionHelper {
                       parent: Node,
                       position: (Double, Double),
                       addHandler: (Int, Int) => Unit,
-                      deleteHandler: (Int, Int) => Unit) = {
+                      removeHandler: (Int, Int) => Unit) = {
     val itemType = if(forRows) "row" else "column"
     new ContextMenu(
       new MenuItem("Add " + itemType + " after") {
@@ -211,23 +211,40 @@ object InteractionHelper {
       },
       new MenuItem("Add " + itemType + "(s)...") {
         onAction = handle{
-          showAddDialog(forRows, parent.scene.value.window.value, addHandler)
+          showAddRemoveDialog(isAdd = true,
+            forRows,
+            parent.scene.value.window.value,
+            addHandler)
         }
       },
       new MenuItem("Remove " + itemType) {
         onAction = handle {
-          deleteHandler(1, 0)
+          removeHandler(1, 0)
+        }
+      },
+      new MenuItem("Remove " + itemType + "(s)...") {
+        onAction = handle{
+          showAddRemoveDialog(isAdd = false,
+            forRows,
+            parent.scene.value.window.value,
+            removeHandler)
         }
       }
     ).show(parent, position._1, position._2)
   }
 
-  def showAddDialog(forRows: Boolean, dialogOwner: Window, addHandler: (Int, Int) => Unit) = {
+  def showAddRemoveDialog(isAdd: Boolean,
+                          forRows: Boolean,
+                          dialogOwner: Window,
+                          responseHandler: (Int, Int) => Unit) = {
     val radioToggle = new ToggleGroup()
     val countInput = new TextField(){
       text = "10"; prefColumnCount = 5
     }
     val itemType = if(forRows) "Row" else "Column"
+    val actionType = if(isAdd) "Add" else "Remove"
+    val noOffset = if(isAdd) "Before" else "From"
+    val withOffset =  if(isAdd) "After" else "Until"
     new Stage(){
       title = "Add " + itemType +"(s)"
       initModality(Modality.APPLICATION_MODAL)
@@ -241,14 +258,14 @@ object InteractionHelper {
             {
               contentDisplay = ContentDisplay.Right
             },
-            new Label("Insert position", new VBox(2){
+            new Label(actionType, new VBox(2){
               content = ObservableBuffer(
-                new RadioButton("Before"){
+                new RadioButton(noOffset){
                   toggleGroup = radioToggle
                   selected = true
                   userData = "0"
                 },
-                new RadioButton("After") {
+                new RadioButton(withOffset) {
                   toggleGroup = radioToggle
                   userData = "1"
                 }
@@ -261,10 +278,11 @@ object InteractionHelper {
             new AnchorPane(){
               content = new HBox(2) {
                 content = ObservableBuffer(
-                  new Button("Add") {
+                  new Button(actionType) {
                     onAction = handle {
                       val data = radioToggle.selectedToggle.value.userData.asInstanceOf[String]
-                      addHandler(countInput.text.value.toInt, data.toInt)
+                      responseHandler(countInput.text.value.toInt,
+                        if(isAdd) data.toInt  else -data.toInt)
                       scene.value.getWindow.hide()
                     }
                   },
@@ -302,7 +320,7 @@ object InteractionHelper {
           parent,
           (event.screenX, event.screenY),
           (count: Int, offset: Int) => onAdd(count, index + offset),
-          (count: Int, offset: Int) => onRemove(1, index + offset)
+          (count: Int, offset: Int) => onRemove(count, index + offset)
         )
       }
       else
