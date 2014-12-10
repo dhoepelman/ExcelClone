@@ -61,8 +61,8 @@ class Model {
       )
       case SetSheet(values, styles) => ur.next(
         values.foldLeft(new Sheet(Map(), Map(), Map(), styles)) {
-          case (sheet, (pos, value)) =>
-            val (s, updates) = sheet.setCell(pos, value)
+          case (acc, (pos, value)) =>
+            val (s, updates) = acc.setCell(pos, value)
             updateSheet(s, updates, Set(pos))
           }
       )
