@@ -8,6 +8,7 @@ object Slider {
   implicit class SheetSlider(val sheet: Sheet) extends AnyVal {
 
     def slide(forward: Boolean, onRows: Boolean, offset: Int, startIndex: Int): (Sheet, List[CellPos]) = {
+      println("Received "+forward + " "+onRows+" "+offset+" "+startIndex)
       val relativeOffset = if(forward) offset else -offset
       val stopIndex =  if(onRows) sheet.rows else sheet.cols
       val permutations = List.range(startIndex, stopIndex)
@@ -24,6 +25,7 @@ object Slider {
                 List.range(0, sheet.cols).map(c => (c, i))
               else
                 List.range(0, sheet.rows).map(r => (i, r)))
+          println("To delete "+toBeDeleted)
           toBeDeleted.foldLeft((sheet, List[CellPos]()))({
             case ((crtSheet, crtUpdates), pos) => crtSheet.deleteCell(pos)
           })

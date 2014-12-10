@@ -15,7 +15,6 @@ import scalafx.stage.{Modality, Stage, Window}
 import scalafx.scene.{Node, Scene}
 import scalafx.geometry.{Pos, Insets}
 import scalaExcel.formula._
-import scala.Range
 
 object InteractionHelper {
 
@@ -280,9 +279,10 @@ object InteractionHelper {
                 content = ObservableBuffer(
                   new Button(actionType) {
                     onAction = handle {
+                      val count = countInput.text.value.toInt
                       val data = radioToggle.selectedToggle.value.userData.asInstanceOf[String]
-                      responseHandler(countInput.text.value.toInt,
-                        if(isAdd) data.toInt  else -data.toInt)
+                      val offset = data.toInt
+                      responseHandler(count, if(isAdd) offset  else (1 - count) * offset)
                       scene.value.getWindow.hide()
                     }
                   },
@@ -320,7 +320,17 @@ object InteractionHelper {
           parent,
           (event.screenX, event.screenY),
           (count: Int, offset: Int) => onAdd(count, index + offset),
-          (count: Int, offset: Int) => onRemove(count, index + offset)
+          (count: Int, offset: Int) => {
+            val (finalIndex, finalCount) = {
+              val newIndex = index + offset
+              if(newIndex < 0)
+                (0, index)
+              else
+                (newIndex, count)
+            }
+            println(finalIndex+ " "+finalCount)
+            onRemove(finalCount, finalIndex)
+          }
         )
       }
       else

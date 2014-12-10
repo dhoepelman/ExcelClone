@@ -102,7 +102,7 @@ class ViewManager extends jfxf.Initializable {
   /**
    * Rx stream of wrappers on the data model sheet
    */
-  val labeledDataTable = tableMutations.scan(new LabeledDataTable(rebuild = true))((dataTable, action) =>
+  val labeledDataTable = tableMutations.scan(new LabeledDataTable(rebuild = true))((dataTable, action) => {
     action match {
       case SlideWindowBy(offsets) => dataTable.slideWindowBy(offsets)
       case SlideWindowTo(bounds) => dataTable.slideWindowTo(bounds)
@@ -121,7 +121,8 @@ class ViewManager extends jfxf.Initializable {
           newTable
       case LayOutTable =>
         dataTable.layOut(tableContainer.width.value, tableContainer.height.value)
-    })
+    }
+  })
 
   /**
    * Global selection stream
