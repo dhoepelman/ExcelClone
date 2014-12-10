@@ -33,7 +33,7 @@ object Sorter {
         }
         .toMap
 
-      sheet.applyPermutations(onRows = true, rowMutations)
+      sheet.applyRowPermutations(rowMutations)
     }
   }
 

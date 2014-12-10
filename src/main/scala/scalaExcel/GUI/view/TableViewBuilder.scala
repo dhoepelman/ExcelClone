@@ -36,24 +36,31 @@ class DataCellColumn(onCellEdit: ((CellPos, String)) => Unit,
   prefWidth = headerWidth
   sortable = false
 
+  // insert a special element that wraps the header and handles user clicks
   val columnObject = this
   graphic = new StackPane() {
+    // let the element stretch to cover the column header
     prefWidth.bind(columnObject.width.subtract(5))
     val stackObject = this
+    // insert into the element a label with the header text
     content = new Label(text.value) {
       style = "-fx-padding: 8px;"
       alignment = Pos.Center
       textAlignment = TextAlignment.Center
+      // let the label stretch to cover the element
       prefWidth.bind(stackObject.width)
+      // register the bulkOperationsInitiator on the user's click
       onMouseClicked = InteractionHelper.bulkOperationsInitiator(forRows = false,
         this,
         (count:Int, index:Int) => onAdd((false, count, index)),
         (count:Int, index:Int) => onRemove((false, count, index)),
         (index: Int) => {
+          // programatically select the whole visible column
           val table = tableView.value
           val selection = table.getSelectionModel
           selection.clearSelection()
           Range(0, table.items.value.size).foreach(r => selection.select(r, columnObject))
+          // forward as bulk column selection
           onBulkSelect((false, index))
         })
     }
@@ -84,15 +91,18 @@ class NumberedColumn(indexConverter: (Int) => Int,
   id = "-1"
   cellValueFactory = _ => ObjectProperty(DataCell.newEmpty())
   cellFactory = _ => new TableCell[DataRow, DataCell] {
+    // register the bulkOperationsInitiator on the user's click
     onMouseClicked = InteractionHelper.bulkOperationsInitiator(forRows = true,
       this,
       (count:Int, index:Int) => onAdd((true, count, index)),
       (count:Int, index:Int) => onRemove((true, count, index)),
       (index: Int) => {
+        // programatically select the whole visible row
         val table = tableView.value
         val selection = table.getSelectionModel
         selection.clearSelection()
         table.columns.foreach (c => selection.select(tableRow.value.getIndex, c))
+        // forward as bulk row selection
         onBulkSelect((true, index))
       })
     item.onChange {
@@ -116,10 +126,26 @@ class StreamingTable(labeledTable: LabeledDataTable) {
 
   val onColResize = Subject[(Int, Double)]()
 
+  /**
+   * Add action subject
+   * onNext should be called with tuples of the following nature:
+   * (isTheItemBeingAddedARow?, numberOfItemsToBeAdded, smallestIndexOfTheAddedItems)
+   */
   val onAdd = Subject[(Boolean, Int, Int)]()
 
+  /**
+   * Remove action subject
+   * onNext should be called with tuples of the nature
+   * (isTheItemBeingRemovedARow?, numberOfItemsToBeRemoved, smallestIndexOfTheRemovedItems)
+   */
   val onRemove = Subject[(Boolean, Int, Int)]()
 
+  /**
+   * Bulk selection action subject
+   * onNext should be called when a user selects an entire row/column
+   * with tuples of the following nature:
+   * (isTheSelectedCollectionARow?, indexOfTheSelectedCollection)
+   */
   val onBulkSelection = Subject[(Boolean, Int)]()
 
   val table = new TableView[DataRow](labeledTable.data) {

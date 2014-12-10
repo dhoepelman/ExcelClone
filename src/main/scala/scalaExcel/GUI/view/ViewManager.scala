@@ -205,6 +205,11 @@ class ViewManager extends jfxf.Initializable {
     streamTable.onColResize.subscribe(resize =>
       tableMutations.onNext(ResizeColumn(resize._1, resize._2)))
 
+
+    //
+    // Forward actions on the streamTable's streams
+    //
+
     // forward selection
     streamTable.onSelection.subscribe(onSelection.onNext _)
     //forward bulk selection
@@ -221,22 +226,26 @@ class ViewManager extends jfxf.Initializable {
     streamTable.onCellEdit.subscribe(onCellEdit.onNext _)
     // forward additions
     streamTable.onAdd.subscribe(s => {
+      // first update the table's data window
       s match {
         case (true, count, index) =>
           tableMutations.onNext(AddRows(count, index))
         case (false, count, index) =>
           tableMutations.onNext(AddColumns(count, index))
       }
+      // then update the model
       onAdd.onNext(s)
       })
     // forward removals
     streamTable.onRemove.subscribe(s => {
+      // first update the table's data window
       s match {
         case (true, count, index) =>
           tableMutations.onNext(RemoveRows(count, index))
         case (false, count, index) =>
           tableMutations.onNext(RemoveColumns(count, index))
       }
+      // the update the model
       onRemove.onNext(s)
       })
 

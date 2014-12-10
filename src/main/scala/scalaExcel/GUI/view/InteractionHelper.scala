@@ -196,6 +196,20 @@ object InteractionHelper {
 
   val copyPasteFormat = new DataFormat("x-excelClone/cutcopy")
 
+  /**
+   * Shows the context menu that should appear when the user clicks a column
+   * header or a row number
+   * @param forRows       target item type (true for row, false for column)
+   * @param parent        the node which registered the click and contains the
+   *                      textual representation of the index
+   * @param position      the screen position of the click action
+   * @param addHandler    the handler for ADD actions that takes the
+   *                      parameters:
+   *                      (numberOfItemsAdded, offsetOfFirstAddedItem)
+   * @param removeHandler the handler for REMOVE actions that takes the
+   *                      parameters:
+   *                      (numberOfItemsToRemoved, offsetOfFirstRemovedItem)
+   */
   def showContextMenu(forRows: Boolean,
                       parent: Node,
                       position: (Double, Double),
@@ -203,11 +217,13 @@ object InteractionHelper {
                       removeHandler: (Int, Int) => Unit) = {
     val itemType = if(forRows) "row" else "column"
     new ContextMenu(
+      // the standard add-one action
       new MenuItem("Add " + itemType + " after") {
         onAction = handle{
           addHandler(1, 1)
         }
       },
+      // the add-many action
       new MenuItem("Add " + itemType + "(s)...") {
         onAction = handle{
           showAddRemoveDialog(isAdd = true,
@@ -216,11 +232,13 @@ object InteractionHelper {
             addHandler)
         }
       },
+      // the standard remove-one action
       new MenuItem("Remove " + itemType) {
         onAction = handle {
           removeHandler(1, 0)
         }
       },
+      // the remove-many action
       new MenuItem("Remove " + itemType + "(s)...") {
         onAction = handle{
           showAddRemoveDialog(isAdd = false,
@@ -232,6 +250,14 @@ object InteractionHelper {
     ).show(parent, position._1, position._2)
   }
 
+  /**
+   * Shows the dialog for adding/removing rows/columns
+   * @param isAdd           the action type (true for ADD false for REMOVE)
+   * @param forRows         the item type (true for row, false for column)
+   * @param dialogOwner     the master window element
+   * @param responseHandler the action handler that takes the parameters:
+   *                        (numberOfItems, offsetOfFirstItem)
+   */
   def showAddRemoveDialog(isAdd: Boolean,
                           forRows: Boolean,
                           dialogOwner: Window,
@@ -279,10 +305,16 @@ object InteractionHelper {
                 content = ObservableBuffer(
                   new Button(actionType) {
                     onAction = handle {
+                      // get number of items
                       val count = countInput.text.value.toInt
                       val data = radioToggle.selectedToggle.value.userData.asInstanceOf[String]
+                      // get the offset
                       val offset = data.toInt
-                      responseHandler(count, if(isAdd) offset  else (1 - count) * offset)
+                      responseHandler(count,
+                        // on ADD, the offset is either 0 or 1
+                        if(isAdd) offset
+                        // on REMOVE the offset is either 0 or -(count - 1)
+                        else (1 - count) * offset)
                       scene.value.getWindow.hide()
                     }
                   },
@@ -306,22 +338,40 @@ object InteractionHelper {
     }.show()
   }
 
+  /**
+   * Returns a MouseEvent handler that can initiate operations on the set of
+   * all rows/columns
+   * @param forRows   the collection type (true for rows, false for columns)
+   * @param parent    the node which will register the click and contains the
+   *                  textual representation of the collection index
+   * @param onAdd     the handler for ADD actions that takes the parameters:
+   *                  (numberOfItemsToBeAdded, smallestIndexOfAddedItems)
+   * @param onRemove  the handler for REMOVE actions that takes the
+   *                  parameters:
+   *                  (numberOfItemsToBeRemoved, smallestIndexOfRemovedItems)
+   * @param onSelect  the handler for the SELECT action that takes the selected
+   *                  collection index as a parameter
+   * @return          the MouseEvent handler
+   */
   def bulkOperationsInitiator(forRows: Boolean,
                              parent: Labeled,
                              onAdd: (Int, Int) => Unit,
                              onRemove: (Int, Int) => Unit,
                              onSelect: (Int) => Unit) =
     (event: MouseEvent) => {
+      // get selected index according to collection type
       val index =
         if(forRows) parent.text.value.toInt - 1
         else colToNum(parent.text.value)
       if(event.button == MouseButton.SECONDARY){
+        // if right click, show context menu
         InteractionHelper.showContextMenu(forRows,
           parent,
           (event.screenX, event.screenY),
           (count: Int, offset: Int) => onAdd(count, index + offset),
           (count: Int, offset: Int) => {
             val (finalIndex, finalCount) = {
+              // do not allow negative removal indexes
               val newIndex = index + offset
               if(newIndex < 0)
                 (0, index + 1)
@@ -333,6 +383,7 @@ object InteractionHelper {
         )
       }
       else
+        // on left click select collection
         onSelect(index)
   }
 

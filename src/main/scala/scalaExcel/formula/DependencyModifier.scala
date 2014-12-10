@@ -89,6 +89,8 @@ object DependencyModifier {
   /**
    * Change the dependencies of formulas by applying a given repositioning
    * function on each cell reference
+   * @param repositioner  repositioning function of type (CellPos) => CellPos
+   * @return              the AST modifier
    *
    * Use this as a general dependency modifier for single dependencies,
    * not in ranges

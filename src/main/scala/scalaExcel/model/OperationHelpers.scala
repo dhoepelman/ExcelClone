@@ -18,36 +18,63 @@ object OperationHelpers {
   }
 
   /**
-   * Implicit class enabling a sheet to permute its rows/columns
+   * Implicit class enabling a map containing permutations of the nature
+   * (index_before -> index_after) to become a cell repositioning function
+   * of the form (CellPos) => CellPos
+   * @param permutations  the map with permutations
+   */
+  implicit class CellRepositioningMap(val permutations: Map[Int, Int]) {
+    /**
+     * Uses the map as a set of row/column permutations to be applied on a
+     * sheet
+     * @param onRows        boolean value specifying if the permutations apply
+     *                      to the sheet's row indexes
+     * @return              the cell repositioning function of the form
+     *                      (CellPos) => CellPos
+     */
+    def asCellRepositioner(onRows: Boolean): (CellPos) => CellPos = {
+      case (x, y) =>
+        if (onRows)
+          (x, permutations.getOrElse(y, y))
+        else
+          (permutations.getOrElse(x, x), y)
+      }
+  }
+
+  /**
+   * Implicit class enabling a sheet to reposition its cells
    * @param sheet the target sheet
    */
   implicit class PermutableSheet(val sheet: Sheet) {
+
     /**
-     * Applys a set of row/column permutations on the target sheet
-     * @param onRows        boolean value specifying if the permutations apply
-     *                      to row indexes
+     * Applies row permutations to the target sheet
      * @param permutations  the map of permutations of the nature
      *                      (index_before -> index_after)
+     * @return              the permuted target sheet
+     */
+    def applyRowPermutations(permutations: Map[Int, Int]) =
+      applyRepositioning(permutations.asCellRepositioner(onRows = true))
+
+    def applyColumnPermutations(permutations: Map[Int, Int]) =
+      applyRepositioning(permutations.asCellRepositioner(onRows = false))
+
+    /**
+     * Applies custom repositioning on the cells of the target sheet
+     * @param repositioner  the cell repositioning function of the form
+     *                      (CellPos) => CellPos
      * @return              the modified target sheet
      */
-    def applyPermutations(onRows: Boolean, permutations: Map[Int, Int]) = {
-
-      def reposition(pos: CellPos) = pos match {
-        case (x, y) =>
-          if (onRows)
-            (x, permutations.getOrElse(y, y))
-          else
-            (permutations.getOrElse(x, x), y)
-      }
+    def applyRepositioning(repositioner: (CellPos) => CellPos) = {
 
       def moveProperty[T](item: (CellPos, T)): (CellPos, T) = item match {
         case (pos, property) =>
-          (reposition(pos),
+          (repositioner(pos),
             property match {
               case cell: Cell =>
-                Cell(changeDependency(reposition)(cell.AST)).asInstanceOf[T]
+                Cell(changeDependency(repositioner)(cell.AST)).asInstanceOf[T]
               case deps: List[CellPos] =>
-                deps.map(reposition).asInstanceOf[T]
+                deps.map(repositioner).asInstanceOf[T]
               case other => other
             })
       }
