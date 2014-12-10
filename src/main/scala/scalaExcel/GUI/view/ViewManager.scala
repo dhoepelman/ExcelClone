@@ -93,6 +93,7 @@ class ViewManager extends jfxf.Initializable {
   val onRedo = Subject[Unit]()
   val onAdd = Subject[(Boolean, Int, Int)]()
   val onRemove = Subject[(Boolean, Int, Int)]()
+  val onColumnReorder = Subject[Map[Int, Int]]()
 
   /**
    * Rx stream of changes to the visible table
@@ -248,6 +249,13 @@ class ViewManager extends jfxf.Initializable {
       // the update the model
       onRemove.onNext(s)
       })
+    // forward column reordering
+    streamTable.onColumnReorder.subscribe(map => {
+      // first update the table's inner header registry
+      tableMutations.onNext(UpdateColumnOrder(map))
+      // the update the model
+      onColumnReorder.onNext(map)
+    })
 
     //
     // Re-initialize scroll bars

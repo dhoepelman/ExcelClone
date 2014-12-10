@@ -98,6 +98,11 @@ object RunGUI extends JFXApp {
     model.remove(removal._1, removal._2, removal._3)
   }
 
+  // when columns are reordered
+  vm.onColumnReorder.subscribe { map =>
+    model.reorderColumns(map)
+  }
+
   stage = new PrimaryStage() {
     title = "Scala Excel"
     scene = new Scene(root, 800, 600) {

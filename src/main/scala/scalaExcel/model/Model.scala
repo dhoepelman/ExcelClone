@@ -73,6 +73,8 @@ class Model {
           ur.next(updateSheet(sheet.slide(forward = true, toRows, count, index)))
         case Remove(fromRows, count, index) =>
           ur.next(updateSheet(sheet.slide(forward = false, fromRows, count, index)))
+        case ReorderColumns(permutations) =>
+          ur.next(sheet.applyColumnPermutations(permutations))
         case Undo => ur.undo()
         case Redo => ur.redo()
         case Refresh => ur
@@ -141,5 +143,9 @@ class Model {
 
   def remove(fromRows: Boolean, count: Int, index: Int) = {
     sheetMutations.onNext(Remove(fromRows, count, index))
+  }
+
+  def reorderColumns(permutations: Map[Int, Int]) = {
+    sheetMutations.onNext(ReorderColumns(permutations))
   }
 }

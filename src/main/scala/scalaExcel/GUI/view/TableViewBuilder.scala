@@ -196,7 +196,10 @@ class StreamingTable(labeledTable: LabeledDataTable) {
       })
       // notify manager of change
       if (!permutations.keySet.contains(-1))
-        o.onNext(permutations)
+        o.onNext(permutations.map({
+          case (c1, c2)  => (labeledTable.toSheetIndex((c1, 0))._1,
+            labeledTable.toSheetIndex((c2, 0))._1)
+        }))
     })
   })
 
