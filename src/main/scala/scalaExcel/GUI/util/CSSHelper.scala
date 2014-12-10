@@ -64,17 +64,29 @@ object CSSHelper {
 
 
   def getCSSFromStyle(style: Styles): String = {
-    fieldsToCss(Map(
+    fieldsToCss(toCSSMap(style))
+  }
+
+  def toCSSMap(style: Styles): Map[String, String] = {
+    Map(
       "-fx-background-color" -> ("-fx-table-cell-border-color, " + colorToWeb(style.background)),
       "-fx-text-fill" -> colorToWeb(style.color),
       "-fx-background-insets" -> "0, 0 0 1 0",
       "-fx-alignment" -> (style.align match {
-        case LeftAlign   => "CENTER-LEFT"
-        case RightAlign  => "CENTER-RIGHT"
+        case LeftAlign => "CENTER-LEFT"
+        case RightAlign => "CENTER-RIGHT"
         case CenterAlign => "CENTER"
-        case NoAlign     => "CENTER-LEFT"
+        case NoAlign => "CENTER-LEFT"
       })
-    ))
+    )
   }
 
+  def asError(style : Styles) : String = {
+    fieldsToCss(toCSSMap(style)
+    + ("-fx-background-color" -> "-fx-table-cell-border-color, red")
+    // Meager attempts to make a small red triangle in the cell
+    //+ ("-fx-shape" -> "\"M 0 0 v -10 l 5 5 z\"")
+    + ("-fx-text-fill" -> colorToWeb(Color.White))
+    )
+  }
 }

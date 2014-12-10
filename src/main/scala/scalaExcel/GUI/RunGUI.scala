@@ -6,10 +6,14 @@ import javafx.{fxml => jfxf}
 import javafx.{scene => jfxs}
 import java.io.IOException
 import scalafx.application.JFXApp.PrimaryStage
+import scalafx.geometry.Insets
 import scalafx.scene.Scene
 import scalaExcel.GUI.view.ViewManager
 import scalaExcel.model.Model
 import scalaExcel.model.Filer._
+import scalafx.scene.control.Button
+import scalafx.scene.layout.BorderPane
+import scalafx.stage.Stage
 
 object RunGUI extends JFXApp {
 
@@ -110,4 +114,32 @@ object RunGUI extends JFXApp {
     }
   }
 
+  // SOURCE: https://github.com/scalafx/ScalaFX-Tutorials/blob/master/stand-alone-dialog/src/main/scala/stand_alone_dialog/StandAloneFXDialogRunAndWait.scala
+  /** Show a `message` in a dialog box, wait till dialog is closed */
+  private def showInDialog(message: String) {
+    // Create dialog
+    val dialogStage = new Stage {
+      outer =>
+      title = "Error"
+      scene = new Scene {
+        root = new BorderPane {
+          padding = Insets(25)
+          bottom = new Button {
+            text = message
+            onAction = handle { outer.close() }
+          }
+        }
+      }
+    }
+
+    // Show dialog
+    dialogStage.show()
+  }
+
+  model.errors.subscribe({ e =>
+    println("Exception while altering model.")
+    e.printStackTrace()
+
+    showInDialog("Sorry, something went wrong while we were doing that! Look in the console for details")
+  })
 }
