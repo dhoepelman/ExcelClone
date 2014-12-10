@@ -324,11 +324,10 @@ object InteractionHelper {
             val (finalIndex, finalCount) = {
               val newIndex = index + offset
               if(newIndex < 0)
-                (0, index)
+                (0, index + 1)
               else
                 (newIndex, count)
             }
-            println(finalIndex+ " "+finalCount)
             onRemove(finalCount, finalIndex)
           }
         )
