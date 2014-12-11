@@ -35,7 +35,9 @@ object RunGUI extends JFXApp {
   // Putting events from the GUI into the model
   // This should be the only place where that ever happens
 
-  val modelChanges = Observable.just(Refresh)
+  val modelChanges = Observable
+    // Make sure we immidiatly get the empty model
+    .just(Refresh)
     // when the user somehow changes the cell
     .merge(vm.onCellEdit.map(edit => SetFormula(edit._1, edit._2)))
     // when the background color of a cell is selected
