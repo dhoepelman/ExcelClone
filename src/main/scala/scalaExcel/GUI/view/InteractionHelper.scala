@@ -161,17 +161,25 @@ object InteractionHelper {
       .filter({ case (selection, _) => selection.nonEmpty})
 
     // TODO: Give the cell a visual indication that is is going to be cut, like Excel does
-    val x = clipboardActions
+    clipboardActions
       .filter({ case (_, action) => action == Cut || action == Copy})
       // TODO: Multiple selection
       .map({ case (selection, action) => (selection.head, action)})
       .subscribe({ a =>
+      println("Boe")
       // Pattern matching won't work. I give up
-      val (selection, action) = a
+      val ((selection, cell), action) = a
       val contents = new ClipboardContent()
-      contents.put(copyPasteFormat, (action, selection._1))
-      contents.putString(selection._2.value.toString)
+      contents.put(copyPasteFormat, (action, selection))
+      contents.putString(cell.toString)
       Clipboard.systemClipboard.setContent(contents)
+    })
+
+    clipboardActions
+      .subscribe({ a =>
+      val (_, action) = a
+      println(action)
+      println(Clipboard.systemClipboard.getContent(copyPasteFormat))
     })
 
     clipboardActions
