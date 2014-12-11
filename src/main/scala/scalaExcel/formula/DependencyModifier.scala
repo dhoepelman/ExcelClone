@@ -89,6 +89,13 @@ object DependencyModifier {
     case Group(e) => Group(f(e))
     case SheetReference(s, r) => f(r) match {
       case r2 : ParseRef => checkValidRef(SheetReference(s,r2))
+      /** TODO: It would be better to return SheetReference(s,Err) like Excel does
+       * However that requires some refactoring because Const is not a ParseRef.
+       * So either let SheetReference accept any Expr or make a case object InvalidRef extend ParseRef
+       * and make sure that gets proccesed correctly and used everywhere instead of Const(VErr(InvalidRef)).
+       * On evaluation InvalidRef should then turn into VErr(InvalidRef)
+       */
+      case Const(VErr(InvalidRef)) => Const(VErr(InvalidRef))
       case _ => throw new IllegalArgumentException("AST transformation did not return a valid ParseRef for SheetReference")
     }
     case _ => f(e)

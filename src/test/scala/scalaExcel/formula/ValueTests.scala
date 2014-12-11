@@ -30,8 +30,8 @@ class ValueTests {
     assertEquals(1, VEmpty.compare(tv(true)))
     assertEquals(1, VEmpty.compare(tv("ab")))
     assertEquals(-1, tv(1).compare(VEmpty))
-    assertEquals(1, tv(true).compare(VEmpty))
-    assertEquals(1, tv("ab").compare(VEmpty))
+    assertEquals(-1, tv(true).compare(VEmpty))
+    assertEquals(-1, tv("ab").compare(VEmpty))
   }
 
 
