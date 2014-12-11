@@ -1,9 +1,7 @@
 package scalaExcel.model
 
 import rx.lang.scala.Observable
-import rx.lang.scala.subjects.BehaviorSubject
 import scalaExcel.model.Sorter.SheetSorter
-import scalaExcel.CellPos
 
 /**
  * Represents the data model of the ScalaExcel application
@@ -57,10 +55,10 @@ class Model(protected val sheetMutations : Observable[ModelMutations]) {
 
   /** Stream of errors in the model */
   val errors = undoRedoSheet
-    .filter({_._1.nonEmpty})
-    .map({_._1.get})
+    .filter({ case (error, ur) => error.nonEmpty})
+    .map({ case (error, _) => error.get})
 
   /** Stream of sheets, emits whenever an atomic change has happened to the sheet  */
   val sheet = undoRedoSheet
-    .map({_._2.current})
+    .map({ case (_, ur) => ur.current})
 }
