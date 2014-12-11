@@ -10,9 +10,6 @@ import scalaExcel.CellPos
  * @param sheetMutations Inputs from outside this package that will effect the state of the sheet model
  */
 class Model(protected val sheetMutations : Observable[ModelMutations]) {
-  /** This is a stream of inputs from 'the world' that will effect the state of the sheet model */
-  val sheetMutations = BehaviorSubject[ModelMutations](Refresh)
-
   /** Perform a modification on the sheet */
   private def modifySheet(ur: UndoRedo[Sheet], action: ModelMutations) = {
     val sheet = ur.current
@@ -66,23 +63,4 @@ class Model(protected val sheetMutations : Observable[ModelMutations]) {
   /** Stream of sheets, emits whenever an atomic change has happened to the sheet  */
   val sheet = undoRedoSheet
     .map({_._2.current})
-}
-
-// TODO: Legacy, refactor tests so they don't need this anymore
-class MutableModel() extends Model(BehaviorSubject[ModelMutations](Refresh)) {
-  def copyCell(from : CellPos, to : CellPos) {
-    sheetMutations.asInstanceOf[BehaviorSubject[ModelMutations]].onNext(CopyCell(from, to))
-  }
-
-  def cutCell(from : CellPos, to : CellPos) {
-    sheetMutations.asInstanceOf[BehaviorSubject[ModelMutations]].onNext(CutCell(from, to))
-  }
-
-  def changeFormula(pos : CellPos, f: String) {
-    sheetMutations.asInstanceOf[BehaviorSubject[ModelMutations]].onNext(SetFormula(pos, f))
-  }
-
-  def stop(): Unit = {
-    sheetMutations.asInstanceOf[BehaviorSubject[ModelMutations]].onCompleted()
-  }
 }
