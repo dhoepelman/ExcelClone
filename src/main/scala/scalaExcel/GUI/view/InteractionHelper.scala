@@ -358,7 +358,7 @@ object InteractionHelper {
                              onAdd: (Int, Int) => Unit,
                              onRemove: (Int, Int) => Unit,
                              onSelect: (Int) => Unit) =
-    (event: MouseEvent) => {
+    (event: MouseEvent) => if (parent.text.value != null) {
       // get selected index according to collection type
       val index =
         if(forRows) parent.text.value.toInt - 1
