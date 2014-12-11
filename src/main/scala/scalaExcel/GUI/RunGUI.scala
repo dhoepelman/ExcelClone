@@ -9,11 +9,12 @@ import scalafx.application.JFXApp.PrimaryStage
 import scalafx.geometry.Insets
 import scalafx.scene.Scene
 import scalaExcel.GUI.view.ViewManager
-import scalaExcel.model.Model
+import scalaExcel.model._
 import scalaExcel.model.Filer._
 import scalafx.scene.control.Button
 import scalafx.scene.layout.BorderPane
 import scalafx.stage.Stage
+import rx.lang.scala.Observable
 
 object RunGUI extends JFXApp {
 
@@ -27,71 +28,53 @@ object RunGUI extends JFXApp {
   val root = loader.load[jfxs.Parent]
 
   /**
-   * The data model
-   */
-  val model = new Model()
-
-  /**
    * The view
    */
   val vm = loader.getController[ViewManager]
 
-  // notify ViewManager of modifications in the model
-  model.sheet.subscribe(vm.dataChanged _)
-
   // Putting events from the GUI into the model
   // This should be the only place where that ever happens
 
-  // when the user somehow changes the cell
-  vm.onCellEdit.subscribe { edit =>
-    model.changeFormula(edit._1, edit._2)
-  }
+  val modelChanges = Observable.just(Refresh)
+    // when the user somehow changes the cell
+    .merge(vm.onCellEdit.map(edit => SetFormula(edit._1, edit._2)))
+    // when the background color of a cell is selected
+    .merge(vm.onBackgroundChange.map(edit => SetBackground(edit._1, edit._2)))
+    // when the front color of a cell is selected
+    .merge(vm.onColorChange.map(edit => SetColor(edit._1, edit._2)))
+    // when a column is sorted
+    .merge(vm.onColumnSort.map(s => SortColumn(s._1, s._2)))
+    // When a cell is deleted
+    .merge(vm.onCellEmpty.map(pos => EmptyCell(pos)))
+    // when a cell is copied
+    .merge(vm.onCellCopy.map(exchange => CopyCell(exchange._1, exchange._2)))
+    // when a cell is cut
+    .merge(vm.onCellCut.map(exchange => CutCell(exchange._1, exchange._2)))
+    // when a file is loaded
+    .merge(vm.onLoad.map({ file =>
+      val data = Filer.load(file)
+      SetSheet(data._1, data._2)
+    }))
+    // when an action is undone
+    .merge(vm.onUndo.map({ _ => Undo}))
+    // when an action is redone
+    .merge(vm.onRedo.map({ _ => Redo}))
 
-  // when the background color of a cell is selected
-  vm.onBackgroundChange.subscribe { edit =>
-    model.changeBackground(edit._1, edit._2)
-  }
+  // The data model
+  val model = new Model(modelChanges)
 
-  // when the front color of a cell is selected
-  vm.onColorChange.subscribe { edit =>
-    model.changeColor(edit._1, edit._2)
-  }
+  // notify ViewManager of modifications in the model
+  model.sheet.subscribe(vm.dataChanged _)
 
-  // when a column is sorted
-  vm.onColumnSort.subscribe { s =>
-    model.sortColumn(s._1, s._2)
-  }
+  // Show a dialog on errors and print the exception stack trace
+  model.errors.subscribe({ e =>
+    println("Exception while altering model.")
+    e.printStackTrace()
 
-  // when a cell is emptied
-  vm.onCellEmpty.subscribe { pos =>
-    model.emptyCell(pos)
-  }
+    showInDialog("Sorry, something went wrong while we were doing that! Look in the console for details")
+  })
 
-  // when a cell is copied
-  vm.onCellCopy.subscribe { exchange =>
-    model.copyCell(exchange._1, exchange._2)
-  }
-
-  // when a cell is cut
-  vm.onCellCut.subscribe { exchange =>
-    model.cutCell(exchange._1, exchange._2)
-  }
-
-  // when a file is loaded
-  vm.onLoad.subscribe { file =>
-    model.loadFrom(file)
-  }
-
-  // when an action is undone
-  vm.onUndo.subscribe { _ =>
-    model.undo()
-  }
-
-  // when an action is redone
-  vm.onRedo.subscribe { _ =>
-    model.redo()
-  }
-
+  // Initialize the JavaFX stage
   stage = new PrimaryStage() {
     title = "Scala Excel"
     scene = new Scene(root, 800, 600) {
@@ -120,11 +103,4 @@ object RunGUI extends JFXApp {
     // Show dialog
     dialogStage.show()
   }
-
-  model.errors.subscribe({ e =>
-    println("Exception while altering model.")
-    e.printStackTrace()
-
-    showInDialog("Sorry, something went wrong while we were doing that! Look in the console for details")
-  })
 }

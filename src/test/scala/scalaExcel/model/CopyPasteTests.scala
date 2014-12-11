@@ -9,7 +9,7 @@ import scalaExcel.formula.{Value, VDouble}
 class CopyPasteTests {
 
   @Test def copy1() = {
-    val model = new Model()
+    val model = new MutableModel()
 
     var y: Value = null
     model.sheet
@@ -26,7 +26,7 @@ class CopyPasteTests {
   }
 
   @Test def cut1() = {
-    val model = new Model()
+    val model = new MutableModel()
 
     var y: Value = null
     model.sheet
@@ -43,7 +43,7 @@ class CopyPasteTests {
   }
 
   @Test def cut2() = {
-    val model = new Model()
+    val model = new MutableModel()
 
     var sheet : Sheet = null
     model.sheet.subscribe(x => sheet = x)

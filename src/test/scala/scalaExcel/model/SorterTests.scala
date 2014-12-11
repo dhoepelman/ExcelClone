@@ -10,7 +10,7 @@ import scalaExcel.model.Sorter.SheetSorter
 class SorterTests {
 
   @Test def testDenseSingleColumnSort() = {
-    val model = new Model()
+    val model = new MutableModel()
     var sheet: Sheet = null
 
     model.sheet.subscribe(s => sheet = s)
@@ -19,7 +19,7 @@ class SorterTests {
     model.changeFormula((0, 1), "=4")
     model.changeFormula((0, 2), "=2")
     model.changeFormula((0, 3), "=3")
-    model.sheetMutations.onCompleted
+    model.stop()
 
     val newSheet = sheet.sort(0)
     assertEquals(Some(VDouble(1)), newSheet.valueAt((0, 0)))
@@ -29,7 +29,7 @@ class SorterTests {
   }
 
   @Test def testSparseColumnSort() = {
-    val model = new Model()
+    val model = new MutableModel()
     var sheet: Sheet = null
 
     model.sheet.subscribe(s => sheet = s)
@@ -38,7 +38,7 @@ class SorterTests {
     model.changeFormula((0, 9), "=4")
     model.changeFormula((0, 4), "=2")
     model.changeFormula((0, 2), "=3")
-    model.sheetMutations.onCompleted
+    model.stop()
 
     val newSheet = sheet.sort(0)
     assertEquals(Some(VDouble(1)), newSheet.valueAt((0, 0)))
@@ -49,7 +49,7 @@ class SorterTests {
   }
 
   @Test def testColumnSortDesc() = {
-    val model = new Model()
+    val model = new MutableModel()
     var sheet: Sheet = null
     model.sheet.last.subscribe(s => sheet = s)
 
@@ -57,7 +57,7 @@ class SorterTests {
     model.changeFormula((0, 2), "=4")
     model.changeFormula((0, 3), "=2")
     model.changeFormula((0, 4), "=3")
-    model.sheetMutations.onCompleted
+    model.stop()
 
     val newSheet = sheet.sort(0, ascending = false)
     assertEquals(Some(VDouble(4)), newSheet.valueAt((0, 0)))
@@ -68,7 +68,7 @@ class SorterTests {
   }
 
   @Test def testUpdateAllColumns() = {
-    val model = new Model()
+    val model = new MutableModel()
     var sheet: Sheet = null
     model.sheet.last.subscribe(s => sheet = s)
 
@@ -82,7 +82,7 @@ class SorterTests {
     model.changeFormula((1, 3), "=13")
     model.changeFormula((1, 1), "=14")
 
-    model.sheetMutations.onCompleted
+    model.stop()
 
     val newSheet = sheet.sort(0)
 
@@ -99,7 +99,7 @@ class SorterTests {
   }
 
   @Test def testUpdateDependents() = {
-    val model = new Model()
+    val model = new MutableModel()
     var sheet: Sheet = null
     model.sheet.last.subscribe(s => sheet = s)
     model.changeFormula((0, 0), "=3")
@@ -108,7 +108,7 @@ class SorterTests {
     model.changeFormula((0, 3), "=8")
     model.changeFormula((0, 4), "=A20")
 
-    model.sheetMutations.onCompleted
+    model.stop()
 
     val newSheet = sheet.sort(0)
 

@@ -6,8 +6,7 @@ import org.junit._
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
-
-import scalaExcel.formula.Evaluator._
+import scala.reflect.ClassTag
 
 @RunWith(value = classOf[Parameterized])
 class PPrintTests(f : String) {

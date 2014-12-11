@@ -7,15 +7,16 @@ import scalaExcel.model.Sorter.SheetSorter
 import scalaExcel.model.OperationHelpers._
 import scalaExcel.CellPos
 
-class Model {
-  /** This is a stream of inputs from 'the world' that will effect the state of the sheet model */
-  val sheetMutations = BehaviorSubject[ModelMutations](Refresh)
-
+/**
+ * Represents the data model of the ScalaExcel application
+ * @param sheetMutations Inputs from outside this package that will effect the state of the sheet model
+ */
+class Model(protected val sheetMutations : Observable[ModelMutations]) {
   /**
    * function to propagate updates to dependent cells
    * @param alreadyUpdated Set of cells that were already updated, to detect cycles
    */
-  def updateSheet(s: Sheet, updates: List[CellPos], alreadyUpdated: Set[CellPos] = Set()): Sheet = {
+  private def updateSheet(s: Sheet, updates: List[CellPos], alreadyUpdated: Set[CellPos] = Set()): Sheet = {
     updates.foldLeft(s)((s, u) => {
       if (alreadyUpdated contains u)
         // u was already updated, so this means there's a circular reference
@@ -28,11 +29,11 @@ class Model {
     })
   }
 
-  def updateSheet(x: (Sheet, List[(Int,Int)])): Sheet = x match {
+  private def updateSheet(x: (Sheet, List[(Int,Int)])): Sheet = x match {
     case (s, updates) => updateSheet(s, updates)
   }
 
-  def updateStyle(sheet: Sheet, pos : CellPos, f: Styles => Styles) =
+  private def updateStyle(sheet: Sheet, pos : CellPos, f: Styles => Styles) =
     sheet.setCellStyle(pos, f(sheet.getCellStyle(pos)))
 
   /** Perform a modification on the sheet */
@@ -87,63 +88,31 @@ class Model {
         }
     })
 
+  /** Stream of errors in the model */
   val errors = undoRedoSheet
     .filter({_._1.nonEmpty})
     .map({_._1.get})
+
+  /** Stream of sheets, emits whenever an atomic change has happened to the sheet  */
   val sheet = undoRedoSheet
     .map({_._2.current})
+}
 
-  def refresh() = sheetMutations.onNext(Refresh)
-
-  def emptyCell(pos : CellPos) {
-    emptyCell(List(pos))
-  }
-
-  def emptyCell(poss : Traversable[CellPos]) {
-    sheetMutations.onNext(EmptyCell(poss))
-  }
-
+// TODO: Legacy, refactor tests so they don't need this anymore
+class MutableModel() extends Model(BehaviorSubject[ModelMutations](Refresh)) {
   def copyCell(from : CellPos, to : CellPos) {
-    sheetMutations.onNext(CopyCell(from, to))
+    sheetMutations.asInstanceOf[BehaviorSubject[ModelMutations]].onNext(CopyCell(from, to))
   }
 
   def cutCell(from : CellPos, to : CellPos) {
-    sheetMutations.onNext(CutCell(from, to))
-  }
-
-  def clearAndSet(values: Map[(Int,Int), String], styles: Map[(Int,Int), Styles]): Unit = {
-    sheetMutations.onNext(SetSheet(values, styles))
+    sheetMutations.asInstanceOf[BehaviorSubject[ModelMutations]].onNext(CutCell(from, to))
   }
 
   def changeFormula(pos : CellPos, f: String) {
-    sheetMutations.onNext(SetFormula(pos, f))
+    sheetMutations.asInstanceOf[BehaviorSubject[ModelMutations]].onNext(SetFormula(pos, f))
   }
 
-  def changeBackground(pos : CellPos, c: Color) {
-    changeBackground(List(pos), c)
-  }
-
-  def changeBackground(poss : Traversable[CellPos], c: Color) {
-    sheetMutations.onNext(SetBackground(poss, c))
-  }
-
-  def changeColor(pos : CellPos, c: Color) {
-    changeColor(List(pos),c)
-  }
-
-  def changeColor(poss : Traversable[CellPos], c: Color): Unit = {
-    sheetMutations.onNext(SetColor(poss, c))
-  }
-
-  def sortColumn(x: Int, asc: Boolean) = {
-    sheetMutations.onNext(SortColumn(x, asc))
-  }
-
-  def undo() = {
-    sheetMutations.onNext(Undo)
-  }
-
-  def redo() = {
-    sheetMutations.onNext(Redo)
+  def stop(): Unit = {
+    sheetMutations.asInstanceOf[BehaviorSubject[ModelMutations]].onCompleted()
   }
 }

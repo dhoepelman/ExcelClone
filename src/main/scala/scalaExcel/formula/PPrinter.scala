@@ -32,7 +32,6 @@ object PPrinter {
     case RowRange(start, end) => print(start) + ":" + print(end)
     case ColRange(start, end) => print(start) + ":" + print(end)
     case SheetReference(sheet, ref) => sheet + "!" + print(ref)
-    case _ => throw new IllegalArgumentException
   }
 
   private def print(ref: RowRef) = $(ref.absolute) + (ref.referent+1)

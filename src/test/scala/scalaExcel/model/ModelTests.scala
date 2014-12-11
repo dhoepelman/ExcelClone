@@ -9,12 +9,12 @@ import org.junit._
 class ModelTests {
 
   @Test def initializeModel() = {
-    val model = new Model()
+    val model = new MutableModel()
     assertEquals(Map(), model.sheet.take(1).toBlocking.last.values)
   }
 
   @Test def changeFormula() = {
-    val model = new Model()
+    val model = new MutableModel()
     val cell = model.sheet
       .filterCellValueAt((0, 0))
     model.changeFormula((0, 0), "=1+1")
@@ -22,7 +22,7 @@ class ModelTests {
   }
 
   @Test def formulaWithReferences() = {
-    val model = new Model()
+    val model = new MutableModel()
     var y: Value = null
     model.sheet
       .filterCellValueAt((0, 2))
@@ -36,7 +36,7 @@ class ModelTests {
   }
 
   @Test def formulaUpdateDependents() = {
-    val model = new Model()
+    val model = new MutableModel()
     var y: Value = null
     model.sheet
       .filterCellValueAt((0, 1))
@@ -50,7 +50,7 @@ class ModelTests {
   }
 
   @Test def circularDependency1() = {
-    val model = new Model()
+    val model = new MutableModel()
     var y: Value = null
     model.sheet
       .filterCellValueAt((2, 0))
@@ -64,7 +64,7 @@ class ModelTests {
   }
 
   @Test def circularDependency2() = {
-    val model = new Model()
+    val model = new MutableModel()
     var y: Value = null
     model.sheet
       .filterCellValueAt((2, 0))
@@ -78,7 +78,7 @@ class ModelTests {
   }
 
   @Test def circularDependency3() = {
-    val model = new Model()
+    val model = new MutableModel()
     var y: Value = null
     model.sheet
       .filterCellValueAt((0, 0))
