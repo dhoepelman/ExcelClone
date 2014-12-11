@@ -91,8 +91,10 @@ class ViewManager extends jfxf.Initializable {
   val onLoad = Subject[java.io.File]()
   val onUndo = Subject[Unit]()
   val onRedo = Subject[Unit]()
-  val onAdd = Subject[(Boolean, Int, Int)]()
-  val onRemove = Subject[(Boolean, Int, Int)]()
+  val onAddColumns = Subject[(Int, Int)]()
+  val onAddRows = Subject[(Int, Int)]()
+  val onRemoveRows = Subject[(Int, Int)]()
+  val onRemoveColumns = Subject[(Int, Int)]()
   val onColumnReorder = Subject[Map[Int, Int]]()
 
   /**
@@ -226,29 +228,25 @@ class ViewManager extends jfxf.Initializable {
     // forward edits
     streamTable.onCellEdit.subscribe(onCellEdit.onNext _)
     // forward additions
-    streamTable.onAdd.subscribe(s => {
-      // first update the table's data window
-      s match {
-        case (true, count, index) =>
-          tableMutations.onNext(AddRows(count, index))
-        case (false, count, index) =>
-          tableMutations.onNext(AddColumns(count, index))
-      }
-      // then update the model
-      onAdd.onNext(s)
-      })
+    streamTable.onAdd.subscribe(_ match {
+      case (true, count, index) =>
+        // first update the table's data window
+        tableMutations.onNext(AddRows(count, index))
+        // then update the model
+        onAddRows.onNext((count, index))
+      case (false, count, index) =>
+        tableMutations.onNext(AddColumns(count, index))
+        onAddColumns.onNext((count, index))
+    })
     // forward removals
-    streamTable.onRemove.subscribe(s => {
-      // first update the table's data window
-      s match {
-        case (true, count, index) =>
-          tableMutations.onNext(RemoveRows(count, index))
-        case (false, count, index) =>
-          tableMutations.onNext(RemoveColumns(count, index))
-      }
-      // the update the model
-      onRemove.onNext(s)
-      })
+    streamTable.onRemove.subscribe(_ match {
+      case (true, count, index) =>
+        tableMutations.onNext(RemoveRows(count, index))
+        onRemoveRows.onNext((count, index))
+      case (false, count, index) =>
+        tableMutations.onNext(RemoveColumns(count, index))
+        onRemoveColumns.onNext((count, index))
+    })
     // forward column reordering
     streamTable.onColumnReorder.subscribe(map => {
       // first update the table's inner header registry

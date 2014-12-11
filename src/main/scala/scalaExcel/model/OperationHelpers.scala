@@ -18,31 +18,23 @@ object OperationHelpers {
   }
 
   /**
-   * Implicit class enabling a map containing permutations of the nature
-   * (index_before -> index_after) to become a cell repositioning function
-   * of the form (CellPos) => CellPos
-   * @param permutations  the map with permutations
+   * Transforms two maps of row/column permutations into a cell repositioning
+   * function  of the form (CellPos) => CellPos
+   * @param rowPermutations map containing row permutations of the nature
+                            (index_before -> index_after)
+   * @param colPermutations map containing column permutations of the nature
+                            (index_before -> index_after)
+   * @return                the cell repositioning function of the form
+   *                        (CellPos) => CellPos
    */
-  implicit class CellRepositioningMap(val permutations: Map[Int, Int]) {
-    /**
-     * Uses the map as a set of row/column permutations to be applied on a
-     * sheet
-     * @param onRows        boolean value specifying if the permutations apply
-     *                      to the sheet's row indexes
-     * @return              the cell repositioning function of the form
-     *                      (CellPos) => CellPos
-     */
-    def asCellRepositioner(onRows: Boolean): (CellPos) => CellPos = {
-      case (x, y) =>
-        if (onRows)
-          (x, permutations.getOrElse(y, y))
-        else
-          (permutations.getOrElse(x, x), y)
-      }
+  def getCellRepositioner(colPermutations: Map[Int, Int] = Map[Int, Int](),
+                          rowPermutations: Map[Int, Int] = Map[Int, Int]()): (CellPos) => CellPos = {
+    case (x, y) =>
+      (colPermutations.getOrElse(x, x), rowPermutations.getOrElse(y, y))
   }
 
   /**
-   * Implicit class enabling a sheet to reposition its cells
+   * Enables a sheet to reposition its cells
    * @param sheet the target sheet
    */
   implicit class PermutableSheet(val sheet: Sheet) {
@@ -54,10 +46,10 @@ object OperationHelpers {
      * @return              the permuted target sheet
      */
     def applyRowPermutations(permutations: Map[Int, Int]) =
-      applyRepositioning(permutations.asCellRepositioner(onRows = true))
+      applyRepositioning(getCellRepositioner(rowPermutations = permutations))
 
     def applyColumnPermutations(permutations: Map[Int, Int]) =
-      applyRepositioning(permutations.asCellRepositioner(onRows = false))
+      applyRepositioning(getCellRepositioner(colPermutations = permutations))
 
     /**
      * Applies custom repositioning on the cells of the target sheet

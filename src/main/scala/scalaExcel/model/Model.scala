@@ -3,7 +3,7 @@ package scalaExcel.model
 import scalafx.scene.paint.Color
 import rx.lang.scala.subjects.BehaviorSubject
 import scalaExcel.model.Sorter._
-import scalaExcel.model.Slider._
+import scalaExcel.model.Resizer._
 import scalaExcel.model.OperationHelpers._
 import scalaExcel.CellPos
 
@@ -67,10 +67,10 @@ class Model {
           }
       )
       case SortColumn(x, asc) => ur.next(sheet.sort(x, asc))
-      case Add(toRows, count, index) =>
-        ur.next(updateSheet(sheet.slide(forward = true, toRows, count, index)))
-      case Remove(fromRows, count, index) =>
-        ur.next(updateSheet(sheet.slide(forward = false, fromRows, count, index)))
+      case AddColumns(count, index) => ur.next(sheet.addColumns(count, index))
+      case AddRows(count, index) => ur.next(sheet.addRows(count, index))
+      case RemoveColumns(count, index) => ur.next(sheet.removeColumns(count, index))
+      case RemoveRows(count, index) => ur.next(sheet.removeRows(count, index))
       case ReorderColumns(permutations) =>
         ur.next(sheet.applyColumnPermutations(permutations))
       case Undo => ur.undo()
@@ -153,12 +153,20 @@ class Model {
     sheetMutations.onNext(Redo)
   }
 
-  def add(toRows: Boolean, count: Int, index: Int) = {
-    sheetMutations.onNext(Add(toRows, count, index))
+  def addRows(count: Int, index: Int) = {
+    sheetMutations.onNext(AddRows(count, index))
   }
 
-  def remove(fromRows: Boolean, count: Int, index: Int) = {
-    sheetMutations.onNext(Remove(fromRows, count, index))
+  def addColumns(count: Int, index: Int) = {
+    sheetMutations.onNext(AddColumns(count, index))
+  }
+
+  def removeRows(count: Int, index: Int) = {
+    sheetMutations.onNext(RemoveRows(count, index))
+  }
+
+  def removeColumns(count: Int, index: Int) = {
+    sheetMutations.onNext(RemoveColumns(count, index))
   }
 
   def reorderColumns(permutations: Map[Int, Int]) = {

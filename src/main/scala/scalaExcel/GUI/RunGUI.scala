@@ -92,14 +92,24 @@ object RunGUI extends JFXApp {
     model.redo()
   }
 
-  // when something is added
-  vm.onAdd.subscribe { addition =>
-    model.add(addition._1, addition._2, addition._3)
+  // when rows are added
+  vm.onAddRows.subscribe { addition =>
+    model.addRows(addition._1, addition._2)
   }
 
-  // when something is removed
-  vm.onRemove.subscribe { removal =>
-    model.remove(removal._1, removal._2, removal._3)
+  // when rows are removed
+  vm.onRemoveRows.subscribe { removal =>
+    model.removeRows(removal._1, removal._2)
+  }
+
+  // when columns are added
+  vm.onAddColumns.subscribe { addition =>
+    model.addColumns(addition._1, addition._2)
+  }
+
+  // when columns are removed
+  vm.onRemoveColumns.subscribe { removal =>
+    model.removeColumns(removal._1, removal._2)
   }
 
   // when columns are reordered
