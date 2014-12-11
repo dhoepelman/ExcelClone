@@ -205,9 +205,9 @@ class ViewManager extends jfxf.Initializable {
       tableMutations.onNext(ResizeColumn(resize._1, resize._2)))
 
     // forward selection
-    streamTable.onSelection.subscribe(onSelection.onNext _)
+    streamTable.onSelection.subscribe(onSelection)
     // forward edits
-    streamTable.onCellEdit.subscribe(onCellEdit.onNext _)
+    streamTable.onCellEdit.subscribe(onCellEdit)
 
     //
     // Re-initialize scroll bars

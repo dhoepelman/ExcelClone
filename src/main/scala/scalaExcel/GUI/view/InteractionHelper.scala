@@ -69,7 +69,7 @@ object InteractionHelper {
       }
     })
     .distinctWithAllLatest(controller.onSelection)
-    .subscribe(controller.onCellEdit.onNext _)
+    .subscribe(controller.onCellEdit)
 
     // Changes on the background picker are pushed to the model
     Observable[Color](o => {
@@ -78,7 +78,7 @@ object InteractionHelper {
       }
     })
     .withLatest(controller.onSelection)
-    .subscribe(controller.onBackgroundChange.onNext _)
+    .subscribe(controller.onBackgroundChange)
 
     //Changes on the color picker are pushed to the model
     Observable[Color](o => {
@@ -87,7 +87,7 @@ object InteractionHelper {
       }
     })
     .withLatest(controller.onSelection)
-    .subscribe(controller.onColorChange.onNext _)
+    .subscribe(controller.onColorChange)
 
     // Saves are handled here
     Observable[String](o => {
@@ -116,7 +116,7 @@ object InteractionHelper {
     })
     .map(chooser => chooser.showOpenDialog(controller.tableContainer.scene.window.getValue))
     .filter(_ != null)
-    .subscribe(controller.onLoad.onNext _)
+    .subscribe(controller.onLoad)
 
     // Emptying of cells is pushed to the model
     Observable[Unit](o =>
@@ -124,7 +124,7 @@ object InteractionHelper {
         o.onNext(Unit)
     })
     .withOnlyLatest(controller.onSelection)
-    .subscribe(controller.onCellEmpty.onNext(_))
+    .subscribe(controller.onCellEmpty)
 
     // Copy-pasting is handled by this function
     // TODO:  Yeah, so putting it in a variable first works. But when I put it directly in the subscribe it doesn't?...
@@ -138,10 +138,12 @@ object InteractionHelper {
         val clipboard = Clipboard.systemClipboard
         val contents = new ClipboardContent()
         action match {
+          // TODO: This case should just be a subscriber, maybe even directly in the handler of the menu cut function
           case Cut | Copy =>
             contents.put(copyPasteFormat, (action, selection.head._1))
             contents.putString(selection.head._2.value.toString)
             clipboard.setContent(contents)
+          // TODO: Convert this case into a proper stream that notifies the appropriate (through filters) observers
           case Paste =>
             val to = selection.head._1
             if (clipboard.hasContent(copyPasteFormat))
@@ -183,9 +185,10 @@ object InteractionHelper {
       }
     })
     .withLatest(controller.onSingleCellSelected)
-    .subscribe(s => s match {
-      case (((c, r), _), asc) => controller.onColumnSort.onNext((c, asc))
+    .map(s => s match {
+      case (((c, r), _), asc) => (c, asc)
     })
+    .subscribe(controller.onColumnSort)
   }
 
   val copyPasteFormat = new DataFormat("x-excelClone/cutcopy")
