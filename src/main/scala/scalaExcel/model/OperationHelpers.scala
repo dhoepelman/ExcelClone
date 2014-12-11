@@ -65,8 +65,8 @@ object OperationHelpers {
             property match {
               case cell: Cell =>
                 Cell(changeDependency(repositioner)(cell.AST)).asInstanceOf[T]
-              case posList: List[CellPos @unchecked] =>
-                posList.map(repositioner).asInstanceOf[T]
+              case posList: List[Any] =>
+                posList.map(p => repositioner(p.asInstanceOf[CellPos])).asInstanceOf[T]
               case other => other
             })
       }
