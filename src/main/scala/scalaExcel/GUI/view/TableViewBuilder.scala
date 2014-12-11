@@ -39,6 +39,7 @@ class DataCellColumn(onCellEdit: ((CellPos, String)) => Unit,
   // insert a special element that wraps the header and handles user clicks
   val columnObject = this
   graphic = new StackPane() {
+    prefHeight = DefaultProperties.FIXED_ROW_HEIGHT
     // let the element stretch to cover the column header
     prefWidth.bind(columnObject.width.subtract(5))
     val stackObject = this
@@ -156,7 +157,7 @@ class StreamingTable(labeledTable: LabeledDataTable) {
     columns += new NumberedColumn(index =>
     //convert table row index to sheet row index
       labeledTable.toSheetIndex((0, index))._2,
-      labeledTable.calculateColWidth,
+      labeledTable.calculateColWidth(),
       onAdd.onNext,
       onRemove.onNext,
       onBulkSelection.onNext)

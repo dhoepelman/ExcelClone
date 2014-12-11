@@ -100,26 +100,28 @@ class LabeledDataTable( _dataWindow: DataWindow = DataWindow.DEFAULT,
                            availableHeight: Double = _height,
                            bottomUpRows: Boolean = false,
                            bottomUpCols: Boolean = false) = {
+    val (minRow, maxRow) =
+      if (bottomUpRows)
+      // if bottom-up, start from the last data row and fit rows upward
+        (Math.max(0, window.dataSize.rowCount - fitRows(availableHeight)),
+          window.dataSize.rowCount)
+      else
+      // else start from the current position and fit rows downward
+        (window.visibleBounds.minRow,
+          Math.min(window.dataSize.rowCount,
+            window.visibleBounds.minRow + fitRows(availableHeight)))
+
     val (minCol, maxCol) =
       if (bottomUpCols)
         // if bottom-up, start from the last data column and fit columns upward
-        (Math.max(0, window.dataSize.columnCount - fitColumns(availableWidth)),
+        (Math.max(0, window.dataSize.columnCount - fitColumns(availableWidth, maxRow)),
           window.dataSize.columnCount)
       else
         // else start from the current position and fit columns downward
         (window.visibleBounds.minCol,
           Math.min(window.dataSize.columnCount,
-            window.visibleBounds.minCol + fitColumns(availableWidth)))
-    val (minRow, maxRow) =
-      if (bottomUpRows)
-        // if bottom-up, start from the last data row and fit rows upward
-        (Math.max(0, window.dataSize.rowCount - fitRows(availableHeight)),
-          window.dataSize.rowCount)
-      else
-        // else start from the current position and fit rows downward
-        (window.visibleBounds.minRow,
-          Math.min(window.dataSize.rowCount,
-            window.visibleBounds.minRow + fitRows(availableHeight)))
+            window.visibleBounds.minCol + fitColumns(availableWidth, maxRow)))
+
     // slide window to new bounds and memorize _width and _height
     new LabeledDataTable(
       window.slideTo(Bounds(minCol, maxCol, minRow, maxRow)),
@@ -236,19 +238,17 @@ class LabeledDataTable( _dataWindow: DataWindow = DataWindow.DEFAULT,
    * Returns the column width such that the number of the last row fits inside
    * the cell
    */
-  def calculateColWidth = {
-    val l = _dataWindow.visibleBounds.maxRow.toString.length
-    Math.max(20, l * DefaultProperties.NUMBERED_COLUMN_WIDTH)
-  }
+  def calculateColWidth(maxRow: Int = _dataWindow.visibleBounds.maxRow) =
+    Math.max(20, maxRow.toString.length * DefaultProperties.NUMBERED_COLUMN_WIDTH)
 
   /**
    * Calculates the maximum number of data columns that fit in a given table width
    * @param availableWidth  the width available to the table
    * @return                number of columns that fit
    */
-  def fitColumns(availableWidth: Double) = {
+  def fitColumns(availableWidth: Double, maxRow: Int = _dataWindow.visibleBounds.maxRow) = {
     // all header widths (including numbered column)
-    val widths = _allHeaderWidths.::(calculateColWidth.toDouble)
+    val widths = _allHeaderWidths.::(calculateColWidth(maxRow).toDouble)
     // number of columns that fit in the table container
     widths.scan(0.0)((acc, w) => acc + w).drop(2).takeWhile(_ < availableWidth).length
   }
