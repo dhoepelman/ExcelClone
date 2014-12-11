@@ -1,6 +1,7 @@
 package scalaExcel.GUI.view
 
-import _root_.rx.lang.scala.Observable
+import rx.lang.scala.Observable
+import rx.lang.scala.subjects.PublishSubject
 import scalafx.Includes._
 import scalafx.scene.paint.Color
 import scalaExcel._
@@ -144,6 +145,7 @@ object InteractionHelper {
   case object Paste extends ClipboardAction
 
   val copyPasteFormat = new DataFormat("x-excelClone/cutcopy")
+
   private def initializeClipboard(controller: ViewManager) {
     // Copy-pasting is handled here
     val clipboardActions = Observable[ClipboardAction](o => {
@@ -160,8 +162,15 @@ object InteractionHelper {
       .withLatest(controller.onManyCellsSelected)
       .filter({ case (selection, _) => selection.nonEmpty})
 
+    /** TODO: Remove this subject
+      * For some reason, if multiple subscribes are attached to clipboardActions only the last
+      * of them actually gets any values. I have no idea what causes this
+      */
+    val clipboardActions2 = PublishSubject[(List[((Int, Int), DataCell)], ClipboardAction)]()
+    clipboardActions.subscribe(clipboardActions2)
+
     // TODO: Give the cell a visual indication that is is going to be cut, like Excel does
-    clipboardActions
+    clipboardActions2
       .filter({ case (_, action) => action == Cut || action == Copy})
       // TODO: Multiple selection
       .map({ case (selection, action) => (selection.head, action)})
@@ -175,14 +184,7 @@ object InteractionHelper {
       Clipboard.systemClipboard.setContent(contents)
     })
 
-    clipboardActions
-      .subscribe({ a =>
-      val (_, action) = a
-      println(action)
-      println(Clipboard.systemClipboard.getContent(copyPasteFormat))
-    })
-
-    clipboardActions
+    clipboardActions2
       .filter({ case (_, action) => action == Paste})
       // TODO: Multiple selection
       .map({ case (selection, action) => (selection.head, action)})
