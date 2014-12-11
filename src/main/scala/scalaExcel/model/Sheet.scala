@@ -34,10 +34,9 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
     val newCells = cells + (pos -> newCell)
     val newValues = calcNewValue(pos, newCell)
     val newDependents = calcNewDependents(pos, newCell)
-    Sheet.updateSheet(
-      new Sheet(newCells, newValues, newDependents, styles),
-      dependentsOf(pos),
-      Set(pos))
+
+    new Sheet(newCells, newValues, newDependents, styles)
+      .updateValues(dependentsOf(pos), Set(pos))
   }
 
   /** Get the Cell or return an empty cell */
@@ -48,9 +47,8 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
   def getValue(pos: CellPos) : Value = valueAt(pos).getOrElse(VEmpty)
 
   def deleteCell(p: CellPos): Sheet = {
-    Sheet.updateSheet(
-      new Sheet(cells - p, values - p, dependents - p, styles - p),
-      dependentsOf(p))
+    new Sheet(cells - p, values - p, dependents - p, styles - p)
+      .updateValues(dependentsOf(p))
   }
 
   def deleteCells(poss: Traversable[CellPos]): Sheet = {
@@ -62,13 +60,12 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
    */
   def copyCell(from: CellPos, to: CellPos) = {
     val cell = Cell(DependencyModifier.moveDependencies(from, to)(getCell(from).AST))
-    Sheet.updateSheet(
-      new Sheet(
-        cells + (to -> cell),
-        calcNewValue(to, cell),
-        calcNewDependents(to, cell),
-        styles + (to -> getCellStyle(from))),
-      dependentsOf(to))
+    new Sheet(
+      cells + (to -> cell),
+      calcNewValue(to, cell),
+      calcNewDependents(to, cell),
+      styles + (to -> getCellStyle(from))
+    ).updateValues(dependentsOf(to))
   }
 
   /**
@@ -83,14 +80,11 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
       .setCellStyle(to, getCellStyle(from))
 
     // Change all the dependent cells to point to the new cell
-    val tempSheet2 = dependents.foldLeft(tempSheet){(s, pos) =>
+    dependents.foldLeft(tempSheet)({(s, pos) =>
       s.setCell(pos, Cell(DependencyModifier.changeDependency(from, to)(s.getCell(pos).AST)))
-    }
-
-    // Delete the original cell
-    val newSheet = tempSheet2.deleteCell(from)
-
-    Sheet.updateSheet(newSheet, toUpdate)
+    })
+      .deleteCell(from) // Delete the original cell
+      .updateValues(toUpdate)
   }
 
   /** Set the style of a cell */
@@ -109,12 +103,24 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
   def getCellStyle(pos : CellPos) = styles.getOrElse(pos, Styles.DEFAULT)
 
   /**
-   * recalculate the value of a cell
-   * @return a new sheet which includes the new value, and a list of cells that
-   *         also need to be updated
+   * function to propagate updates to dependent cells
+   * @param updates A list of positions of which the value should be recalculated
+   * @param alreadyUpdated Set of cells that were already updated, to detect cycles
    */
-  private def updateCell(pos : CellPos) = {
-    (new Sheet(cells, calcNewValue(pos, getCell(pos)), dependents, styles), dependentsOf(pos))
+  private def updateValues(updates: List[CellPos], alreadyUpdated: Set[CellPos] = Set()): Sheet = {
+    updates.foldLeft(this)((s, u) => {
+      if (alreadyUpdated contains u)
+        // u was already updated, so this means there's a circular reference
+        s.setToCircular(u)
+      else {
+        // recalculate the value of a cell
+        val newSheet = new Sheet(cells, calcNewValue(u, getCell(u)), dependents, styles)
+        dependentsOf(u) match {
+          case List() => newSheet
+          case newUpdates => newSheet.updateValues(newUpdates, alreadyUpdated + u)
+        }
+      }
+    })
   }
 
   /**
@@ -159,27 +165,3 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
 
 }
 
-object Sheet {
-
-  /**
-   * function to propagate updates to dependent cells
-   * @param alreadyUpdated Set of cells that were already updated, to detect cycles
-   */
-  def updateSheet(s: Sheet, updates: List[CellPos], alreadyUpdated: Set[CellPos] = Set()): Sheet = {
-    updates.foldLeft(s)((s, u) => {
-      if (alreadyUpdated contains u)
-        // u was already updated, so this means there's a circular reference
-        s.setToCircular(u)
-      else
-        s.updateCell(u) match {
-          case (newSheet, List()) => newSheet
-          case (newSheet, newUpdates) => updateSheet(newSheet, newUpdates, alreadyUpdated + u)
-        }
-    })
-  }
-
-  def updateSheet(x: (Sheet, List[(Int,Int)])): Sheet = x match {
-    case (s, updates) => updateSheet(s, updates)
-  }
-
-}
