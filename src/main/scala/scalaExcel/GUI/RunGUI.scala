@@ -36,7 +36,7 @@ object RunGUI extends JFXApp {
   // This should be the only place where that ever happens
 
   val modelChanges = Observable
-    // Make sure we immidiatly get the empty model
+    // Make sure we immediately get the empty model
     .just(Refresh)
     // when the user somehow changes the cell
     .merge(vm.onCellEdit.map(edit => SetFormula(edit._1, edit._2)))
