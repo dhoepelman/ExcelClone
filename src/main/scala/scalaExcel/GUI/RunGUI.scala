@@ -35,32 +35,33 @@ object RunGUI extends JFXApp {
   // Putting events from the GUI into the model
   // This should be the only place where that ever happens
 
-  val modelChanges = Observable
+  val modelChanges = Observable.from(List(
     // Make sure we immediately get the empty model
-    .just(Refresh)
+    Observable.just(Refresh),
     // when the user somehow changes the cell
-    .merge(vm.onCellEdit.map(edit => SetFormula(edit._1, edit._2)))
+    vm.onCellEdit.map(edit => SetFormula(edit._1, edit._2)),
     // when the background color of a cell is selected
-    .merge(vm.onBackgroundChange.map(edit => SetBackground(edit._1, edit._2)))
+    vm.onBackgroundChange.map(edit => SetBackground(edit._1, edit._2)),
     // when the front color of a cell is selected
-    .merge(vm.onColorChange.map(edit => SetColor(edit._1, edit._2)))
+    vm.onColorChange.map(edit => SetColor(edit._1, edit._2)),
     // when a column is sorted
-    .merge(vm.onColumnSort.map(s => SortColumn(s._1, s._2)))
+    vm.onColumnSort.map(s => SortColumn(s._1, s._2)),
     // When a cell is deleted
-    .merge(vm.onCellEmpty.map(pos => EmptyCell(pos)))
+    vm.onCellEmpty.map(pos => EmptyCell(pos)),
     // when a cell is copied
-    .merge(vm.onCellCopy.map(exchange => CopyCell(exchange._1, exchange._2)))
+    vm.onCellCopy.map(exchange => CopyCell(exchange._1, exchange._2)),
     // when a cell is cut
-    .merge(vm.onCellCut.map(exchange => CutCell(exchange._1, exchange._2)))
+    vm.onCellCut.map(exchange => CutCell(exchange._1, exchange._2)),
     // when a file is loaded
-    .merge(vm.onLoad.map({ file =>
+    vm.onLoad.map({ file =>
       val data = Filer.load(file)
       SetSheet(data._1, data._2)
-    }))
+    }),
     // when an action is undone
-    .merge(vm.onUndo.map({ _ => Undo}))
+    vm.onUndo.map({ _ => Undo}),
     // when an action is redone
-    .merge(vm.onRedo.map({ _ => Redo}))
+    vm.onRedo.map({ _ => Redo})
+  )).flatten
 
   // The data model
   val model = new Model(modelChanges)
