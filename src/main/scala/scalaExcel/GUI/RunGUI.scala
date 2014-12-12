@@ -35,7 +35,7 @@ object RunGUI extends JFXApp {
   // Putting events from the GUI into the model
   // This should be the only place where that ever happens
 
-  val modelChanges = Observable.from(List(
+  val modelChanges = observableMerge(
     // Make sure we immediately get the empty model
     Observable.just(Refresh),
     // when the user somehow changes the cell
@@ -61,7 +61,7 @@ object RunGUI extends JFXApp {
     vm.onUndo.map({ _ => Undo}),
     // when an action is redone
     vm.onRedo.map({ _ => Redo})
-  )).flatten
+  )
 
   // The data model
   val model = new Model(modelChanges)
@@ -106,4 +106,7 @@ object RunGUI extends JFXApp {
     // Show dialog
     dialogStage.show()
   }
+
+  /** Merges multiple observables into 1 stream */
+  private def observableMerge[T](os : Observable[T]*) = Observable.from(List(os)).flatten
 }
