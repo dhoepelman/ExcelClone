@@ -7,8 +7,6 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
 
-import scalaExcel.formula.Evaluator._
-
 @RunWith(value = classOf[Parameterized])
 class PPrintTests(f : String) {
   // Test if the formula equals its parsed and pretty-printed self

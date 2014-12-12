@@ -26,20 +26,36 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
    * Set the cell at pos to some formula f
    * @return the new sheet, and a list of cells that need to be recalculated
    */
-  def setCell(pos : CellPos, f : String) : (Sheet, List[CellPos]) = {
+  def setCell(pos: CellPos, f: String): Sheet = {
     val newCell = Cell(f)
     setCell(pos, newCell)
   }
 
-  private def setCell(pos: CellPos, newCell : Cell) = {
+  private def setCell(pos: CellPos, newCell: Cell): Sheet = {
     val newCells = cells + (pos -> newCell)
     val newValues = calcNewValue(pos, newCell)
     val newDependents = calcNewDependents(pos, newCell)
-    (new Sheet(newCells, newValues, newDependents, styles), dependentsOf(pos))
+    Sheet.updateSheet(
+      new Sheet(newCells, newValues, newDependents, styles),
+      dependentsOf(pos),
+      Set(pos))
   }
 
-  def deleteCell(p : CellPos) = {
-    (new Sheet(cells - p, values - p, dependents - p, styles - p), dependentsOf(p))
+  /** Get the Cell or return an empty cell */
+  def getCell(pos: CellPos) : Cell = cells getOrElse(pos, Cell())
+
+  def valueAt(pos: CellPos) = values get pos
+
+  def getValue(pos: CellPos) : Value = valueAt(pos).getOrElse(VEmpty)
+
+  def deleteCell(p: CellPos): Sheet = {
+    Sheet.updateSheet(
+      new Sheet(cells - p, values - p, dependents - p, styles - p),
+      dependentsOf(p))
+  }
+
+  def deleteCells(poss: Traversable[CellPos]): Sheet = {
+    poss.foldLeft(this)((sheet, pos) => sheet.deleteCell(pos))
   }
 
   /**
@@ -47,12 +63,13 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
    */
   def copyCell(from: CellPos, to: CellPos) = {
     val cell = Cell(DependencyModifier.moveDependencies(from, to)(getCell(from).AST))
-    (new Sheet(
-      cells + (to -> cell),
-      calcNewValue(to, cell),
-      calcNewDependents(to, cell),
-      styles + (to -> getCellStyle(from)))
-      , dependentsOf(to))
+    Sheet.updateSheet(
+      new Sheet(
+        cells + (to -> cell),
+        calcNewValue(to, cell),
+        calcNewDependents(to, cell),
+        styles + (to -> getCellStyle(from))),
+      dependentsOf(to))
   }
 
   /**
@@ -63,18 +80,18 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
     val toUpdate = dependents ++ dependentsOf(to)
 
     val tempSheet = this
-      .setCell(to, getCell(from))._1
+      .setCell(to, getCell(from))
       .setCellStyle(to, getCellStyle(from))
 
     // Change all the dependent cells to point to the new cell
     val tempSheet2 = dependents.foldLeft(tempSheet){(s, pos) =>
-      s.setCell(pos, Cell(DependencyModifier.changeDependency(from, to)(s.getCell(pos).AST)))._1
+      s.setCell(pos, Cell(DependencyModifier.changeDependency(from, to)(s.getCell(pos).AST)))
     }
 
     // Delete the original cell
-    val (newSheet, _) = tempSheet2.deleteCell(from)
+    val newSheet = tempSheet2.deleteCell(from)
 
-    (newSheet, toUpdate)
+    Sheet.updateSheet(newSheet, toUpdate)
   }
 
   //TODO implement
@@ -93,37 +110,39 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
    */
   def removeReferencesToRows(rows: List[Int]) = this
 
-  /**
-   * recalculate the value of a cell
-   * @return a new sheet which includes the new value, and a list of cells that also need to be updated
-   */
-  def updateCell(pos : CellPos) = {
-    (new Sheet(cells, calcNewValue(pos, getCell(pos)), dependents, styles), dependentsOf(pos))
-  }
-
-  def getCellStyle(pos : CellPos) = styles.getOrElse(pos, Styles.DEFAULT)
-
   /** Set the style of a cell */
   def setCellStyle(pos : CellPos, s: Styles) = {
     new Sheet(cells, values, dependents, styles + (pos -> s))
   }
 
+  def updateCellStyle(pos: CellPos, f: Styles => Styles) = {
+    setCellStyle(pos, f(getCellStyle(pos)))
+  }
+
+  def updateCellsStyle(poss: Traversable[CellPos], f: Styles => Styles) = {
+    poss.foldLeft(this)((sheet, pos) => sheet.updateCellStyle(pos, f))
+  }
+
+  def getCellStyle(pos : CellPos) = styles.getOrElse(pos, Styles.DEFAULT)
+
+  /**
+   * recalculate the value of a cell
+   * @return a new sheet which includes the new value, and a list of cells that
+   *         also need to be updated
+   */
+  private def updateCell(pos : CellPos) = {
+    (new Sheet(cells, calcNewValue(pos, getCell(pos)), dependents, styles), dependentsOf(pos))
+  }
+
   /**
    * Set a cell to the circular reference error
    */
-  def setToCircular(pos : CellPos) = {
+  private def setToCircular(pos : CellPos) = {
     new Sheet(cells, values + (pos -> VErr(CircularRef)), dependents)
   }
 
   /** Get the cells that depend on this given cell */
-  def dependentsOf(p: CellPos) : List[CellPos] = dependents getOrElse(p, List())
-
-  def valueAt(pos : CellPos) = values get pos
-
-  /** Get the Cell or return an empty cell */
-  def getCell(pos : CellPos) : Cell = cells getOrElse(pos, Cell())
-
-  def getValue(pos : CellPos) : Value = values getOrElse(pos, VEmpty)
+  private def dependentsOf(p: CellPos) : List[CellPos] = dependents getOrElse(p, List())
 
   private def calcNewValue(pos: CellPos, c: Cell) = {
     val value = c.eval(values)
@@ -153,6 +172,31 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
     cells.toString(),
     dependents.toString(),
     values.toString()
-    ).toString()
+  ).toString()
+
+}
+
+object Sheet {
+
+  /**
+   * function to propagate updates to dependent cells
+   * @param alreadyUpdated Set of cells that were already updated, to detect cycles
+   */
+  def updateSheet(s: Sheet, updates: List[CellPos], alreadyUpdated: Set[CellPos] = Set()): Sheet = {
+    updates.foldLeft(s)((s, u) => {
+      if (alreadyUpdated contains u)
+        // u was already updated, so this means there's a circular reference
+        s.setToCircular(u)
+      else
+        s.updateCell(u) match {
+          case (newSheet, List()) => newSheet
+          case (newSheet, newUpdates) => updateSheet(newSheet, newUpdates, alreadyUpdated + u)
+        }
+    })
+  }
+
+  def updateSheet(x: (Sheet, List[(Int,Int)])): Sheet = x match {
+    case (s, updates) => updateSheet(s, updates)
+  }
 
 }

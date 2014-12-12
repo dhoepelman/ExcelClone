@@ -20,14 +20,6 @@ object Filer {
   type FileTypeSerialized = (Map[(Int,Int), String], Map[(Int,Int), (String,String,String,String)])
   type FileType = (Map[(Int,Int), String], Map[(Int,Int), Styles])
 
-  /** Make Filer load functionality accessible directly on the model */
-  implicit class ModelExtension(model: Model) {
-    def loadFrom(file: File): Unit = {
-      val data = Filer.load(file)
-      model.clearAndSet(data._1, data._2)
-    }
-  }
-
   /** Make Filer save functionality accessible directly on the sheet */
   implicit class SheetExtension(sheet: Sheet) {
     def saveTo(file: File): Unit = {

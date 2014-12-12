@@ -214,7 +214,7 @@ class ViewManager extends jfxf.Initializable {
     //
 
     // forward selection
-    streamTable.onSelection.subscribe(onSelection.onNext _)
+    streamTable.onSelection.subscribe(onSelection)
     //forward bulk selection
     streamTable.onBulkSelection.subscribe(s => {
       val indexes = s match{
@@ -226,7 +226,7 @@ class ViewManager extends jfxf.Initializable {
       onSelection.onNext(indexes)
     })
     // forward edits
-    streamTable.onCellEdit.subscribe(onCellEdit.onNext _)
+    streamTable.onCellEdit.subscribe(onCellEdit)
     // forward additions
     streamTable.onAdd.subscribe(_ match {
       case (true, count, index) =>

@@ -9,11 +9,12 @@ import scalafx.application.JFXApp.PrimaryStage
 import scalafx.geometry.Insets
 import scalafx.scene.Scene
 import scalaExcel.GUI.view.ViewManager
-import scalaExcel.model.Model
+import scalaExcel.model._
 import scalaExcel.model.Filer._
 import scalafx.scene.control.Button
 import scalafx.scene.layout.BorderPane
 import scalafx.stage.Stage
+import rx.lang.scala.Observable
 
 object RunGUI extends JFXApp {
 
@@ -27,96 +28,67 @@ object RunGUI extends JFXApp {
   val root = loader.load[jfxs.Parent]
 
   /**
-   * The data model
-   */
-  val model = new Model()
-
-  /**
    * The view
    */
   val vm = loader.getController[ViewManager]
 
-  // notify ViewManager of modifications in the model
-  model.sheet.subscribe(vm.dataChanged _)
-
   // Putting events from the GUI into the model
   // This should be the only place where that ever happens
 
-  // when the user somehow changes the cell
-  vm.onCellEdit.subscribe { edit =>
-    model.changeFormula(edit._1, edit._2)
-  }
+  val modelChanges = observableMerge(
+    // Make sure we immediately get the empty model
+    Observable.just(Refresh),
+    // when the user somehow changes the cell
+    vm.onCellEdit.map(edit => SetFormula(edit._1, edit._2)),
+    // when the background color of a cell is selected
+    vm.onBackgroundChange.map(edit => SetBackground(edit._1, edit._2)),
+    // when the front color of a cell is selected
+    vm.onColorChange.map(edit => SetColor(edit._1, edit._2)),
+    // when a column is sorted
+    vm.onColumnSort.map(s => SortColumn(s._1, s._2)),
+    // When a cell is deleted
+    vm.onCellEmpty.map(pos => EmptyCell(pos)),
+    // when a cell is copied
+    vm.onCellCopy.map(exchange => CopyCell(exchange._1, exchange._2)),
+    // when a cell is cut
+    vm.onCellCut.map(exchange => CutCell(exchange._1, exchange._2)),
+    // when a file is loaded
+    vm.onLoad.map({ file =>
+      val data = Filer.load(file)
+      SetSheet(data._1, data._2)
+    }),
+    // when an action is undone
+    vm.onUndo.map({ _ => Undo}),
+    // when an action is redone
+    vm.onRedo.map({ _ => Redo}),
+    // when rows are added
+    vm.onAddRows.map(addition => AddRows(addition._1, addition._2)),
+    // when columns are added
+    vm.onAddColumns.map(addition => AddColumns(addition._1, addition._2)),
+    // when rows are removed
+    vm.onRemoveRows.map(removal => RemoveRows(removal._1, removal._2)),
+    // when columns are removed
+    vm.onRemoveColumns.map(removal => RemoveColumns(removal._1, removal._2)),
+    // when columns are reordered
+    vm.onColumnReorder.map(permutations => ReorderColumns(permutations))
 
-  // when the background color of a cell is selected
-  vm.onBackgroundChange.subscribe { edit =>
-    model.changeBackground(edit._1, edit._2)
-  }
+  )
 
-  // when the front color of a cell is selected
-  vm.onColorChange.subscribe { edit =>
-    model.changeColor(edit._1, edit._2)
-  }
+  // The data model
+  val model = new Model(modelChanges)
 
-  // when a column is sorted
-  vm.onColumnSort.subscribe { s =>
-    model.sortColumn(s._1, s._2)
-  }
+  // notify ViewManager of modifications in the model
+  model.sheet.subscribe(vm.dataChanged _)
 
-  // when a cell is emptied
-  vm.onCellEmpty.subscribe { pos =>
-    model.emptyCell(pos)
-  }
+  // Show a dialog on errors and print the exception stack trace
+  model.errors.subscribe({ e =>
+    println("Exception while altering model.")
+    e.printStackTrace()
 
-  // when a cell is copied
-  vm.onCellCopy.subscribe { exchange =>
-    model.copyCell(exchange._1, exchange._2)
-  }
+    showInDialog("Sorry, something went wrong while we were doing that! Look in the console for details")
+  })
 
-  // when a cell is cut
-  vm.onCellCut.subscribe { exchange =>
-    model.cutCell(exchange._1, exchange._2)
-  }
-
-  // when a file is loaded
-  vm.onLoad.subscribe { file =>
-    model.loadFrom(file)
-  }
-
-  // when an action is undone
-  vm.onUndo.subscribe { _ =>
-    model.undo()
-  }
-
-  // when an action is redone
-  vm.onRedo.subscribe { _ =>
-    model.redo()
-  }
-
-  // when rows are added
-  vm.onAddRows.subscribe { addition =>
-    model.addRows(addition._1, addition._2)
-  }
-
-  // when rows are removed
-  vm.onRemoveRows.subscribe { removal =>
-    model.removeRows(removal._1, removal._2)
-  }
-
-  // when columns are added
-  vm.onAddColumns.subscribe { addition =>
-    model.addColumns(addition._1, addition._2)
-  }
-
-  // when columns are removed
-  vm.onRemoveColumns.subscribe { removal =>
-    model.removeColumns(removal._1, removal._2)
-  }
-
-  // when columns are reordered
-  vm.onColumnReorder.subscribe { map =>
-    model.reorderColumns(map)
-  }
-
+  // Initialize the JavaFX stage
   stage = new PrimaryStage() {
     title = "Scala Excel"
     scene = new Scene(root, 800, 600) {
@@ -146,10 +118,6 @@ object RunGUI extends JFXApp {
     dialogStage.show()
   }
 
-  model.errors.subscribe({ e =>
-    println("Exception while altering model.")
-    e.printStackTrace()
-
-    showInDialog("Sorry, something went wrong while we were doing that! Look in the console for details")
-  })
+  /** Merges multiple observables into 1 stream */
+  private def observableMerge[T](os : Observable[T]*) = Observable.from(os).flatten
 }
