@@ -24,7 +24,7 @@ object Resizer {
       )
       // delete the cells at those positions
       .foldLeft(sheet)({
-        case (crtSheet, pos) => crtSheet.deleteCell(pos)._1
+        case (crtSheet, pos) => crtSheet.deleteCell(pos)
       })
 
     /**

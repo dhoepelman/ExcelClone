@@ -1,11 +1,9 @@
 package scalaExcel.GUI.view
 
 import rx.lang.scala._
-import rx.lang.scala.subjects.PublishSubject
 import scalafx.Includes._
 import scalafx.scene.paint.Color
 import scalaExcel._
-import scalaExcel.GUI.data.DataCell
 import scalafx.scene.input._
 import scalaExcel.rx.operators.WithLatest._
 import scalafx.scene.control._

@@ -1,11 +1,9 @@
 package scalaExcel.model
 
 import rx.lang.scala.Observable
-import scalafx.scene.paint.Color
 import scalaExcel.model.Sorter._
 import scalaExcel.model.Resizer._
 import scalaExcel.model.OperationHelpers._
-import scalaExcel.CellPos
 
 /**
  * Represents the data model of the ScalaExcel application
@@ -30,7 +28,7 @@ class Model(protected val sheetMutations : Observable[ModelMutations]) {
         ur.next(sheet.updateCellsStyle(poss, s => s.setBackground(c)))
       case SetSheet(values, styles) =>
         ur.next(values.foldLeft(new Sheet(Map(), Map(), Map(), styles)) {
-          case (sheet, (pos, value)) => sheet.setCell(pos, value)
+          case (s, (pos, value)) => s.setCell(pos, value)
         })
       case SortColumn(x, asc) =>
         ur.next(sheet.sort(x, asc))

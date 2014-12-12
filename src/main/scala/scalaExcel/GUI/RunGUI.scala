@@ -10,7 +10,6 @@ import scalafx.geometry.Insets
 import scalafx.scene.Scene
 import scalaExcel.GUI.view.ViewManager
 import scalaExcel.model._
-import scalaExcel.model.Filer._
 import scalafx.scene.control.Button
 import scalafx.scene.layout.BorderPane
 import scalafx.stage.Stage
