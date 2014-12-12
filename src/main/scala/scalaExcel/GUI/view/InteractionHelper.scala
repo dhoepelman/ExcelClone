@@ -1,6 +1,6 @@
 package scalaExcel.GUI.view
 
-import rx.lang.scala.Observable
+import rx.lang.scala._
 import rx.lang.scala.subjects.PublishSubject
 import scalafx.Includes._
 import scalafx.scene.paint.Color
@@ -142,40 +142,26 @@ object InteractionHelper {
   sealed trait ClipboardAction extends Serializable
   case object Cut extends ClipboardAction
   case object Copy extends ClipboardAction
-  case object Paste extends ClipboardAction
 
   val copyPasteFormat = new DataFormat("x-excelClone/cutcopy")
 
+  /** Copy-pasting is handled here */
   private def initializeClipboard(controller: ViewManager) {
-    // Copy-pasting is handled here
-    val clipboardActions = Observable[ClipboardAction](o => {
-      controller.menuCut.onAction = handle {
-        o.onNext(Cut)
-      }
-      controller.menuCopy.onAction = handle {
-        o.onNext(Copy)
-      }
-      controller.menuPaste.onAction = handle {
-        o.onNext(Paste)
-      }
-    })
+
+    // Create streams for cut and copy events
+    val onCut = Subject[ClipboardAction]()
+    val onCopy = Subject[ClipboardAction]()
+    controller.menuCut.onAction = handle { onCut.onNext(Cut) }
+    controller.menuCopy.onAction = handle { onCopy.onNext(Copy) }
+
+    // Handle cut and copy
+    // TODO: Give the cell a visual indication that is is going to be cut, like Excel does
+    onCut.merge(onCopy)
       .withLatest(controller.onManyCellsSelected)
       .filter({ case (selection, _) => selection.nonEmpty})
-
-    /** TODO: Remove this subject
-      * For some reason, if multiple subscribes are attached to clipboardActions only the last
-      * of them actually gets any values. I have no idea what causes this
-      */
-    val clipboardActions2 = PublishSubject[(List[((Int, Int), DataCell)], ClipboardAction)]()
-    clipboardActions.subscribe(clipboardActions2)
-
-    // TODO: Give the cell a visual indication that is is going to be cut, like Excel does
-    clipboardActions2
-      .filter({ case (_, action) => action == Cut || action == Copy})
       // TODO: Multiple selection
       .map({ case (selection, action) => (selection.head, action)})
       .subscribe({ a =>
-      println("Boe")
       // Pattern matching won't work. I give up
       val ((selection, cell), action) = a
       val contents = new ClipboardContent()
@@ -184,27 +170,33 @@ object InteractionHelper {
       Clipboard.systemClipboard.setContent(contents)
     })
 
-    clipboardActions2
-      .filter({ case (_, action) => action == Paste})
+    // Handle paste
+    Observable[Unit]({ obs =>
+        controller.menuPaste.onAction = handle {
+          obs.onNext(Unit)
+        }
+      })
+      .withOnlyLatest(controller.onManyCellsSelected)
+      .filter({ case selection => selection.nonEmpty })
       // TODO: Multiple selection
-      .map({ case (selection, action) => (selection.head, action)})
+      .map({ case selection => selection.head})
       .subscribe({ a =>
       // Pattern matching won't work. I give up
-      val (selection, action) = a
+      val (selected, _) = a
       val clipboard = Clipboard.systemClipboard
       if (clipboard.hasContent(copyPasteFormat)) {
         clipboard.getContent(copyPasteFormat) match {
           case (Cut, from) =>
             // Cut-Pasting can only happen once
             clipboard.clear()
-            controller.onCellCut.onNext((from.asInstanceOf[CellPos], selection._1))
+            controller.onCellCut.onNext((from.asInstanceOf[CellPos], selected))
           case (Copy, from) =>
-            controller.onCellCopy.onNext((from.asInstanceOf[CellPos], selection._1))
+            controller.onCellCopy.onNext((from.asInstanceOf[CellPos], selected))
           case other =>
             throw new IllegalArgumentException("Clipboard contained invalid copy-paste data {" + other.toString + "}")
         }
       } else if (clipboard.hasString)
-        controller.onCellEdit.onNext((selection._1, clipboard.getString))
+        controller.onCellEdit.onNext((selected, clipboard.getString))
     })
   }
 

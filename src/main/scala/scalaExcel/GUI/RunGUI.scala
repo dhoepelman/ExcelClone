@@ -108,5 +108,5 @@ object RunGUI extends JFXApp {
   }
 
   /** Merges multiple observables into 1 stream */
-  private def observableMerge[T](os : Observable[T]*) = Observable.from(List(os)).flatten
+  private def observableMerge[T](os : Observable[T]*) = Observable.from(os).flatten
 }
