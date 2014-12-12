@@ -67,10 +67,6 @@ class ViewManager extends jfxf.Initializable {
   private var testButtonDelegate: jfxsc.Button = _
   private var testButton: Button = _
 
-  @jfxf.FXML private var newColumnDelegate: jfxsc.Button = _
-  private var newColumnButton: Button = _
-  @jfxf.FXML private var newRowDelegate: jfxsc.Button = _
-  private var newRowButton: Button = _
   @jfxf.FXML private var horizontalScrollDelegate: jfxsc.ScrollBar = _
   private var horizontalScroll: WatchableScrollBar = _
   @jfxf.FXML private var verticalScrollDelegate: jfxsc.ScrollBar = _
@@ -95,6 +91,11 @@ class ViewManager extends jfxf.Initializable {
   val onLoad = Subject[java.io.File]()
   val onUndo = Subject[Unit]()
   val onRedo = Subject[Unit]()
+  val onAddColumns = Subject[(Int, Int)]()
+  val onAddRows = Subject[(Int, Int)]()
+  val onRemoveRows = Subject[(Int, Int)]()
+  val onRemoveColumns = Subject[(Int, Int)]()
+  val onColumnReorder = Subject[Map[Int, Int]]()
 
   /**
    * Rx stream of changes to the visible table
@@ -104,12 +105,14 @@ class ViewManager extends jfxf.Initializable {
   /**
    * Rx stream of wrappers on the data model sheet
    */
-  val labeledDataTable = tableMutations.scan(new LabeledDataTable(rebuild = true))((dataTable, action) =>
+  val labeledDataTable = tableMutations.scan(new LabeledDataTable(rebuild = true))((dataTable, action) => {
     action match {
       case SlideWindowBy(offsets) => dataTable.slideWindowBy(offsets)
       case SlideWindowTo(bounds) => dataTable.slideWindowTo(bounds)
-      case AddNewColumn(index) => dataTable.addNewColumn(index)
-      case AddNewRow(index) => dataTable.addNewRow(index)
+      case AddColumns(count, index) => dataTable.addColumns(count, index)
+      case AddRows(count, index) => dataTable.addRows(count, index)
+      case RemoveColumns(count, index) => dataTable.removeColumns(count, index)
+      case RemoveRows(count, index) => dataTable.removeRows(count, index)
       case UpdateContents(newSheet) => dataTable.updateContents(newSheet)
       case UpdateColumnOrder(permutations) => dataTable.updateColumnOrder(permutations)
       case ResizeColumn(columnIndex, width) =>
@@ -119,9 +122,10 @@ class ViewManager extends jfxf.Initializable {
           newTable.layOut(availableWidth, tableContainer.height.value)
         else
           newTable
-      case LayOutTable() =>
+      case LayOutTable =>
         dataTable.layOut(tableContainer.width.value, tableContainer.height.value)
-    })
+    }
+  })
 
   /**
    * Global selection stream
@@ -204,10 +208,52 @@ class ViewManager extends jfxf.Initializable {
     streamTable.onColResize.subscribe(resize =>
       tableMutations.onNext(ResizeColumn(resize._1, resize._2)))
 
+
+    //
+    // Forward actions on the streamTable's streams
+    //
+
     // forward selection
     streamTable.onSelection.subscribe(onSelection)
+    //forward bulk selection
+    streamTable.onBulkSelection.subscribe(s => {
+      val indexes = s match{
+        case (true, index) =>
+          List.range(0, labeledTable.gridSize.columnCount).map(c => (c, index))
+        case (false, index) =>
+          List.range(0, labeledTable.gridSize.rowCount).map(r => (index, r))
+      }
+      onSelection.onNext(indexes)
+    })
     // forward edits
     streamTable.onCellEdit.subscribe(onCellEdit)
+    // forward additions
+    streamTable.onAdd.subscribe(_ match {
+      case (true, count, index) =>
+        // first update the table's data window
+        tableMutations.onNext(AddRows(count, index))
+        // then update the model
+        onAddRows.onNext((count, index))
+      case (false, count, index) =>
+        tableMutations.onNext(AddColumns(count, index))
+        onAddColumns.onNext((count, index))
+    })
+    // forward removals
+    streamTable.onRemove.subscribe(_ match {
+      case (true, count, index) =>
+        tableMutations.onNext(RemoveRows(count, index))
+        onRemoveRows.onNext((count, index))
+      case (false, count, index) =>
+        tableMutations.onNext(RemoveColumns(count, index))
+        onRemoveColumns.onNext((count, index))
+    })
+    // forward column reordering
+    streamTable.onColumnReorder.subscribe(map => {
+      // first update the table's inner header registry
+      tableMutations.onNext(UpdateColumnOrder(map))
+      // the update the model
+      onColumnReorder.onNext(map)
+    })
 
     //
     // Re-initialize scroll bars
@@ -271,36 +317,23 @@ class ViewManager extends jfxf.Initializable {
     menuPaste = new MenuItem(menuPasteDelegate)
     menuDelete = new MenuItem(menuDeleteDelegate)
 
-    newColumnButton = new Button(newColumnDelegate)
-    newRowButton = new Button(newRowDelegate)
-
     // initialize interaction streams
     InteractionHelper.initializeInteractionStreams(this)
 
     // subscribe table to data changes
     labeledDataTable.subscribe(buildTableView _)
 
-    // handle adding of rows/columns
-    newColumnButton.onAction = handle {
-      // add new column at the end (position -1)
-      tableMutations.onNext(AddNewColumn(-1))
-    }
-    newRowButton.onAction = handle {
-      // add new row at the end (position -1)
-      tableMutations.onNext(AddNewRow(-1))
-    }
-
     // handle changes on size of table container
     tableContainer.width.onChange {
       (_, _, newWidth) => {
         // re-render the table
-        tableMutations.onNext(LayOutTable())
+        tableMutations.onNext(LayOutTable)
       }
     }
     tableContainer.height.onChange {
       (_, _, newHeight) => {
         // re-render the table
-        tableMutations.onNext(LayOutTable())
+        tableMutations.onNext(LayOutTable)
       }
     }
 

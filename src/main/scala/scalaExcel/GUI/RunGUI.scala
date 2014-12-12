@@ -10,7 +10,6 @@ import scalafx.geometry.Insets
 import scalafx.scene.Scene
 import scalaExcel.GUI.view.ViewManager
 import scalaExcel.model._
-import scalaExcel.model.Filer._
 import scalafx.scene.control.Button
 import scalafx.scene.layout.BorderPane
 import scalafx.stage.Stage
@@ -60,7 +59,18 @@ object RunGUI extends JFXApp {
     // when an action is undone
     vm.onUndo.map({ _ => Undo}),
     // when an action is redone
-    vm.onRedo.map({ _ => Redo})
+    vm.onRedo.map({ _ => Redo}),
+    // when rows are added
+    vm.onAddRows.map(addition => AddRows(addition._1, addition._2)),
+    // when columns are added
+    vm.onAddColumns.map(addition => AddColumns(addition._1, addition._2)),
+    // when rows are removed
+    vm.onRemoveRows.map(removal => RemoveRows(removal._1, removal._2)),
+    // when columns are removed
+    vm.onRemoveColumns.map(removal => RemoveColumns(removal._1, removal._2)),
+    // when columns are reordered
+    vm.onColumnReorder.map(permutations => ReorderColumns(permutations))
+
   )
 
   // The data model

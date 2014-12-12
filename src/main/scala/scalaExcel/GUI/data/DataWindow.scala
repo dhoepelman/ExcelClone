@@ -29,34 +29,32 @@ class DataWindow(val dataSize: Size,
 
   def rowCount = visibleBounds.maxRow - visibleBounds.minRow
 
-  def addNewRow() =
+  def addDataRows(count: Int) =
     new DataWindow(
-      // add one more column to maximum bounds
-      Size(dataSize.columnCount, dataSize.rowCount + 1),
-      // if the column should be in view, slide the visibleBounds over it
-      if (visibleBounds.maxRow == dataSize.rowCount)
-        (Bounds(0, 0, 1, 1) add visibleBounds)
-      else
-        visibleBounds
-    )
+      Size(dataSize.columnCount, dataSize.rowCount + count),
+      visibleBounds)
 
-  def addNewColumn() =
+  def addDataColumns(count: Int) =
     new DataWindow(
-      // add one more column to maximum bounds
-      Size(dataSize.columnCount + 1, dataSize.rowCount),
-      // if the row should be in view, slide the visibleBounds over it
-      if (visibleBounds.maxCol == dataSize.columnCount)
-        (Bounds(1, 1, 0, 0) add visibleBounds)
-      else
-        visibleBounds)
+      Size(dataSize.columnCount + count, dataSize.rowCount),
+      visibleBounds)
+
+  def removeDataRows(count: Int) =
+    new DataWindow(
+      Size(dataSize.columnCount, dataSize.rowCount - count),
+      visibleBounds)
+
+  def removeDataColumns(count: Int) =
+    new DataWindow(
+      Size(dataSize.columnCount- count, dataSize.rowCount),
+      visibleBounds)
 
   def expandTo(size: Size) =
     new DataWindow(
       Size(
         max(size.columnCount, dataSize.columnCount),
         max(size.rowCount, dataSize.rowCount)),
-      visibleBounds
-    )
+      visibleBounds)
 
   def visibleHeaders =
     List.range(visibleBounds.minCol, visibleBounds.maxCol) map numToCol
@@ -65,12 +63,7 @@ class DataWindow(val dataSize: Size,
 
 object DataWindow {
 
-  case class Bounds(
-      val minCol: Int,
-      val maxCol: Int,
-      val minRow: Int,
-      val maxRow: Int) {
-
+  case class Bounds(minCol: Int, maxCol: Int, minRow: Int, maxRow: Int) {
     def add(b2: Bounds) =
       Bounds(minCol + b2.minCol,
              maxCol + b2.maxCol,
@@ -83,7 +76,7 @@ object DataWindow {
 
   }
 
-  case class Size(val columnCount: Int, val rowCount: Int)
+  case class Size(columnCount: Int, rowCount: Int)
 
   val DEFAULT = new DataWindow(
     Size(DefaultProperties.GRID_SIZE._1, DefaultProperties.GRID_SIZE._2),

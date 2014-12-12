@@ -1,15 +1,19 @@
 package scalaExcel.GUI.view
 
 import rx.lang.scala._
-import rx.lang.scala.subjects.PublishSubject
 import scalafx.Includes._
 import scalafx.scene.paint.Color
 import scalaExcel._
-import scalaExcel.GUI.data.DataCell
-import scalafx.scene.input.{DataFormat, ClipboardContent, Clipboard}
+import scalafx.scene.input._
 import scalaExcel.rx.operators.WithLatest._
-import scalafx.scene.control.ScrollBar
+import scalafx.scene.control._
 import javafx.scene.{control => jfxsc}
+import scalafx.scene.layout.{Priority, VBox, HBox, AnchorPane}
+import scalafx.collections.ObservableBuffer
+import scalafx.stage.{Modality, Stage, Window}
+import scalafx.scene.{Node, Scene}
+import scalafx.geometry.{Pos, Insets}
+import scalaExcel.formula._
 
 object InteractionHelper {
 
@@ -210,10 +214,202 @@ object InteractionHelper {
         o.onNext(false)
       }
     })
-      .withLatest(controller.onSingleCellSelected)
-      .map(s => s match {
-      case (((c, r), _), asc) => (c, asc)
+    .withLatest(controller.onSelection)
+    .map({
+      case (list, asc) => (list.head._1, asc)
     })
-      .subscribe(controller.onColumnSort)
+    .subscribe(controller.onColumnSort)
   }
+
+  /**
+   * Shows the context menu that should appear when the user clicks a column
+   * header or a row number
+   * @param forRows       target item type (true for row, false for column)
+   * @param parent        the node which registered the click and contains the
+   *                      textual representation of the index
+   * @param position      the screen position of the click action
+   * @param addHandler    the handler for ADD actions that takes the
+   *                      parameters:
+   *                      (numberOfItemsAdded, offsetOfFirstAddedItem)
+   * @param removeHandler the handler for REMOVE actions that takes the
+   *                      parameters:
+   *                      (numberOfItemsToRemoved, offsetOfFirstRemovedItem)
+   */
+  def showContextMenu(forRows: Boolean,
+                      parent: Node,
+                      position: (Double, Double),
+                      addHandler: (Int, Int) => Unit,
+                      removeHandler: (Int, Int) => Unit) = {
+    val itemType = if(forRows) "row" else "column"
+    new ContextMenu(
+      // the standard add-one action
+      new MenuItem("Add " + itemType + " after") {
+        onAction = handle{
+          addHandler(1, 1)
+        }
+      },
+      // the add-many action
+      new MenuItem("Add " + itemType + "(s)...") {
+        onAction = handle{
+          showAddRemoveDialog(isAdd = true,
+            forRows,
+            parent.scene.value.window.value,
+            addHandler)
+        }
+      },
+      // the standard remove-one action
+      new MenuItem("Remove " + itemType) {
+        onAction = handle {
+          removeHandler(1, 0)
+        }
+      },
+      // the remove-many action
+      new MenuItem("Remove " + itemType + "(s)...") {
+        onAction = handle{
+          showAddRemoveDialog(isAdd = false,
+            forRows,
+            parent.scene.value.window.value,
+            removeHandler)
+        }
+      }
+    ).show(parent, position._1, position._2)
+  }
+
+  /**
+   * Shows the dialog for adding/removing rows/columns
+   * @param isAdd           the action type (true for ADD false for REMOVE)
+   * @param forRows         the item type (true for row, false for column)
+   * @param dialogOwner     the master window element
+   * @param responseHandler the action handler that takes the parameters:
+   *                        (numberOfItems, offsetOfFirstItem)
+   */
+  def showAddRemoveDialog(isAdd: Boolean,
+                          forRows: Boolean,
+                          dialogOwner: Window,
+                          responseHandler: (Int, Int) => Unit) = {
+    val radioToggle = new ToggleGroup()
+    val countInput = new TextField(){
+      text = "10"; prefColumnCount = 5
+    }
+    val itemType = if(forRows) "Row" else "Column"
+    val actionType = if(isAdd) "Add" else "Remove"
+    val noOffset = if(isAdd) "Before" else "From"
+    val withOffset =  if(isAdd) "After" else "Until"
+    new Stage(){
+      title = "Add " + itemType +"(s)"
+      initModality(Modality.APPLICATION_MODAL)
+      initOwner(dialogOwner)
+      scene = new Scene(
+        new VBox(20){
+          padding = Insets.apply(10, 10, 10, 10)
+          spacing = 10
+          content = ObservableBuffer(
+            new Label(itemType + "s", countInput)
+            {
+              contentDisplay = ContentDisplay.Right
+            },
+            new Label(actionType, new VBox(2){
+              content = ObservableBuffer(
+                new RadioButton(noOffset){
+                  toggleGroup = radioToggle
+                  selected = true
+                  userData = "0"
+                },
+                new RadioButton(withOffset) {
+                  toggleGroup = radioToggle
+                  userData = "1"
+                }
+              )
+              spacing = 5
+            })
+            {
+              contentDisplay = ContentDisplay.Right
+            },
+            new AnchorPane(){
+              content = new HBox(2) {
+                content = ObservableBuffer(
+                  new Button(actionType) {
+                    onAction = handle {
+                      // get number of items
+                      val count = countInput.text.value.toInt
+                      val data = radioToggle.selectedToggle.value.userData.asInstanceOf[String]
+                      // get the offset
+                      val offset = data.toInt
+                      responseHandler(count,
+                        // on ADD, the offset is either 0 or 1
+                        if(isAdd) offset
+                        // on REMOVE the offset is either 0 or -(count - 1)
+                        else (1 - count) * offset)
+                      scene.value.getWindow.hide()
+                    }
+                  },
+                  new Button("Cancel") {
+                    onAction = handle {
+                      scene.value.getWindow.hide()
+                    }
+                  }
+                )
+                spacing = 5
+                alignment = Pos.BottomRight
+              }
+              vgrow = Priority.Always
+              AnchorPane.setAnchors(content.get(0), 0, 0, 0, 0)
+            }
+          )
+        },
+        300,
+        200
+      )
+    }.show()
+  }
+
+  /**
+   * Returns a MouseEvent handler that can initiate operations on the set of
+   * all rows/columns
+   * @param forRows   the collection type (true for rows, false for columns)
+   * @param parent    the node which will register the click and contains the
+   *                  textual representation of the collection index
+   * @param onAdd     the handler for ADD actions that takes the parameters:
+   *                  (numberOfItemsToBeAdded, smallestIndexOfAddedItems)
+   * @param onRemove  the handler for REMOVE actions that takes the
+   *                  parameters:
+   *                  (numberOfItemsToBeRemoved, smallestIndexOfRemovedItems)
+   * @param onSelect  the handler for the SELECT action that takes the selected
+   *                  collection index as a parameter
+   * @return          the MouseEvent handler
+   */
+  def bulkOperationsInitiator(forRows: Boolean,
+                             parent: Labeled,
+                             onAdd: (Int, Int) => Unit,
+                             onRemove: (Int, Int) => Unit,
+                             onSelect: (Int) => Unit) =
+    (event: MouseEvent) => if (parent.text.value != null) {
+      // get selected index according to collection type
+      val index =
+        if(forRows) parent.text.value.toInt - 1
+        else colToNum(parent.text.value)
+      if(event.button == MouseButton.SECONDARY){
+        // if right click, show context menu
+        InteractionHelper.showContextMenu(forRows,
+          parent,
+          (event.screenX, event.screenY),
+          (count: Int, offset: Int) => onAdd(count, index + offset),
+          (count: Int, offset: Int) => {
+            val (finalIndex, finalCount) = {
+              // do not allow negative removal indexes
+              val newIndex = index + offset
+              if(newIndex < 0)
+                (0, index + 1)
+              else
+                (newIndex, count)
+            }
+            onRemove(finalCount, finalIndex)
+          }
+        )
+      }
+      else
+        // on left click select collection
+        onSelect(index)
+  }
+
 }

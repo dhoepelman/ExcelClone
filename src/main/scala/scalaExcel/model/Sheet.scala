@@ -93,6 +93,22 @@ class Sheet(val cells: Map[CellPos, Cell] = Map(),
     Sheet.updateSheet(newSheet, toUpdate)
   }
 
+  //TODO implement
+  /**
+   * Invalidate all AST references to the given columns
+   * @param columns list of column indexes
+   * @return        sheet containing modified cells
+   */
+  def removeReferencesToColumns(columns: List[Int]) = this
+
+  //TODO implement
+  /**
+   * Invalidate all AST references to the given rows
+   * @param rows list of row indexes
+   * @return        sheet containing modified cells
+   */
+  def removeReferencesToRows(rows: List[Int]) = this
+
   /** Set the style of a cell */
   def setCellStyle(pos : CellPos, s: Styles) = {
     new Sheet(cells, values, dependents, styles + (pos -> s))

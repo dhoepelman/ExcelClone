@@ -2,6 +2,7 @@ package scalaExcel.model
 
 import scalaExcel.formula._
 import scalaExcel.CellPos
+import scalaExcel.model.OperationHelpers._
 
 object Sorter {
 
@@ -12,10 +13,9 @@ object Sorter {
       val rows = sheet.rows
 
       type CellValue = (CellPos, Option[Value])
-      def ascOrDescCompare(a: CellValue, b: CellValue) = (a, b) match {
-        case ((_, Some(a)), (_, Some(b))) => {
+      def ascOrDescCompare(va: CellValue, vb: CellValue) = (va, vb) match {
+        case ((_, Some(a)), (_, Some(b))) =>
           (a.compare(b) * (if (ascending) 1 else -1)) < 0
-        }
         case ((_, None), (_, _)) => false
         case ((_, _), (_, None)) => true
       }
@@ -33,44 +33,8 @@ object Sorter {
         }
         .toMap
 
-      val cellModifier = DependencyModifier.changeDependencyRows(rowMutations)
-
-      // reposition all the cells
-      val cells =
-        sheet.cells
-        .map {
-          case ((x, y), cell) => {
-            val p2 = (x, rowMutations.get(y).get)
-            (p2, Cell(cellModifier(cell.AST)))
-          }
-        }
-
-      // Move the values to the new positions
-      val values =
-        sheet.values
-        .map {
-          case ((x, y), v) => ((x, rowMutations.get(y).get), v)
-        }
-
-      // update dependents
-      val dependents =
-        sheet.dependents
-        .map {
-          case ((x, y), deps) => (
-            (x, rowMutations.get(y).getOrElse(y)),
-            deps.map(a => (a._1, rowMutations.get(a._2).getOrElse(a._2))))
-        }
-
-      // move styles
-      val styles =
-        sheet.styles
-        .map {
-          case ((x, y), s) => ((x, rowMutations.get(y).getOrElse(y)), s)
-        }
-
-      new Sheet(cells, values, dependents, styles)
+      sheet.applyRowPermutations(rowMutations)
     }
-
   }
 
 }

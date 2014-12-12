@@ -1,7 +1,9 @@
 package scalaExcel.model
 
 import rx.lang.scala.Observable
-import scalaExcel.model.Sorter.SheetSorter
+import scalaExcel.model.Sorter._
+import scalaExcel.model.Resizer._
+import scalaExcel.model.OperationHelpers._
 
 /**
  * Represents the data model of the ScalaExcel application
@@ -26,7 +28,7 @@ class Model(protected val sheetMutations : Observable[ModelMutations]) {
         ur.next(sheet.updateCellsStyle(poss, s => s.setBackground(c)))
       case SetSheet(values, styles) =>
         ur.next(values.foldLeft(new Sheet(Map(), Map(), Map(), styles)) {
-          case (sheet, (pos, value)) => sheet.setCell(pos, value)
+          case (s, (pos, value)) => s.setCell(pos, value)
         })
       case SortColumn(x, asc) =>
         ur.next(sheet.sort(x, asc))
@@ -36,6 +38,12 @@ class Model(protected val sheetMutations : Observable[ModelMutations]) {
         ur.redo()
       case Refresh =>
         ur
+      case AddColumns(count, index) => ur.next(sheet.addColumns(count, index))
+      case AddRows(count, index) => ur.next(sheet.addRows(count, index))
+      case RemoveColumns(count, index) => ur.next(sheet.removeColumns(count, index))
+      case RemoveRows(count, index) => ur.next(sheet.removeRows(count, index))
+      case ReorderColumns(permutations) =>
+        ur.next(sheet.applyColumnPermutations(permutations))
     }
   }
 
