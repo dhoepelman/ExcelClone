@@ -1,5 +1,8 @@
 package scalaExcel.GUI.view
 
+
+import rx.lang.scala.subjects.BehaviorSubject
+
 import scala.language.reflectiveCalls
 import java.net.URL
 import rx.lang.scala._
@@ -20,6 +23,8 @@ import scalaExcel.GUI.data.DataWindow.Bounds
 import scalaExcel.GUI.data.LabeledDataTable.DataRow
 import scalaExcel.GUI.view.InteractionHelper.WatchableScrollBar
 import scalaExcel.model.Sheet
+import scalafx.stage
+import scalafx.stage.Stage
 
 class ViewManager extends jfxf.Initializable {
 
@@ -57,6 +62,9 @@ class ViewManager extends jfxf.Initializable {
 
   @jfxf.FXML private var menuDeleteDelegate: jfxsc.MenuItem = _
   var menuDelete: MenuItem = _
+
+  @jfxf.FXML private var menuGraphDelegate: jfxsc.MenuItem = _
+  var menuGraph: MenuItem = _
 
   @jfxf.FXML private var sortUpDelegate: jfxsc.Button = _
   var sortUp: Button = _
@@ -96,6 +104,8 @@ class ViewManager extends jfxf.Initializable {
   val onRemoveRows = Subject[(Int, Int)]()
   val onRemoveColumns = Subject[(Int, Int)]()
   val onColumnReorder = Subject[Map[Int, Int]]()
+
+  val sheetsForGraph = BehaviorSubject[Sheet]() // TODO create from existing streams
 
   /**
    * Rx stream of changes to the visible table
@@ -287,8 +297,10 @@ class ViewManager extends jfxf.Initializable {
    * To be called when the data model contents have changed
    * @param sheet the new data model sheet
    */
-  def dataChanged(sheet: Sheet) =
+  def dataChanged(sheet: Sheet) = {
     tableMutations.onNext(UpdateContents(sheet))
+    sheetsForGraph.onNext(sheet)
+  }
 
   /**
    * Called on initialization of the FXML controller
@@ -316,6 +328,7 @@ class ViewManager extends jfxf.Initializable {
     menuCopy = new MenuItem(menuCopyDelegate)
     menuPaste = new MenuItem(menuPasteDelegate)
     menuDelete = new MenuItem(menuDeleteDelegate)
+    menuGraph = new MenuItem(menuGraphDelegate)
 
     // initialize interaction streams
     InteractionHelper.initializeInteractionStreams(this)
@@ -343,6 +356,13 @@ class ViewManager extends jfxf.Initializable {
     }
     menuRedo.onAction = handle {
       onRedo.onNext(Unit)
+    }
+
+
+
+    menuGraph.onAction = handle {
+      // TODO expose as Rx stream?
+      new GraphWindow(sheetsForGraph).show()
     }
 
   }

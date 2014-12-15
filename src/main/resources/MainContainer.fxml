@@ -74,6 +74,10 @@
                                 </MenuItem>
                             </items>
                         </Menu>
+                        <Menu mnemonicParsing="false" text="View">
+                            <MenuItem fx:id="menuGraphDelegate" text="Basic graph">
+                            </MenuItem>
+                        </Menu>
                     </menus>
                 </MenuBar>
                 <GridPane alignment="CENTER" gridLinesVisible="true" prefHeight="42" styleClass="button-bar">
