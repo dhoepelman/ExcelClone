@@ -34,7 +34,10 @@ case class VErr(t: ErrType) extends Value {
 }
 
 case object VEmpty extends Value {
-  def compare(v: Value) = 1
+  def compare(v : Value) = v match {
+    case VEmpty => 0
+    case _ => 1
+  }
 }
 
 object Values {
