@@ -34,7 +34,11 @@ class GraphWindow (val sheets: Observable[Sheet],
   }
 
   val series = columns
-    .map(column => new Series[Number, Number])
+    .map(column => {
+      val s = new Series[Number, Number]
+      s.name = "Column " + column
+      s
+    })
   series.foreach(s => lineChart.getData.add(s))
 
   // TODO get series labels from first row?
@@ -43,13 +47,30 @@ class GraphWindow (val sheets: Observable[Sheet],
   sheets.map(sheetToData(_,columns))
     .map(x => x.zip(series))
     .subscribe(_.foreach{case (d, s) =>
-      s.data.getValue.clear
-      d.foreach(s.data.getValue.add(_))
+      applyData(s,d)
     })
-//      s.data.getValue.clear
-//      d.foreach(s.data.getValue.add(_))
 
 
+  /**
+   * Replaces the contents of an existing series with new data.
+   *
+   * @param series The series to be edited
+   * @param data The data to be applied
+   */
+  def applyData(series: Series[Number, Number],
+                data: IndexedSeq[javafx.scene.chart.XYChart.Data[Number,Number]]) = {
+    series.data.getValue.clear
+    data.foreach(series.data.getValue.add(_))
+  }
+
+
+  /**
+   * Creates a list of series out of a sheet's columns
+   *
+   * @param sheet A sheet out of which to construct graphs
+   * @param columns The columns to be used in creating the graphs
+   * @return
+   */
   def sheetToData(sheet: Sheet, columns: List[Int]) = {
     println("Calculating new graph")
     columns.map(column => {
