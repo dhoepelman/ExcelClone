@@ -15,3 +15,4 @@ case class SlideWindowTo(bounds: Bounds) extends TableMutations
 case class UpdateColumnOrder(permutations: Map[Int, Int]) extends TableMutations
 case class UpdateContents(sheet: Sheet) extends TableMutations
 case class ResizeColumn(columnIndex: Int, width: Double)extends TableMutations
+case object Reset extends TableMutations
