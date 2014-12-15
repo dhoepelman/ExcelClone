@@ -14,8 +14,10 @@ import scalafx.collections.ObservableBuffer
 /**
  * Created by Chris on 15-12-2014.
  */
-class GraphWindow (val sheets: Observable[Sheet])
+class GraphWindow (val sheets: Observable[Sheet],
+                   val columns: List[Int])
   extends Stage {
+
   title = "Superchart of forever"
 
   // Defining the axes
@@ -27,33 +29,40 @@ class GraphWindow (val sheets: Observable[Sheet])
   val lineChart = LineChart(xAxis, yAxis)
   lineChart.title = "Superchart of forever"
 
-  val series = new Series[Number, Number]
-  series.name = "Yellow"
-
-  sheets.map(sheetToData)
-    .subscribe(d => {
-      series.data.getValue.clear
-      d.foreach(series.data.getValue.add(_))
-    })
-
-  lineChart.getData.add(series)
-
   scene = new Scene(800, 600) {
     root = lineChart
   }
 
+  val series = columns
+    .map(column => new Series[Number, Number])
+  series.foreach(s => lineChart.getData.add(s))
+
+  // TODO get series labels from first row?
+
+  // Project every change from the model to the charts
+  sheets.map(sheetToData)
+    .map(x => x.zip(series))
+    .subscribe(_.foreach{case (d, s) =>
+      s.data.getValue.clear
+      d.foreach(s.data.getValue.add(_))
+    })
+//      s.data.getValue.clear
+//      d.foreach(s.data.getValue.add(_))
+
 
   def sheetToData(sheet: Sheet) = {
     println("Calculating new graph")
-    (0 to sheet.rows)
-      .map(r => sheet.getValue((0,r)))
-      .map(_ match {
+    columns.map(column => {
+      (0 to sheet.rows)
+        .map(r => sheet.getValue((column, r)))
+        .map(_ match {
         case VDouble(v) => v
         case _ => 0.0
       })
-      .zipWithIndex
-      .map(t => (t._2, t._1))
-      .map {case (x, y) => XYChart.Data[Number, Number](x, y)}
+        .zipWithIndex
+        .map(t => (t._2, t._1)) // Swap to put index on the x axis
+        .map { case (x, y) => XYChart.Data[Number, Number](x, y)}
+    }).toList
   }
 
 }

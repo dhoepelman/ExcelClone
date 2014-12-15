@@ -380,7 +380,7 @@ class ViewManager extends jfxf.Initializable {
 
     menuGraph.onAction = handle {
       // TODO expose as Rx stream?
-      new GraphWindow(sheetsForGraph).show()
+      new GraphWindow(sheetsForGraph, List(0,1)).show()
     }
 
   }
