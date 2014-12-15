@@ -208,7 +208,9 @@ class StreamingTable(labeledTable: LabeledDataTable) {
     table.onKeyPressed = (e: KeyEvent) => o.onNext(e)
   })
 
-  onKeyPressed.map(_.code)
+  onKeyPressed
+    .filter(!_.isShortcutDown)
+    .map(_.code)
     .filter(code => !code.isWhitespaceKey &&
       !code.isNavigationKey &&
       !code.isModifierKey &&
