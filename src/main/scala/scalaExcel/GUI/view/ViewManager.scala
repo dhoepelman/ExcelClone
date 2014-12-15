@@ -40,6 +40,9 @@ class ViewManager extends jfxf.Initializable {
   @jfxf.FXML private var formulaEditorDelegate: jfxsc.TextField = _
   var formulaEditor: TextField = _
 
+  @jfxf.FXML private var formulaCheatSheetDelegate: jfxsc.MenuButton = _
+  var formulaCheatSheet: MenuButton = _
+
   @jfxf.FXML private var backgroundColorPickerDelegate: jfxsc.ColorPicker = _
   var backgroundColorPicker: jfxsc.ColorPicker = _
 
@@ -361,6 +364,7 @@ class ViewManager extends jfxf.Initializable {
     sortUp = new Button(sortUpDelegate)
     sortDown = new Button(sortDownDelegate)
     formulaEditor = new TextField(formulaEditorDelegate)
+    formulaCheatSheet = new MenuButton(formulaCheatSheetDelegate)
     menuLoad = new MenuItem(menuLoadDelegate)
     menuSave = new MenuItem(menuSaveDelegate)
     menuRedo = new MenuItem(menuRedoDelegate)
@@ -376,6 +380,41 @@ class ViewManager extends jfxf.Initializable {
     alignRightButton = new Button(alignRightDelegate)
     addColsButton = new Button(addColsDelegate)
     addRowsButton = new Button(addRowsDelegate)
+
+    val fcsItems = formulaCheatSheet.items
+
+    List(
+      "SUM(range)",
+      "AVERAGE(range)",
+      "POWER(num, exp)",
+      "ROUND(num)",
+      "ROW(ref)",
+      "ROWS(range)",
+      "COLUMN(ref)",
+      "COLUMNS(range)",
+      "COUNT(range)",
+      "MATCH(value, range)",
+      "VLOOKUP(value, range, offset)",
+      "ADDRESS(row, col, abs)",
+      "IF(test, true, false)",
+      "OR(value1, value2)",
+      "AND(value1, value2)",
+      "NOT(value)",
+      "UPPER(value)",
+      "LOWER(value)",
+      "LEN(value)",
+      "TRIM(value)",
+      "ISBLANK(value)",
+      "ISERROR(value)",
+      "ISNA(value)",
+      "ISLOGICAL(value)",
+      "ISNUMBER(value)",
+      "ISTEXT(value)"
+    ).foreach(fn => {
+      val item = new MenuItem(fn)
+      item.onAction = handle(editorText = editorText + fn)
+      fcsItems.add(item)
+    })
 
     // initialize interaction streams
     InteractionHelper.initializeInteractionStreams(this)
