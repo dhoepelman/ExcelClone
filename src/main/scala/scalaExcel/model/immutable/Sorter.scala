@@ -1,8 +1,8 @@
-package scalaExcel.model
+package scalaExcel.model.immutable
 
 import scalaExcel.formula._
 import scalaExcel.CellPos
-import scalaExcel.model.OperationHelpers._
+import scalaExcel.model.immutable.OperationHelpers._
 
 object Sorter {
 

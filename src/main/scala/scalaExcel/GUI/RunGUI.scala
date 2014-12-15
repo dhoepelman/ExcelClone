@@ -10,6 +10,7 @@ import scalafx.geometry.Insets
 import scalafx.scene.Scene
 import scalaExcel.GUI.view.ViewManager
 import scalaExcel.model._
+import scalaExcel.model.immutable.Filer
 import scalafx.scene.control.Button
 import scalafx.scene.layout.BorderPane
 import scalafx.stage.Stage
@@ -74,7 +75,7 @@ object RunGUI extends JFXApp {
   )
 
   // The data model
-  val model = new Model(modelChanges)
+  val model : Model = new immutable.Model(modelChanges)
 
   // notify ViewManager of modifications in the model
   model.sheet.subscribe(vm.dataChanged _)

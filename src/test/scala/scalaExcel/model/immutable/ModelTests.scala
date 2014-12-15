@@ -1,11 +1,12 @@
-package scalaExcel.model
-
-import scalaExcel.formula.{VErr, CircularRef, VDouble, Value}
-import scalaExcel.model.OperationHelpers._
-import rx.lang.scala.Observable
+package scalaExcel.model.immutable
 
 import org.junit.Assert._
 import org.junit._
+import rx.lang.scala.Observable
+
+import scalaExcel.formula.VDouble
+import scalaExcel.model._
+import scalaExcel.model.immutable.OperationHelpers._
 
 class ModelTests {
 

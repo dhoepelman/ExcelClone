@@ -1,11 +1,11 @@
-package scalaExcel.model
+package scalaExcel.model.immutable
 
 import org.junit.Assert._
 import org.junit._
 
 import scalaExcel.formula._
 import scalaExcel.formula.Values.{toVal => tv}
-import scalaExcel.model.Sorter.SheetSorter
+import scalaExcel.model.immutable.Sorter.SheetSorter
 
 class SorterTests {
 

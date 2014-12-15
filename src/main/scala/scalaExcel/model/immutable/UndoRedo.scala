@@ -1,4 +1,4 @@
-package scalaExcel.model
+package scalaExcel.model.immutable
 
 /**
  * Provides undo and redo functionality

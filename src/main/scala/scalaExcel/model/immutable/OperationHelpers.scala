@@ -1,9 +1,10 @@
-package scalaExcel.model
+package scalaExcel.model.immutable
 
 import rx.lang.scala.Observable
 
 import scalaExcel.CellPos
 import scalaExcel.formula.DependencyModifier.changeDependency
+import scalaExcel.model.Cell
 
 object OperationHelpers {
 

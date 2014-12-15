@@ -7,7 +7,6 @@ import scalafx.beans.property.ObjectProperty
 import scalaExcel.model.Sheet
 import scalaExcel.util.DefaultProperties
 import scalaExcel.GUI.data.DataWindow.{Size, Bounds}
-import scalaExcel.model.Filer._
 
 /**
  * Wrapper on the data model sheet
@@ -20,7 +19,7 @@ import scalaExcel.model.Filer._
  */
 class LabeledDataTable( _dataWindow: DataWindow = DataWindow.DEFAULT,
                         _allHeaderWidths: List[Double] = LabeledDataTable.DEFAULT_WIDTHS,
-                        _sheet: Sheet = new Sheet(),
+                        _sheet: Sheet = new scalaExcel.model.immutable.Sheet(),
                         val rebuild: Boolean,
                         _width: Double = 0,
                         _height: Double = 0) {
