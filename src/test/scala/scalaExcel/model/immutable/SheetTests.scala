@@ -1,4 +1,4 @@
-package scalaExcel.model
+package scalaExcel.model.immutable
 
 import org.junit.Assert._
 import org.junit._

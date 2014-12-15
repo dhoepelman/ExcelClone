@@ -1,6 +1,6 @@
-package scalaExcel.model
+package scalaExcel.model.immutable
 
-import scalaExcel.model.OperationHelpers._
+import scalaExcel.model.immutable.OperationHelpers._
 
 object Resizer {
 
