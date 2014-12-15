@@ -159,11 +159,9 @@ object InteractionHelper {
     controller.menuCopy.onAction = handle { onCopy.onNext(Copy) }
 
     // Handle cut and copy
-    // TODO: Give the cell a visual indication that is is going to be cut, like Excel does
     onCut.merge(onCopy)
       .withLatest(controller.onManyCellsSelected)
       .filter({ case (selection, _) => selection.nonEmpty})
-      // TODO: Multiple selection
       .map({ case (selection, action) => (selection.head, action)})
       .subscribe({ a =>
       // Pattern matching won't work. I give up
@@ -182,7 +180,6 @@ object InteractionHelper {
       })
       .withOnlyLatest(controller.onManyCellsSelected)
       .filter({ case selection => selection.nonEmpty })
-      // TODO: Multiple selection
       .map({ case selection => selection.head})
       .subscribe({ a =>
       // Pattern matching won't work. I give up

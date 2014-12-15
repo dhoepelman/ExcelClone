@@ -258,7 +258,7 @@ class LabeledDataTable( _dataWindow: DataWindow = DataWindow.DEFAULT,
    * @return                number of rows that fit
    */
   def fitRows(availableHeight: Double) = {
-    // TODO if rows can vary height, this must be rewritten
+    // If rows can vary height, this must be rewritten
     val rowHeight = DefaultProperties.FIXED_ROW_HEIGHT
     // number of rows that fit in the table container (-1 because of header row)
     Math.max(0, (availableHeight / rowHeight).toInt - 1)

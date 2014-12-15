@@ -71,8 +71,6 @@ object DependencyModifier {
     }
   }
 
-  // TODO: Is this useful for other classes too?
-  // TODO: Is there a canonical way/name for this operation? I feel like I'm re-inventing the wheel
   /** Apply a function to the whole AST */
   private def applyToAST(f: Expr => Expr)(e: Expr) = e match {
     case BinOp(op, e1, e2) => BinOp(op, f(e1), f(e2))
