@@ -249,7 +249,8 @@ class LabeledDataTable( _dataWindow: DataWindow = DataWindow.DEFAULT,
     // all header widths (including numbered column)
     val widths = _allHeaderWidths.::(calculateColWidth(maxRow).toDouble)
     // number of columns that fit in the table container
-    widths.scan(0.0)((acc, w) => acc + w).drop(2).takeWhile(_ < availableWidth).length
+    val safeWidth =  Math.max(0, availableWidth - DefaultProperties.CONTAINER_BUFFER)
+    widths.scan(0.0)((acc, w) => acc + w).drop(2).takeWhile(_ < safeWidth).length
   }
 
   /**
@@ -258,10 +259,11 @@ class LabeledDataTable( _dataWindow: DataWindow = DataWindow.DEFAULT,
    * @return                number of rows that fit
    */
   def fitRows(availableHeight: Double) = {
-    // TODO if rows can vary height, this must be rewritten
+    // If rows can vary height, this must be rewritten
     val rowHeight = DefaultProperties.FIXED_ROW_HEIGHT
     // number of rows that fit in the table container (-1 because of header row)
-    Math.max(0, (availableHeight / rowHeight).toInt - 1)
+    val safeHeight =  Math.max(0, availableHeight - DefaultProperties.CONTAINER_BUFFER)
+    Math.max(0, (safeHeight / rowHeight).toInt - 1)
   }
 
   /**

@@ -8,6 +8,7 @@ import scalafx.scene.input._
 import scalaExcel.rx.operators.WithLatest._
 import scalafx.scene.control._
 import javafx.scene.{control => jfxsc}
+import javafx.{stage => jfxs}
 import scalafx.scene.layout.{Priority, VBox, HBox, AnchorPane}
 import scalafx.collections.ObservableBuffer
 import scalafx.stage.{Modality, Stage, Window}
@@ -159,11 +160,9 @@ object InteractionHelper {
     controller.menuCopy.onAction = handle { onCopy.onNext(Copy) }
 
     // Handle cut and copy
-    // TODO: Give the cell a visual indication that is is going to be cut, like Excel does
     onCut.merge(onCopy)
       .withLatest(controller.onManyCellsSelected)
       .filter({ case (selection, _) => selection.nonEmpty})
-      // TODO: Multiple selection
       .map({ case (selection, action) => (selection.head, action)})
       .subscribe({ a =>
       // Pattern matching won't work. I give up
@@ -182,7 +181,6 @@ object InteractionHelper {
       })
       .withOnlyLatest(controller.onManyCellsSelected)
       .filter({ case selection => selection.nonEmpty })
-      // TODO: Multiple selection
       .map({ case selection => selection.head})
       .subscribe({ a =>
       // Pattern matching won't work. I give up
@@ -340,12 +338,12 @@ object InteractionHelper {
                         if(isAdd) offset
                         // on REMOVE the offset is either 0 or -(count - 1)
                         else (1 - count) * offset)
-                      scene.value.getWindow.hide()
+                      scene.value.getWindow.asInstanceOf[jfxs.Stage].close()
                     }
                   },
                   new Button("Cancel") {
                     onAction = handle {
-                      scene.value.getWindow.hide()
+                      scene.value.getWindow.asInstanceOf[jfxs.Stage].close()
                     }
                   }
                 )

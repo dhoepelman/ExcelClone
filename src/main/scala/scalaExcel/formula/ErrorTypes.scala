@@ -1,7 +1,6 @@
 
 package scalaExcel.formula
 
-// TODO: An enumeration would probably be a better fit for this
 /**
  * @param expr What users see when this error is encountered
  */

@@ -36,7 +36,9 @@ object DependencyModifierParameterizedTests {
       ("=$B1+C$1", (2,0), (3,2), "=$B1+D$3", "=$B3+D$1"),
       ("=-D10", (9,4), (1,1), "=-D10", "=-#REF!"),
       ("=-D10", (3,9), (1,4), "=-B5", "=-B5"),
-      ("=-D10", (2,8), (1,4), "=-D10", "=-C6")
+      ("=-D10", (2,8), (1,4), "=-D10", "=-C6"),
+      ("=Sheet!A1", (0,0), (1,2), "=Sheet!B3", "=Sheet!B3"),
+      ("=Sheet1!D10", (9,4), (1,1), "=Sheet1!D10", "=#REF!")
       ).foreach({case (a,b,c,d,e) => data.add(Array(a,b,c,d,e))})
     data
   }

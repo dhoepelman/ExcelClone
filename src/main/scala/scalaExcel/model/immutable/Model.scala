@@ -46,6 +46,7 @@ class Model(protected val sheetMutations : Observable[ModelMutations]) extends s
       case RemoveRows(count, index) => ur.next(sheet.removeRows(count, index))
       case ReorderColumns(permutations) =>
         ur.next(sheet.applyColumnPermutations(permutations))
+      case ClearHistory => new UndoRedo(sheet)
     }
   }
 

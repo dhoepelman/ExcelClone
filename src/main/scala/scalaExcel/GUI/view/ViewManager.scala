@@ -7,7 +7,7 @@ import scala.language.reflectiveCalls
 import java.net.URL
 import rx.lang.scala._
 
-import javafx.{event => jfxe, fxml => jfxf}
+import javafx.{stage => jfxs, fxml => jfxf}
 import javafx.scene.{control => jfxsc, layout => jfxsl}
 import javafx.stage.FileChooser.ExtensionFilter
 
@@ -23,8 +23,6 @@ import scalaExcel.GUI.data.DataWindow.Bounds
 import scalaExcel.GUI.data.LabeledDataTable.DataRow
 import scalaExcel.GUI.view.InteractionHelper.WatchableScrollBar
 import scalaExcel.model.Sheet
-import scalafx.stage
-import scalafx.stage.Stage
 
 class ViewManager extends jfxf.Initializable {
 
@@ -47,6 +45,12 @@ class ViewManager extends jfxf.Initializable {
 
   @jfxf.FXML private var menuSaveDelegate: jfxsc.MenuItem = _
   var menuSave: MenuItem = _
+
+  @jfxf.FXML private var menuNewDelegate: jfxsc.MenuItem = _
+  var menuNew: MenuItem = _
+
+  @jfxf.FXML private var menuCloseDelegate: jfxsc.MenuItem = _
+  var menuClose: MenuItem = _
 
   @jfxf.FXML private var menuUndoDelegate: jfxsc.MenuItem = _
   var menuUndo : MenuItem = _
@@ -104,6 +108,7 @@ class ViewManager extends jfxf.Initializable {
   val onRemoveRows = Subject[(Int, Int)]()
   val onRemoveColumns = Subject[(Int, Int)]()
   val onColumnReorder = Subject[Map[Int, Int]]()
+  val onNewSheet = Subject[Unit]()
 
   val sheetsForGraph = BehaviorSubject[Sheet]() // TODO create from existing streams
 
@@ -134,6 +139,8 @@ class ViewManager extends jfxf.Initializable {
           newTable
       case LayOutTable =>
         dataTable.layOut(tableContainer.width.value, tableContainer.height.value)
+      case Reset => new LabeledDataTable(rebuild = true)
+        .layOut(tableContainer.width.value, tableContainer.height.value)
     }
   })
 
@@ -328,6 +335,8 @@ class ViewManager extends jfxf.Initializable {
     menuCopy = new MenuItem(menuCopyDelegate)
     menuPaste = new MenuItem(menuPasteDelegate)
     menuDelete = new MenuItem(menuDeleteDelegate)
+    menuNew = new MenuItem(menuNewDelegate)
+    menuClose = new MenuItem(menuCloseDelegate)
     menuGraph = new MenuItem(menuGraphDelegate)
 
     // initialize interaction streams
@@ -356,6 +365,15 @@ class ViewManager extends jfxf.Initializable {
     }
     menuRedo.onAction = handle {
       onRedo.onNext(Unit)
+    }
+
+    menuNew.onAction = handle {
+      onNewSheet.onNext(Unit)
+      tableMutations.onNext(Reset)
+    }
+
+    menuClose.onAction = handle {
+      tableContainer.scene.value.getWindow.asInstanceOf[jfxs.Stage].close()
     }
 
 

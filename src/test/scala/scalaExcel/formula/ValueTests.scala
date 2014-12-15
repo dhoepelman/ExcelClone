@@ -24,6 +24,14 @@ class ValueTests {
     // errors should come after other values
     assertEquals(-1, tv("a").compare(VErr(InvalidValue)))
     assertEquals(1, VErr(InvalidValue).compare(tv("a")))
+    // Empty cells should come after everything else
+    assertEquals(0, VEmpty.compare(VEmpty))
+    assertEquals(1, VEmpty.compare(tv(1)))
+    assertEquals(1, VEmpty.compare(tv(true)))
+    assertEquals(1, VEmpty.compare(tv("ab")))
+    assertEquals(-1, tv(1).compare(VEmpty))
+    assertEquals(-1, tv(true).compare(VEmpty))
+    assertEquals(-1, tv("ab").compare(VEmpty))
   }
 
 

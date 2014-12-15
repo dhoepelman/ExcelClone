@@ -144,7 +144,6 @@ object Parser extends RegexParsers {
     case a ~ c => ColRef(colToNum(c), a.isDefined)
   }
 
-  // TODO: Remove the ":" from the transformation by using <~ or ~>
   def CellRange_   : Parser[Range]   = CellRef_ ~ ":" ~ CellRef_ ^^ {
     case start ~ _ ~ end => Range(start, end)
   }
