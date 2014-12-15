@@ -40,7 +40,7 @@ class GraphWindow (val sheets: Observable[Sheet],
   // TODO get series labels from first row?
 
   // Project every change from the model to the charts
-  sheets.map(sheetToData)
+  sheets.map(sheetToData(_,columns))
     .map(x => x.zip(series))
     .subscribe(_.foreach{case (d, s) =>
       s.data.getValue.clear
@@ -50,15 +50,15 @@ class GraphWindow (val sheets: Observable[Sheet],
 //      d.foreach(s.data.getValue.add(_))
 
 
-  def sheetToData(sheet: Sheet) = {
+  def sheetToData(sheet: Sheet, columns: List[Int]) = {
     println("Calculating new graph")
     columns.map(column => {
       (0 to sheet.rows)
         .map(r => sheet.getValue((column, r)))
         .map(_ match {
-        case VDouble(v) => v
-        case _ => 0.0
-      })
+          case VDouble(v) => v
+          case _ => 0.0
+        })
         .zipWithIndex
         .map(t => (t._2, t._1)) // Swap to put index on the x axis
         .map { case (x, y) => XYChart.Data[Number, Number](x, y)}
