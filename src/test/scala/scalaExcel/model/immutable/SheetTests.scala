@@ -37,6 +37,17 @@ class SheetTests {
     assertEquals((0, 0), sheet.size)
   }
 
+  @Test def deleteCellsCleanupDependents() = {
+    val sheet = new Sheet()
+      .setCell((0, 0), "1")
+      .setCell((0, 1), "=A1")
+      .setCell((0, 2), "=A1")
+      .deleteCell((0, 1))
+    assertEquals((1, 3), sheet.size)
+    assertEquals(Map((0, 0) -> List((0, 2))), sheet.dependents)
+
+  }
+
   @Test def copyCell1() = {
     val sheet = new Sheet()
       .setCell((0, 0), "1")
