@@ -80,4 +80,30 @@ class SheetTests {
     assertEquals(Color.Black, sheet.getCellStyle((0, 0)).background)
   }
 
+  @Test def circularDependency1() = {
+    val sheet = new Sheet()
+      .setCell((0, 0), "=C1")
+      .setCell((1, 0), "=5")
+      .setCell((2, 0), "=A1+B1")
+    assertEquals(VErr(CircularRef), sheet.getValue((2, 0)))
+  }
+
+  @Test def circularDependency2() = {
+    val sheet = new Sheet()
+      .setCell((0, 0), "=B1")
+      .setCell((1, 0), "=C1+1")
+      .setCell((2, 0), "=A1+1")
+    assertEquals(VErr(CircularRef), sheet.getValue((2, 0)))
+  }
+
+  @Test def circularDependency3() = {
+    val sheet = new Sheet()
+      .setCell((0, 0), "=5")
+      .setCell((1, 0), "=A1+5")
+      .setCell((2, 0), "=B1")
+      .setCell((0, 0), "=B1")
+    assertEquals(VErr(CircularRef), sheet.getValue((0, 0)))
+  }
+
+
 }

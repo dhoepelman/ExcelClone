@@ -51,43 +51,4 @@ class ModelTests {
     assertEquals(VDouble(10), cell.toBlocking.last)
   }
 
-  @Test def circularDependency1() = {
-    val model = new Model(Observable.from(List(
-      SetFormula((0, 0), "=C1"),
-      SetFormula((1, 0), "=5"),
-      SetFormula((2, 0), "=A1+B1")
-    )))
-
-    val cell = model.sheet
-      .filterCellValueAt((2, 0))
-
-    assertEquals(VErr(CircularRef), cell.toBlocking.last)
-  }
-
-  @Test def circularDependency2() = {
-    val model = new Model(Observable.from(List(
-      SetFormula((0, 0), "=B1"),
-      SetFormula((1, 0), "=C1+1"),
-      SetFormula((2, 0), "=A1+1")
-    )))
-
-    val cell = model.sheet
-      .filterCellValueAt((2, 0))
-
-    assertEquals(VErr(CircularRef), cell.toBlocking.last)
-  }
-
-  @Test def circularDependency3() = {
-    val model = new Model(Observable.from(List(
-      SetFormula((0, 0), "=5"),
-      SetFormula((1, 0), "=A1+5"),
-      SetFormula((2, 0), "=B1"),
-      SetFormula((0, 0), "=B1")
-    )))
-
-    val cell = model.sheet
-      .filterCellValueAt((0, 0))
-
-    assertEquals(VErr(CircularRef), cell.toBlocking.last)
-  }
 }
