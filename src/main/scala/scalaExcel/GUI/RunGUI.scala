@@ -70,8 +70,9 @@ object RunGUI extends JFXApp {
     // when columns are removed
     vm.onRemoveColumns.map(removal => RemoveColumns(removal._1, removal._2)),
     // when columns are reordered
-    vm.onColumnReorder.map(permutations => ReorderColumns(permutations))
-
+    vm.onColumnReorder.map(permutations => ReorderColumns(permutations)),
+    // when a new sheet is opened
+    vm.onNewSheet.flatMap({ _ => Observable.from(List(SetSheet(Map(), Map()), ClearHistory))})
   )
 
   // The data model

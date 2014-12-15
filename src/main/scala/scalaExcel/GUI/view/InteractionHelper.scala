@@ -8,6 +8,7 @@ import scalafx.scene.input._
 import scalaExcel.rx.operators.WithLatest._
 import scalafx.scene.control._
 import javafx.scene.{control => jfxsc}
+import javafx.{stage => jfxs}
 import scalafx.scene.layout.{Priority, VBox, HBox, AnchorPane}
 import scalafx.collections.ObservableBuffer
 import scalafx.stage.{Modality, Stage, Window}
@@ -337,12 +338,12 @@ object InteractionHelper {
                         if(isAdd) offset
                         // on REMOVE the offset is either 0 or -(count - 1)
                         else (1 - count) * offset)
-                      scene.value.getWindow.hide()
+                      scene.value.getWindow.asInstanceOf[jfxs.Stage].close()
                     }
                   },
                   new Button("Cancel") {
                     onAction = handle {
-                      scene.value.getWindow.hide()
+                      scene.value.getWindow.asInstanceOf[jfxs.Stage].close()
                     }
                   }
                 )

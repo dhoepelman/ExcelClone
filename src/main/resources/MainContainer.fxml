@@ -22,6 +22,11 @@
                     <menus>
                         <Menu mnemonicParsing="false" text="File">
                             <items>
+                        <MenuItem fx:id="menuNewDelegate" text="New">
+                           <accelerator>
+                              <KeyCodeCombination alt="UP" code="O" control="ANY" meta="ANY" shift="UP" shortcut="DOWN" />
+                           </accelerator>
+                        </MenuItem>
                                 <MenuItem fx:id="menuLoadDelegate" text="Open">
                                     <accelerator>
                                         <KeyCodeCombination alt="UP" code="O" control="ANY" meta="ANY" shift="UP" shortcut="DOWN" />
@@ -32,7 +37,7 @@
                                         <KeyCodeCombination alt="UP" code="S" control="ANY" meta="ANY" shift="UP" shortcut="DOWN" />
                                     </accelerator>
                                 </MenuItem>
-                                <MenuItem mnemonicParsing="false" text="Close">
+                                <MenuItem fx:id="menuCloseDelegate" mnemonicParsing="false" text="Close">
                                     <accelerator>
                                         <KeyCodeCombination alt="UP" code="Q" control="ANY" meta="ANY" shift="UP" shortcut="DOWN" />
                                     </accelerator>
@@ -187,29 +192,21 @@
                        </GridPane>
                    </children>
                 </AnchorPane>
-                <TabPane prefHeight="200.0" prefWidth="200.0" side="BOTTOM" VBox.vgrow="ALWAYS">
-                    <tabs>
-                        <Tab text="Untitled Tab 1">
-                            <content>
-                                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                           <children>
-                              <BorderPane prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                 <bottom>
-                                    <ScrollBar fx:id="horizontalScrollDelegate" BorderPane.alignment="CENTER" />
-                                 </bottom>
-                                 <right>
-                                    <ScrollBar fx:id="verticalScrollDelegate" orientation="VERTICAL" BorderPane.alignment="CENTER" />
-                                 </right>
-                                 <center>
-                                    <AnchorPane fx:id="tableContainerDelegate" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
-                                 </center>
-                              </BorderPane>
-                           </children>
-                                </AnchorPane>
-                            </content>
-                        </Tab>
-                    </tabs>
-                </TabPane>
+                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
+               <children>
+                  <BorderPane prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                     <bottom>
+                        <ScrollBar fx:id="horizontalScrollDelegate" BorderPane.alignment="CENTER" />
+                     </bottom>
+                     <right>
+                        <ScrollBar fx:id="verticalScrollDelegate" orientation="VERTICAL" BorderPane.alignment="CENTER" />
+                     </right>
+                     <center>
+                        <AnchorPane fx:id="tableContainerDelegate" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
+                     </center>
+                  </BorderPane>
+               </children>
+                    </AnchorPane>
             </children>
         </VBox>
     </children>

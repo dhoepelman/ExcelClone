@@ -23,3 +23,4 @@ case class AddColumns(count: Int, index: Int) extends ModelMutations
 case class RemoveRows(count: Int, index: Int) extends ModelMutations
 case class RemoveColumns(count: Int, index: Int) extends ModelMutations
 case class ReorderColumns(permutations: Map[Int, Int]) extends ModelMutations
+case object ClearHistory extends ModelMutations
