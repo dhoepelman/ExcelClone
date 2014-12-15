@@ -102,4 +102,11 @@ object DependencyModifier {
     case _ => e
   }) _
 
+  /**
+   * Change dependencies to #REF!
+   */
+  def invalidateDependencies(cols : Set[Int], rows : Set[Int]) : (Expr => Expr) = applyToAST(e => e match {
+    case Cell(ColRef(c, _), RowRef(r, _)) => if(cols.contains(c) || rows.contains(r)) Const(VErr(InvalidRef)) else e
+    case _ => e
+  }) _
 }

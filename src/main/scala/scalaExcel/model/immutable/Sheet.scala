@@ -96,7 +96,7 @@ class Sheet(private[immutable] val cells: Map[CellPos, Cell] = Map(),
    * @param columns list of column indexes
    * @return        sheet containing modified cells
    */
-  def removeReferencesToColumns(columns: List[Int]) = this
+  def removeReferencesToColumns(columns: Seq[Int]) = removeReferencesTo(columns.toSet, Set())
 
   //TODO implement
   /**
@@ -104,7 +104,22 @@ class Sheet(private[immutable] val cells: Map[CellPos, Cell] = Map(),
    * @param rows list of row indexes
    * @return        sheet containing modified cells
    */
-  def removeReferencesToRows(rows: List[Int]) = this
+  def removeReferencesToRows(rows: List[Int]) = removeReferencesTo(Set(), rows.toSet)
+
+  private def removeReferencesTo(cols: Set[Int], rows: Set[Int]) = {
+    val affected = cells
+      .filter({ case ((c, r), _) => cols(c) || rows(r)})
+      .map({ case (_, cell) => cell.refs})
+      .flatten
+      .toList
+
+    val modifier = DependencyModifier.invalidateDependencies(cols, rows)
+    affected
+      .foldLeft(this)({ (s, pos) =>
+        s.setCell(pos, Cell(modifier(s.getCell(pos).AST)))
+      })
+      .updateValues(affected)
+  }
 
   /** Set the style of a cell */
   def setCellStyle(pos : CellPos, s: Styles) = {
