@@ -9,10 +9,10 @@ import scalaExcel.CellPos
  * @param values final values of all positions in the sheet
  * @param dependents a map lists of cells that depend on that cell
  */
-class Sheet(val cells: Map[CellPos, Cell] = Map(),
-            val values: Map[CellPos, Value] = Map(),
-            val dependents: Map[CellPos, List[CellPos]] = Map(),
-            val styles: Map[CellPos, Styles] = Map()) {
+class Sheet(private[model] val cells: Map[CellPos, Cell] = Map(),
+            private[model] val values: Map[CellPos, Value] = Map(),
+            private[model] val dependents: Map[CellPos, List[CellPos]] = Map(),
+            private[model] val styles: Map[CellPos, Styles] = Map()) {
 
   /** Get the number of rows in the sheet */
   lazy val rows = if (cells.isEmpty) 0 else cells.keys.maxBy(_._2)._2 + 1
