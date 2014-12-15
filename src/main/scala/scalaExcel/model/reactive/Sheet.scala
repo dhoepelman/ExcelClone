@@ -5,7 +5,7 @@ import java.io.File
 
 import scalaExcel.CellPos
 import scalaExcel.model._
-import scalaExcel.formula.Value
+import scalaExcel.formula.{VEmpty, Value}
 import rx.lang.scala.subjects.BehaviorSubject
 import scala.collection.mutable.Map
 
@@ -19,6 +19,15 @@ class Sheet(private val cells : Map[CellPos,BehaviorSubject[CellValue]]) extends
 
   /** Get a tuple of columns and rows in the sheet */
   override def size: (Int, Int) = (rows, cols)
+
+  def getCellSubject(pos : CellPos) = {
+    if(!cells.contains(pos)) {
+
+    }
+  }
+
+  val emptyCell = CellValue(Cell(), VEmpty, Styles.DEFAULT)
+  def createCell(pos : CellPos) = cells.put(pos, new BehaviorSubject[CellValue](emptyCell))
 
   /** Value of a Cell */
   override def getValue(pos: (Int, Int)): Value = ???
