@@ -299,18 +299,26 @@ class ViewManager extends jfxf.Initializable {
     horizontalScroll = new WatchableScrollBar(horizontalScrollDelegate,
       maxs._1,
       values._1,
-      (newValue: Int) =>
-      // slide table window horizontally by the difference
-        tableMutations.onNext(SlideWindowBy(Bounds(newValue - values._1, newValue - values._1, 0, 0))))
+      (newValue: Int) => {
+        val diff = newValue - values._1
+        val maxDiff = Math.signum(diff).toInt * Math.min(Math.abs(diff), labeledTable.windowSize.columnCount)
+        // slide table window horizontally by the difference
+        tableMutations.onNext(SlideWindowBy(Bounds(maxDiff, maxDiff, 0, 0)))
+        }
+    )
 
     if (verticalScroll != null)
       verticalScroll.unWatch()
     verticalScroll = new WatchableScrollBar(verticalScrollDelegate,
       maxs._2,
       values._2,
-      (newValue: Int) =>
-      // slide table window vertically by the difference
-        tableMutations.onNext(SlideWindowBy(Bounds(0, 0, newValue - values._2, newValue - values._2))))
+      (newValue: Int) => {
+          val diff = newValue - values._2
+          val maxDiff = Math.signum(diff).toInt * Math.min(Math.abs(diff), labeledTable.windowSize.rowCount)
+          // slide table window vertically by the difference
+          tableMutations.onNext(SlideWindowBy(Bounds(0, 0, maxDiff, maxDiff)))
+        }
+    )
 
     addRowsButton.onAction = handle {
      streamTable.onAdd.onNext((true, 10, labeledTable.gridSize.rowCount))
