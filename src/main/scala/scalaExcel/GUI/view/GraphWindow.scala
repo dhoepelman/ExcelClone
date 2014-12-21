@@ -7,7 +7,7 @@ import scalaExcel.model.Sheet
 import scalafx.scene.chart.XYChart.Series
 import scalafx.stage.Stage
 import scalafx.scene.Scene
-import scalafx.scene.chart.{LineChart, NumberAxis, XYChart}
+import scalafx.scene.chart.{LineChart, NumberAxis}
 
 /**
  * Created by Chris on 15-12-2014.
@@ -78,8 +78,11 @@ class GraphWindow (val sheets: Observable[Sheet],
           case (VDouble(_), _) => true
           case _ => false
         })
+        .map {
+          case (VDouble(v), i) => (v, i)
+        }
         .map(t => (t._2, t._1)) // Swap to put index on the x axis
-        .map { case (x, y) => XYChart.Data[Number, Number](x, y)}
+        .map { case (x, y) => new javafx.scene.chart.XYChart.Data[Number, Number](x, y)}
     }).toList
   }
 
