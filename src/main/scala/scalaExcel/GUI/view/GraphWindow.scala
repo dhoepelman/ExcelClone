@@ -2,14 +2,12 @@ package scalaExcel.GUI.view
 
 import rx.lang.scala._
 
-import scalaExcel.formula.VDouble
+import scalaExcel.formula._
 import scalaExcel.model.Sheet
-import scalafx.application.JFXApp
 import scalafx.scene.chart.XYChart.Series
 import scalafx.stage.Stage
 import scalafx.scene.Scene
 import scalafx.scene.chart.{LineChart, NumberAxis, XYChart}
-import scalafx.collections.ObservableBuffer
 
 /**
  * Created by Chris on 15-12-2014.
@@ -22,7 +20,6 @@ class GraphWindow (val sheets: Observable[Sheet],
 
   // Defining the axes
   val xAxis = new NumberAxis
-  xAxis.label = "Number of Month"
   val yAxis = new NumberAxis
 
   // Creating the chart
@@ -76,11 +73,11 @@ class GraphWindow (val sheets: Observable[Sheet],
     columns.map(column => {
       (0 to sheet.rows)
         .map(r => sheet.getValue((column, r)))
-        .map(_ match {
-          case VDouble(v) => v
-          case _ => 0.0
-        })
         .zipWithIndex
+        .filter(_ match { // Completely ignore non-numbers
+          case (VDouble(_), _) => true
+          case _ => false
+        })
         .map(t => (t._2, t._1)) // Swap to put index on the x axis
         .map { case (x, y) => XYChart.Data[Number, Number](x, y)}
     }).toList
