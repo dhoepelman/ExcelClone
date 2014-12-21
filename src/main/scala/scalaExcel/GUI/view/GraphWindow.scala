@@ -16,6 +16,8 @@ class GraphWindow (val sheets: Observable[Sheet],
                    val columns: List[Int])
   extends Stage {
 
+  type DataNumNum = javafx.scene.chart.XYChart.Data[Number, Number]
+
   title = "Superchart of forever"
 
   // Defining the axes
@@ -55,7 +57,7 @@ class GraphWindow (val sheets: Observable[Sheet],
    * @param data The data to be applied
    */
   def applyData(series: Series[Number, Number],
-                data: IndexedSeq[javafx.scene.chart.XYChart.Data[Number,Number]]) = {
+                data: IndexedSeq[DataNumNum]) = {
     series.data.getValue.clear
     data.foreach(series.data.getValue.add(_))
   }
@@ -68,7 +70,7 @@ class GraphWindow (val sheets: Observable[Sheet],
    * @param columns The columns to be used in creating the graphs
    * @return
    */
-  def sheetToData(sheet: Sheet, columns: List[Int]) = {
+  def sheetToData(sheet: Sheet, columns: List[Int]) : List[IndexedSeq[DataNumNum]] = {
     println("Calculating new graph")
     columns.map(column => {
       (0 to sheet.rows)
