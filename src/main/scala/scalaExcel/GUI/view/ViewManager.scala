@@ -16,10 +16,19 @@ import scalafx.scene.paint.Color
 
 import scalaExcel.CellPos
 import scalaExcel.GUI.data._
-import scalaExcel.GUI.data.DataWindow.Bounds
 import scalaExcel.GUI.data.LabeledDataTable.DataRow
 import scalaExcel.GUI.view.InteractionHelper.WatchableScrollBar
-import scalaExcel.model.Sheet
+import scalaExcel.model._
+import scalaExcel.GUI.data.SlideWindowTo
+import scalaExcel.GUI.data.DataWindow.Bounds
+import scalaExcel.GUI.data.ResizeColumn
+import scalaExcel.GUI.data.AddRows
+import scalaExcel.GUI.data.RemoveRows
+import scalaExcel.GUI.data.UpdateColumnOrder
+import scalaExcel.GUI.data.AddColumns
+import scalaExcel.GUI.data.UpdateContents
+import scalaExcel.GUI.data.SlideWindowBy
+import scalaExcel.GUI.data.RemoveColumns
 
 class ViewManager extends jfxf.Initializable {
 
@@ -78,6 +87,13 @@ class ViewManager extends jfxf.Initializable {
   @jfxf.FXML private var verticalScrollDelegate: jfxsc.ScrollBar = _
   private var verticalScroll: WatchableScrollBar = _
 
+  @jfxf.FXML private var alignLeftDelegate: jfxsc.Button = _
+  var alignLeftButton: Button = _
+  @jfxf.FXML private var alignCenterDelegate: jfxsc.Button = _
+  var alignCenterButton: Button = _
+  @jfxf.FXML private var alignRightDelegate: jfxsc.Button = _
+  var alignRightButton: Button = _
+
   val fileChooser = new javafx.stage.FileChooser
   fileChooser.getExtensionFilters.addAll(
     new ExtensionFilter("ScalaExcel homebrew", "*.scalaexcel"),
@@ -103,6 +119,7 @@ class ViewManager extends jfxf.Initializable {
   val onRemoveColumns = Subject[(Int, Int)]()
   val onColumnReorder = Subject[Map[Int, Int]]()
   val onNewSheet = Subject[Unit]()
+  val onAlign = Subject[(Traversable[CellPos], Alignment)]()
 
   /**
    * Rx stream of changes to the visible table
@@ -327,6 +344,9 @@ class ViewManager extends jfxf.Initializable {
     menuDelete = new MenuItem(menuDeleteDelegate)
     menuNew = new MenuItem(menuNewDelegate)
     menuClose = new MenuItem(menuCloseDelegate)
+    alignLeftButton = new Button(alignLeftDelegate)
+    alignCenterButton = new Button(alignCenterDelegate)
+    alignRightButton = new Button(alignRightDelegate)
 
     // initialize interaction streams
     InteractionHelper.initializeInteractionStreams(this)
@@ -378,5 +398,29 @@ class ViewManager extends jfxf.Initializable {
   def fontColor = fontColorPicker.value.value
 
   def fontColor_=(color: Color): Unit = fontColorPicker.value = color
+
+  def alignment =
+    if (alignRightButton.isDisabled) RightAlign
+    else if (alignCenterButton.isDisabled) CenterAlign
+    else LeftAlign
+
+  def alignment_=(alignment: Alignment): Unit = alignment match {
+    case LeftAlign =>
+      alignLeftButton.disable = true
+      alignCenterButton.disable = false
+      alignRightButton.disable = false
+    case RightAlign =>
+      alignLeftButton.disable = false
+      alignCenterButton.disable = false
+      alignRightButton.disable = true
+    case CenterAlign =>
+      alignLeftButton.disable = false
+      alignCenterButton.disable = true
+      alignRightButton.disable = false
+    case _ =>
+      alignLeftButton.disable = false
+      alignCenterButton.disable = false
+      alignRightButton.disable = false
+  }
 
 }

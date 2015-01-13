@@ -15,6 +15,7 @@ import scalafx.stage.{Modality, Stage, Window}
 import scalafx.scene.{Node, Scene}
 import scalafx.geometry.{Pos, Insets}
 import scalaExcel.formula._
+import scalaExcel.model.{RightAlign, CenterAlign, Alignment, LeftAlign}
 
 object InteractionHelper {
 
@@ -58,6 +59,8 @@ object InteractionHelper {
     initializeClipboard(controller)
 
     initializeSorting(controller)
+
+    initializeAlignment(controller)
   }
 
   private def initializeFormulaEditor(controller: ViewManager) {
@@ -142,6 +145,35 @@ object InteractionHelper {
       })
       .withOnlyLatest(controller.onSelection)
       .subscribe(controller.onCellEmpty)
+  }
+
+  private def initializeAlignment(controller: ViewManager) {
+    // Selecting a single cell updates the alignment buttons' states
+    controller.onSingleCellSelected
+      .distinctUntilChanged
+      .map(single => single._2.styles)
+      .subscribe(s => {
+      controller.alignment = s.align
+    })
+
+    // Pressing of the alignment buttons is interpreted and pushed to the model
+    Observable[Alignment](o => {
+      controller.alignLeftButton.onAction = handle {
+        controller.alignment = LeftAlign
+        o.onNext(LeftAlign)
+      }
+      controller.alignCenterButton.onAction = handle {
+        controller.alignment = CenterAlign
+        o.onNext(CenterAlign)
+      }
+      controller.alignRightButton.onAction = handle {
+        controller.alignment = RightAlign
+        o.onNext(RightAlign)
+      }
+    })
+      .withLatest(controller.onSelection)
+      .subscribe(controller.onAlign)
+
   }
 
   sealed trait ClipboardAction extends Serializable

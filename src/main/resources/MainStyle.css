@@ -43,12 +43,12 @@
 }
 
 .button-bar .button-box{
-    -fx-background: -fx-accent;
     -fx-background-color: -fx-focus-color;
 }
 
 .button-bar .button-box  > Label {
     -fx-font-weight: bold;
+    -fx-text-fill: white;
 }
 
 .button-bar .button-box Label {
