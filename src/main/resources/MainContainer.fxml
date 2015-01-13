@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.image.*?>
 <?import javafx.scene.input.*?>
 <?import java.lang.*?>
 <?import javafx.geometry.*?>
@@ -84,9 +85,53 @@
                 <GridPane alignment="CENTER" gridLinesVisible="true" prefHeight="42" styleClass="button-bar">
                     <children>
                         <AnchorPane>
-                            <children>
-                                <Button fx:id="testButtonDelegate" alignment="CENTER" layoutX="7.0" mnemonicParsing="false" text="ButtonT" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                            </children>
+                     <children>
+                        <VBox alignment="CENTER" prefHeight="42.0" prefWidth="130.0" styleClass="button-box" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                           <children>
+                              <Label alignment="CENTER" contentDisplay="CENTER" text="Alignment" textAlignment="CENTER" />
+                              <HBox alignment="CENTER">
+                                 <children>
+                                    <AnchorPane prefHeight="200.0" prefWidth="200.0">
+                                       <children>
+                                          <Button fx:id="alignLeftDelegate" alignment="CENTER" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" text="Left" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                             <graphic>
+                                                <ImageView fitHeight="13.0" pickOnBounds="true">
+                                                   <image>
+                                                      <Image url="@align_left.png" />
+                                                   </image>
+                                                </ImageView>
+                                             </graphic></Button>
+                                       </children>
+                                    </AnchorPane>
+                                    <AnchorPane prefHeight="200.0" prefWidth="200.0">
+                                       <children>
+                                          <Button fx:id="alignCenterDelegate" alignment="CENTER" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" text="Center" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                             <graphic>
+                                                <ImageView fitHeight="13.0" pickOnBounds="true">
+                                                   <image>
+                                                      <Image url="@align_center.png" />
+                                                   </image>
+                                                </ImageView>
+                                             </graphic></Button>
+                                       </children>
+                                    </AnchorPane>
+                                    <AnchorPane layoutX="75.0" layoutY="10.0" prefHeight="200.0" prefWidth="200.0">
+                                       <children>
+                                          <Button fx:id="alignRightDelegate" alignment="CENTER" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" text="Right" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                             <graphic>
+                                                <ImageView fitHeight="13.0" pickOnBounds="true">
+                                                   <image>
+                                                      <Image url="@align_right.png" />
+                                                   </image>
+                                                </ImageView>
+                                             </graphic></Button>
+                                       </children>
+                                    </AnchorPane>
+                                 </children>
+                              </HBox>
+                           </children>
+                        </VBox>
+                     </children>
                         </AnchorPane>
                         <AnchorPane GridPane.columnIndex="1" GridPane.hgrow="ALWAYS">
                             <children>
@@ -125,12 +170,26 @@
                                  <children>
                                     <AnchorPane prefHeight="200.0" prefWidth="200.0">
                                        <children>
-                                          <Button fx:id="sortUpDelegate" alignment="CENTER" mnemonicParsing="false" text="Asc" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                          <Button fx:id="sortUpDelegate" alignment="CENTER" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" text="Asc" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                             <graphic>
+                                                <ImageView fitHeight="13.0" pickOnBounds="true" preserveRatio="true">
+                                                   <image>
+                                                      <Image url="@sort_asc.png" />
+                                                   </image>
+                                                </ImageView>
+                                             </graphic></Button>
                                        </children>
                                     </AnchorPane>
                                     <AnchorPane prefHeight="200.0" prefWidth="200.0">
                                        <children>
-                                          <Button fx:id="sortDownDelegate" alignment="CENTER" mnemonicParsing="false" text="Desc" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                          <Button fx:id="sortDownDelegate" alignment="CENTER" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" text="Desc" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                             <graphic>
+                                                <ImageView fitHeight="13.0" pickOnBounds="true" preserveRatio="true">
+                                                   <image>
+                                                      <Image url="@sort_desc.png" />
+                                                   </image>
+                                                </ImageView>
+                                             </graphic></Button>
                                        </children>
                                     </AnchorPane>
                                  </children>
@@ -140,35 +199,64 @@
                             </children>
                         </AnchorPane>
                         <AnchorPane GridPane.columnIndex="4">
-                            <children>
-                                <Button alignment="CENTER" mnemonicParsing="false" text="Button" wrapText="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" GridPane.halignment="CENTER" />
-                            </children>
+                     <children>
+                        <VBox alignment="CENTER" styleClass="button-box" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                           <children>
+                              <Label alignment="CENTER" contentDisplay="CENTER" text="Formatting" />
+                              <AnchorPane>
+                                 <children>
+                                    <ChoiceBox fx:id="formatChoiceDelegate" prefWidth="150.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                 </children>
+                              </AnchorPane>
+                           </children>
+                        </VBox>
+                     </children>
                         </AnchorPane>
                         <AnchorPane GridPane.columnIndex="5">
                             <children>
-                                <Button alignment="CENTER" mnemonicParsing="false" text="Button" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" GridPane.halignment="CENTER" />
+                        <VBox alignment="CENTER" prefHeight="42.0" prefWidth="130.0" styleClass="button-box" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                           <children>
+                              <Label alignment="CENTER" contentDisplay="CENTER" text="Table" textAlignment="CENTER" />
+                              <HBox alignment="CENTER">
+                                 <children>
+                                    <AnchorPane prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS">
+                                       <children>
+                                          <Button fx:id="addColsDelegate" alignment="CENTER" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" text="+Columns" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                             <graphic>
+                                                <ImageView fitHeight="13.0" pickOnBounds="true" preserveRatio="true">
+                                                   <image>
+                                                      <Image url="@add_colums.png" />
+                                                   </image>
+                                                </ImageView>
+                                             </graphic></Button>
+                                       </children>
+                                    </AnchorPane>
+                                    <AnchorPane prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS">
+                                       <children>
+                                          <Button fx:id="addRowsDelegate" alignment="CENTER" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" text="+Rows" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                             <graphic>
+                                                <ImageView fitHeight="13.0" pickOnBounds="true" preserveRatio="true">
+                                                   <image>
+                                                      <Image url="@add_rows.png" />
+                                                   </image>
+                                                </ImageView>
+                                             </graphic></Button>
+                                       </children>
+                                    </AnchorPane>
+                                 </children>
+                              </HBox>
+                           </children>
+                        </VBox>
                             </children>
                         </AnchorPane>
-                        <AnchorPane GridPane.columnIndex="6">
-                            <children>
-                                <Button alignment="CENTER" mnemonicParsing="false" text="Button" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" GridPane.halignment="CENTER" />
-                            </children>
-                        </AnchorPane>
-                  <AnchorPane layoutX="10.0" layoutY="10.0" GridPane.columnIndex="7">
-                     <children>
-                        <Button alignment="CENTER" mnemonicParsing="false" text="Button" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" GridPane.halignment="CENTER" />
-                     </children>
-                  </AnchorPane>
                     </children>
                     <columnConstraints>
-                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="130.0" />
-                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="94.0" minWidth="10.0" prefWidth="68.0" />
-                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="18.0" prefWidth="100.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="16.0" prefWidth="100.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="16.0" prefWidth="100.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="16.0" prefWidth="130.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="94.0" minWidth="10.0" percentWidth="16.0" prefWidth="68.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="18.0" prefWidth="100.0" />
                     </columnConstraints>
                     <rowConstraints>
                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />

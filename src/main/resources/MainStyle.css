@@ -43,7 +43,8 @@
 }
 
 .button-bar .button-box{
-    -fx-background-color: #99cccc;
+    -fx-background: -fx-accent;
+    -fx-background-color: -fx-focus-color;
 }
 
 .button-bar .button-box  > Label {
