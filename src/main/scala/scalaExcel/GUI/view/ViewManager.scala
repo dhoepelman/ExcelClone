@@ -301,6 +301,7 @@ class ViewManager extends jfxf.Initializable {
       values._1,
       (newValue: Int) => {
         val diff = newValue - values._1
+        // do not allow a single scroll action to exceed window width
         val maxDiff = Math.signum(diff).toInt * Math.min(Math.abs(diff), labeledTable.windowSize.columnCount)
         // slide table window horizontally by the difference
         tableMutations.onNext(SlideWindowBy(Bounds(maxDiff, maxDiff, 0, 0)))
@@ -314,6 +315,7 @@ class ViewManager extends jfxf.Initializable {
       values._2,
       (newValue: Int) => {
           val diff = newValue - values._2
+          // do not allow a single scroll action to exceed window height
           val maxDiff = Math.signum(diff).toInt * Math.min(Math.abs(diff), labeledTable.windowSize.rowCount)
           // slide table window vertically by the difference
           tableMutations.onNext(SlideWindowBy(Bounds(0, 0, maxDiff, maxDiff)))
