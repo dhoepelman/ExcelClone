@@ -216,7 +216,7 @@
                             <children>
                         <VBox alignment="CENTER" prefHeight="42.0" prefWidth="130.0" styleClass="button-box" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <children>
-                              <Label alignment="CENTER" contentDisplay="CENTER" text="Table" textAlignment="CENTER" />
+                              <Label alignment="CENTER" contentDisplay="CENTER" text="Add More..." textAlignment="CENTER" />
                               <HBox alignment="CENTER">
                                  <children>
                                     <AnchorPane prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS">

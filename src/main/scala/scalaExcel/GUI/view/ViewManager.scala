@@ -94,6 +94,11 @@ class ViewManager extends jfxf.Initializable {
   @jfxf.FXML private var alignRightDelegate: jfxsc.Button = _
   var alignRightButton: Button = _
 
+  @jfxf.FXML private var addColsDelegate: jfxsc.Button = _
+  var addColsButton: Button = _
+  @jfxf.FXML private var addRowsDelegate: jfxsc.Button = _
+  var addRowsButton: Button = _
+
   val fileChooser = new javafx.stage.FileChooser
   fileChooser.getExtensionFilters.addAll(
     new ExtensionFilter("ScalaExcel homebrew", "*.scalaexcel"),
@@ -307,6 +312,14 @@ class ViewManager extends jfxf.Initializable {
       // slide table window vertically by the difference
         tableMutations.onNext(SlideWindowBy(Bounds(0, 0, newValue - values._2, newValue - values._2))))
 
+    addRowsButton.onAction = handle {
+     streamTable.onAdd.onNext((true, 10, labeledTable.gridSize.rowCount))
+    }
+
+    addColsButton.onAction = handle {
+      streamTable.onAdd.onNext((false, 5, labeledTable.gridSize.columnCount))
+    }
+
   }
 
   /**
@@ -347,6 +360,8 @@ class ViewManager extends jfxf.Initializable {
     alignLeftButton = new Button(alignLeftDelegate)
     alignCenterButton = new Button(alignCenterDelegate)
     alignRightButton = new Button(alignRightDelegate)
+    addColsButton = new Button(addColsDelegate)
+    addRowsButton = new Button(addRowsDelegate)
 
     // initialize interaction streams
     InteractionHelper.initializeInteractionStreams(this)
