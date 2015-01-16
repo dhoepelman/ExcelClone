@@ -134,17 +134,6 @@ object Filer {
   def unescape(s: String): String =
     s.replace("\"\"", "\"")
 
-  /** A very basic formatter */
-  def dummyFormat(value: Value): String = {
-    //TODO remove function when formatter is available
-    value match {
-      case VDouble(v) => v.toString
-      case VString(v) => v.toString
-      case VBool(v) => v.toString
-      case _ => ""
-    }
-  }
-
   /** Save sheet as CSV file */
   def saveCSV(file: File, sheet: Sheet) = {
     printToFile(file)(_ print sheetToCSV(sheet))
@@ -153,9 +142,9 @@ object Filer {
   /** Convert sheet to CSV string */
   def sheetToCSV(sheet: Sheet): String = {
     (0 to sheet.rows).map(row => {
-      (0 to sheet.cols).map(column => sheet.getValue((column, row))).map(v =>
-         escape(dummyFormat(v)) //TODO hook to proper formatter
-      ).foldLeft("")((fold, v) => fold + "\"" + v + "\"" + ",")
+      (0 to sheet.cols).map(column => (sheet.getCellStyle((column, row)), sheet.getValue((column, row))))
+        .map({case (styles, value) => escape(styles.format(value))})
+        .foldLeft("")((fold, v) => fold + "\"" + v + "\"" + ",")
     }).foldLeft("")((fold, row) => fold + row + "\n")
   }
 
