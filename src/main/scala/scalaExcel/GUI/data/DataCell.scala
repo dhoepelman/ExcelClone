@@ -50,19 +50,7 @@ private class DataCellImpl(val expression: String,
     }
   }
 
-  override def toString = value match {
-    case VEmpty => ""
-    case VDouble(d) =>
-      val formatter =
-        if (styles.format != null && styles.format != "") styles.format
-        else if (d % 1 == 0) "%1.0f"
-        else "%1.2f"
-      formatter format d
-    case VString(s) => s
-    case VBool(b) => boolToString(b)
-    case VErr(e) => e.expr
-    case _ => value.toString
-  }
+  override def toString = styles.format(value)
 
   def verboseString: String = {
     "Cell{expr=" + expression + ", fmt=" + toString + ", sty=" + styleString + ", eval=" + value + "}"

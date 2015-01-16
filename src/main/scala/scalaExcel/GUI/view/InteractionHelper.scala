@@ -15,7 +15,7 @@ import scalafx.stage.{Modality, Stage, Window}
 import scalafx.scene.{Node, Scene}
 import scalafx.geometry.{Pos, Insets}
 import scalaExcel.formula._
-import scalaExcel.model.{RightAlign, CenterAlign, Alignment, LeftAlign}
+import scalaExcel.model._
 
 object InteractionHelper {
 
@@ -61,6 +61,8 @@ object InteractionHelper {
     initializeSorting(controller)
 
     initializeAlignment(controller)
+
+    initializeFormatting(controller)
   }
 
   private def initializeFormulaEditor(controller: ViewManager) {
@@ -101,7 +103,7 @@ object InteractionHelper {
     //Changes on the color picker are pushed to the model
     Observable[Color](o => {
       controller.fontColorPicker.onAction = handle {
-        o.onNext(controller.fontColorPicker.value.value)
+        o.onNext(controller.fontColor)
       }
     })
       .withLatest(controller.onSelection)
@@ -173,6 +175,31 @@ object InteractionHelper {
     })
       .withLatest(controller.onSelection)
       .subscribe(controller.onAlign)
+
+  }
+
+  private def initializeFormatting(controller: ViewManager) {
+    // Selecting a single cell updates the alignment buttons' states
+    controller.onSingleCellSelected
+      .distinctUntilChanged
+      .map(single => single._2.styles)
+      .subscribe(s => {
+        controller.formattingEnabled = false
+        controller.formatting = s.format
+        controller.formattingEnabled = true
+    })
+
+    // Pressing of the alignment buttons is interpreted and pushed to the model
+    Observable[ValueFormat](o => {
+      controller.formatChoice.value.onChange {
+        (_, _, newValue) => {
+          if (controller.formattingEnabled)
+            o.onNext(newValue)
+        }
+      }
+    })
+      .withLatest(controller.onSelection)
+      .subscribe(controller.onFormat)
 
   }
 

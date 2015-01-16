@@ -14,6 +14,7 @@ case class CutCell(from : CellPos, to : CellPos) extends ModelMutations
 case class SetColor(pos : Traversable[CellPos], c: Color) extends ModelMutations
 case class SetBackground(pos : Traversable[CellPos], c: Color) extends ModelMutations
 case class SetAlign(pos : Traversable[CellPos], align: Alignment) extends ModelMutations
+case class SetFormat(pos : Traversable[CellPos], format: ValueFormat) extends ModelMutations
 case class SortColumn(x: Int, asc: Boolean) extends ModelMutations
 case object Redo extends ModelMutations
 case object Undo extends ModelMutations

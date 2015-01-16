@@ -72,6 +72,20 @@ object Filer {
   /** Manually deserialize Color */
   def deserializeColour(colour: String): Color = Color.web(colour)
 
+  /** Manually serialize Format case class */
+  def serializeFormat(format: ValueFormat): String = {
+    format match {
+      case _   => ""
+    }
+  }
+
+  /** Manually deserialize Format case class */
+  def deserializeFormat(format: String): ValueFormat = {
+    format match {
+      case _   => DefaultValueFormat
+    }
+  }
+
   /** Save sheet to custom file type that preserves all the features */
   def saveHomebrew(file: File, sheet: Sheet): Unit = {
     // Pickling Sheet itself causes compiler to hang
@@ -84,7 +98,7 @@ object Filer {
           serializeAlignment(s.align),
           serializeColour(s.background),
           serializeColour(s.color),
-          s.format)
+          serializeFormat(s.format))
         )
       )
       printToFile(file)(_.print(structure.pickle.value))
@@ -104,7 +118,7 @@ object Filer {
       case (align, background, colour, format) => new Styles(
         deserializeColour(background),
         deserializeColour(colour),
-        format,
+        deserializeFormat(format),
         deserializeAlignment(align)
       )
     })
