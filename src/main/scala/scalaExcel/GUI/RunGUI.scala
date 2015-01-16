@@ -1,5 +1,7 @@
 package scalaExcel.GUI
 
+import java.util.Locale
+
 import scalafx.Includes._
 import scalafx.application.JFXApp
 import javafx.{fxml => jfxf}
@@ -17,6 +19,11 @@ import scalafx.stage.Stage
 import rx.lang.scala.Observable
 
 object RunGUI extends JFXApp {
+
+  println(Locale.getAvailableLocales.filter(_.getDisplayLanguage != "")
+    .filter(_.getDisplayCountry != "")
+    .sortBy(_.getDisplayCountry)
+    .map(locale => locale.getDisplayLanguage + "(" + locale.getCountry + ")").toList)
 
   val resource = getClass.getResource("/MainContainer.fxml")
 
@@ -76,7 +83,9 @@ object RunGUI extends JFXApp {
     // when the alignment of a cell is selected
     vm.onAlign.map(align => SetAlign(align._1, align._2)),
     // when the value format of a cell is selected
-    vm.onFormat.map(format => SetFormat(format._1, format._2))
+    vm.onFormat.map(format => SetFormat(format._1, format._2)),
+    // when the table needs refreshing
+    vm.onRefresh.map(_ => Refresh)
   )
 
   // The data model

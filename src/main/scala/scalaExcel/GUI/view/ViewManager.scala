@@ -1,5 +1,7 @@
 package scalaExcel.GUI.view
 
+import java.util.Locale
+
 import scala.language.reflectiveCalls
 import java.net.URL
 import rx.lang.scala._
@@ -103,6 +105,9 @@ class ViewManager extends jfxf.Initializable {
   @jfxf.FXML private var formatChoiceDelegate: jfxsc.ChoiceBox[ValueFormat] = _
   var formatChoice: ChoiceBox[ValueFormat] = _
 
+  @jfxf.FXML private var localeMenuDelegate: jfxsc.Menu = _
+  private var localeMenu: Menu = _
+
   val fileChooser = new javafx.stage.FileChooser
   fileChooser.getExtensionFilters.addAll(
     new ExtensionFilter("ScalaExcel homebrew", "*.scalaexcel"),
@@ -130,6 +135,7 @@ class ViewManager extends jfxf.Initializable {
   val onNewSheet = Subject[Unit]()
   val onAlign = Subject[(Traversable[CellPos], Alignment)]()
   val onFormat = Subject[(Traversable[CellPos], ValueFormat)]()
+  val onRefresh = Subject[Unit]()
 
   /**
    * Rx stream of changes to the visible table
@@ -389,6 +395,20 @@ class ViewManager extends jfxf.Initializable {
       PercentageValueFormat,
       new CustomNumericValueFormat())
     formatChoice.value = DefaultValueFormat
+    localeMenu = new Menu(localeMenuDelegate)
+    localeMenu.items = ObservableBuffer() ++ Locale.getAvailableLocales
+      .filter(_.getDisplayLanguage != "")
+      .filter(_.getDisplayCountry != "")
+      .sortBy(_.getDisplayLanguage)
+      .map({locale =>
+        new MenuItem() {
+          userData = locale
+          text = locale.getDisplayLanguage + "(" + locale.getCountry + ")"
+          onAction = handle {
+            Locale.setDefault(userData.asInstanceOf[Locale])
+            onRefresh.onNext(Unit)
+          }
+        }})
 
     // initialize interaction streams
     InteractionHelper.initializeInteractionStreams(this)

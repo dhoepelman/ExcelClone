@@ -16,6 +16,13 @@ case object NoAlign     extends Alignment
 
 abstract class ValueFormat {
   def apply(value: Value): String
+  def applyNumericFormatter(formatter: (Locale) => DecimalFormat)(value: Value) =
+    value match {
+      case VDouble(d) =>
+        val locale = if (Locale.getDefault == null) Locale.US else Locale.getDefault
+        formatter(locale).format(d)
+      case _ => DefaultValueFormat.apply(value)
+    }
 }
 case object DefaultValueFormat extends ValueFormat {
   def apply(value: Value): String = value match {
@@ -36,27 +43,27 @@ case object TextValueFormat extends ValueFormat {
   override def toString = "Text"
 }
 case object ScientificValueFormat extends ValueFormat {
-  def apply(value: Value): String = value match {
-    case VDouble(d) => ""
-    case _ => DefaultValueFormat.apply(value)
-  }
+  def apply(value: Value): String =
+    applyNumericFormatter((locale: Locale) =>
+      new DecimalFormat("0.##E00", new DecimalFormatSymbols(locale)))(value)
+
   override def toString = "Scientific"
 }
 case object PercentageValueFormat extends ValueFormat {
   def apply(value: Value): String = value match {
-    case VDouble(d) => ""
+    case VDouble(d) => new CustomNumericValueFormat(suffix="%").apply(VDouble(d*100))
     case _ => DefaultValueFormat.apply(value)
   }
+
   override def toString = "Percentage"
 }
 case object CurrencyValueFormat extends ValueFormat {
-  def apply(value: Value): String = value match {
-    case VDouble(d) =>
-      val locale = if (Locale.getDefault == null) Locale.US else Locale.getDefault
-      val formatter = NumberFormat.getCurrencyInstance(locale)
-      formatter.format(d)
-    case _ => DefaultValueFormat.apply(value)
-  }
+  def apply(value: Value): String =
+    applyNumericFormatter({
+      locale => NumberFormat.getCurrencyInstance(locale)
+        .asInstanceOf[DecimalFormat]
+    })(value)
+
   override def toString = "Currency"
 }
 case class CustomNumericValueFormat(
@@ -68,22 +75,20 @@ case class CustomNumericValueFormat(
                           groupingSymbol: Option[Char] = None
                           ) extends ValueFormat {
 
-  def apply(value: Value): String = value match {
-    case VDouble(d) =>
-      val locale = if (Locale.getDefault == null) Locale.US else Locale.getDefault
+  private def customFormatter(locale: Locale) = {
+    val formatter = new DecimalFormat()
+    formatter.setGroupingUsed(enableGrouping)
+    formatter.setMaximumFractionDigits(decimalPlaces)
 
-      val formatter = new DecimalFormat()
-      formatter.setGroupingUsed(enableGrouping)
-      formatter.setMaximumFractionDigits(decimalPlaces)
-
-      val symbols = new DecimalFormatSymbols(locale)
-      symbols.setDecimalSeparator(decimalSymbol.getOrElse(symbols.getDecimalSeparator))
-      symbols.setGroupingSeparator(groupingSymbol.getOrElse(symbols.getGroupingSeparator))
-      formatter.setDecimalFormatSymbols(symbols)
-
-      prefix + formatter.format(d) + suffix
-    case _ => DefaultValueFormat.apply(value)
+    val symbols = new DecimalFormatSymbols(locale)
+    symbols.setDecimalSeparator(decimalSymbol.getOrElse(symbols.getDecimalSeparator))
+    symbols.setGroupingSeparator(groupingSymbol.getOrElse(symbols.getGroupingSeparator))
+    formatter.setDecimalFormatSymbols(symbols)
+    formatter
   }
+  def apply(value: Value): String =
+    prefix + applyNumericFormatter(customFormatter)(value) + suffix
+
   override def toString = "Custom"
 }
 
