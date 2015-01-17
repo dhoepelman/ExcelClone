@@ -16,6 +16,7 @@ import scalafx.scene.{Node, Scene}
 import scalafx.geometry.{Pos, Insets}
 import scalaExcel.formula._
 import scalaExcel.model._
+import javafx.scene.{control => jfxsc}
 
 object InteractionHelper {
 
@@ -192,10 +193,12 @@ object InteractionHelper {
     // Pressing of the alignment buttons is interpreted and pushed to the model
     Observable[ValueFormat](o => {
       controller.formatChoice.value.onChange {
-        (_, _, newValue) => {
-          if (controller.formattingEnabled)
-            o.onNext(newValue)
-        }
+        (_, _, newValue) => if (controller.formattingEnabled)
+          newValue match {
+            case f: CustomNumericValueFormat =>
+              showFormattingDialog(controller.formatChoice.scene.window.getValue, o.onNext)
+            case f => o.onNext(f)
+          }
       }
     })
       .withLatest(controller.onSelection)
@@ -469,4 +472,96 @@ object InteractionHelper {
         onSelect(index)
   }
 
+  /**
+   * Shows formatting dialog
+   * @param dialogOwner     the master window element
+   * @param responseHandler the action handler that takes the parameters:
+   *                        (numberOfItems, offsetOfFirstItem)
+   */
+  def showFormattingDialog(dialogOwner: Window,
+                          responseHandler: ValueFormat => Unit) = {
+
+    val codes = List("prefix", "suffix", "minInt", "maxInt", "minFrac", "maxFrac", "decSymbol", "grSymbol")
+    val labels = List("Prefix", "Suffix", "Min Integer Digits", "Max Integer Digits", "Min Fraction Digits", "Max Fraction Digits", "Custom Decimal Symbol", "Custom Grouping Symbol")
+    val inputs = codes.view.zip(labels).map({
+      case (c, l) =>
+        (l, new TextField() {
+          id = c
+          prefColumnCount = 5
+        })
+    })
+    val groupingCheck = new CheckBox()
+    new Stage(){
+      title = "Custom Numeric Format"
+      initModality(Modality.APPLICATION_MODAL)
+      initOwner(dialogOwner)
+      scene = new Scene(
+        new VBox(20) {
+          padding = Insets.apply(10, 10, 10, 10)
+          spacing = 10
+          content = ObservableBuffer[Node]() ++
+            inputs.map({
+              case (l, i) => new Label(l, i) {
+                contentDisplay = ContentDisplay.Right
+              }
+            }) :+
+            new Label("Enable Grouping", groupingCheck) {
+              contentDisplay = ContentDisplay.Right
+            } :+
+            new AnchorPane() {
+            content = new HBox(2) {
+              content = ObservableBuffer(
+                new Button("Apply") {
+                  onAction = handle {
+                    // build custom format by parsing input fields
+                    val format = new CustomNumericValueFormat(
+                      scene.value.lookup("#prefix").asInstanceOf[jfxsc.TextField].text.value,
+                      scene.value.lookup("#suffix").asInstanceOf[jfxsc.TextField].text.value,
+                      try {
+                        scene.value.lookup("#minInt").asInstanceOf[jfxsc.TextField].text.value.toInt
+                      } catch {
+                        case _ : Throwable => 0
+                      },
+                      try {
+                        scene.value.lookup("#maxInt").asInstanceOf[jfxsc.TextField].text.value.toInt
+                      } catch {
+                        case _ : Throwable => Int.MaxValue
+                      },
+                      try {
+                        scene.value.lookup("#minFrac").asInstanceOf[jfxsc.TextField].text.value.toInt
+                      } catch {
+                        case _ : Throwable => 0
+                      },
+                      try {
+                        scene.value.lookup("#maxFrac").asInstanceOf[jfxsc.TextField].text.value.toInt
+                      } catch {
+                        case _ : Throwable => Int.MaxValue
+                      },
+                      scene.value.lookup("#decSymbol").asInstanceOf[jfxsc.TextField].text.value.headOption,
+                      groupingCheck.selected.value,
+                      scene.value.lookup("#grSymbol").asInstanceOf[jfxsc.TextField].text.value.headOption
+                    )
+                    // send format
+                    responseHandler(format)
+                    scene.value.getWindow.asInstanceOf[jfxs.Stage].close()
+                  }
+                },
+                new Button("Cancel") {
+                  onAction = handle {
+                    scene.value.getWindow.asInstanceOf[jfxs.Stage].close()
+                  }
+                }
+              )
+              spacing = 5
+              alignment = Pos.BottomRight
+            }
+            vgrow = Priority.Always
+            AnchorPane.setAnchors(content.get(0), 0, 0, 0, 0)
+          }
+        },
+        300,
+        400
+      )
+    }.show()
+  }
 }

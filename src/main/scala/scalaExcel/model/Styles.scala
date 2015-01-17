@@ -69,16 +69,22 @@ case object CurrencyValueFormat extends ValueFormat {
 case class CustomNumericValueFormat(
                           prefix: String = "",
                           suffix: String = "",
-                          decimalPlaces: Int = DefaultProperties.NF_DECIMAL_PLACES,
-                          enableGrouping: Boolean = DefaultProperties.NF_ENABLE_GROUPING,
+                          minIntegerDigits: Int = DefaultProperties.NF_MIN_INTEGER_DIGITS,
+                          maxIntegerDigits: Int = DefaultProperties.NF_MAX_INTEGER_DIGITS,
+                          minFractionDigits: Int = DefaultProperties.NF_MIN_FRACTION_DIGITS,
+                          maxFractionDigits: Int = DefaultProperties.NF_MAX_FRACTION_DIGITS,
                           decimalSymbol: Option[Char] = None,
+                          enableGrouping: Boolean = DefaultProperties.NF_ENABLE_GROUPING,
                           groupingSymbol: Option[Char] = None
                           ) extends ValueFormat {
 
   private def customFormatter(locale: Locale) = {
     val formatter = new DecimalFormat()
     formatter.setGroupingUsed(enableGrouping)
-    formatter.setMaximumFractionDigits(decimalPlaces)
+    formatter.setMinimumFractionDigits(minFractionDigits)
+    formatter.setMaximumFractionDigits(maxFractionDigits)
+    formatter.setMinimumIntegerDigits(minIntegerDigits)
+    formatter.setMaximumIntegerDigits(maxIntegerDigits)
 
     val symbols = new DecimalFormatSymbols(locale)
     symbols.setDecimalSeparator(decimalSymbol.getOrElse(symbols.getDecimalSeparator))
@@ -90,6 +96,10 @@ case class CustomNumericValueFormat(
     prefix + applyNumericFormatter(customFormatter)(value) + suffix
 
   override def toString = "Custom"
+
+  override def equals(obj: scala.Any): Boolean =
+    if (obj == null) false
+    else obj.isInstanceOf[CustomNumericValueFormat]
 }
 
 class Styles (

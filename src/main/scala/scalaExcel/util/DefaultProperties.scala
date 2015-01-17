@@ -13,5 +13,8 @@ object DefaultProperties {
   val NF_ENABLE_GROUPING = false
   val NF_GROUPING_SYMBOL = ','
   val NF_DECIMAL_SYMBOL = '.'
-  val NF_DECIMAL_PLACES = 2
+  val NF_MAX_FRACTION_DIGITS = 2
+  val NF_MIN_FRACTION_DIGITS = 0
+  val NF_MAX_INTEGER_DIGITS = Int.MaxValue
+  val NF_MIN_INTEGER_DIGITS = 0
 }
