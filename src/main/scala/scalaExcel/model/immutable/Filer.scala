@@ -73,16 +73,32 @@ object Filer {
   def deserializeColour(colour: String): Color = Color.web(colour)
 
   /** Manually serialize Format case class */
-  def serializeFormat(format: ValueFormat): String = {
+  def serializeFormat(format: ValueFormat): String =
     format match {
-      case _   => ""
+      case DefaultValueFormat => "DefaultValueFormat"
+      case TextValueFormat => "TextValueFormat"
+      case CurrencyValueFormat => "CurrencyValueFormat"
+      case ScientificValueFormat => "ScientificValueFormat"
+      case PercentageValueFormat => "PercentageValueFormat"
+      case CustomNumericValueFormat(prefix, suffix, minInt, maxInt, minFrac, maxFrac, decSymbol, grouping, grSymbol) =>
+        "Custom__"+prefix+"__"+suffix+"__"+minInt+"__"+maxInt+"__"+minFrac+"__"+maxFrac+"__"+decSymbol+"__"+grouping+"__"+grSymbol
     }
-  }
 
   /** Manually deserialize Format case class */
   def deserializeFormat(format: String): ValueFormat = {
     format match {
-      case _   => DefaultValueFormat
+      case "DefaultValueFormat" => DefaultValueFormat
+      case "TextValueFormat" => TextValueFormat
+      case "CurrencyValueFormat" => CurrencyValueFormat
+      case "ScientificValueFormat" => ScientificValueFormat
+      case "PercentageValueFormat" => PercentageValueFormat
+      case s => try {
+        val sections = s.stripPrefix("Custom").split("__")
+        CustomNumericValueFormat(sections(0), sections(1), sections(2).toInt, sections(3).toInt, sections(4).toInt, sections(5).toInt, sections(6).headOption, sections(7).toBoolean, sections(8).headOption)
+      }
+      catch {
+        case _: Throwable => new CustomNumericValueFormat()
+      }
     }
   }
 

@@ -20,11 +20,6 @@ import rx.lang.scala.Observable
 
 object RunGUI extends JFXApp {
 
-  println(Locale.getAvailableLocales.filter(_.getDisplayLanguage != "")
-    .filter(_.getDisplayCountry != "")
-    .sortBy(_.getDisplayCountry)
-    .map(locale => locale.getDisplayLanguage + "(" + locale.getCountry + ")").toList)
-
   val resource = getClass.getResource("/MainContainer.fxml")
 
   if (resource == null) {
