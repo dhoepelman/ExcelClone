@@ -296,13 +296,15 @@ class ViewManager extends jfxf.Initializable {
     // stop listening to changes on the old bars
     if (horizontalScroll != null)
       horizontalScroll.unWatch()
-    horizontalScroll = new WatchableScrollBar(horizontalScrollDelegate,
+
+    horizontalScroll = new WatchableScrollBar(
+      horizontalScrollDelegate,
       maxs._1,
       values._1,
       (newValue: Int) => {
         val diff = newValue - values._1
         // do not allow a single scroll action to exceed window width
-        val maxDiff = Math.signum(diff).toInt * Math.min(Math.abs(diff), labeledTable.windowSize.columnCount)
+        val maxDiff = Math.signum(diff).toInt * Math.min(Math.abs(diff), labeledTable.windowSize.columnCount / 2)
         // slide table window horizontally by the difference
         tableMutations.onNext(SlideWindowBy(Bounds(maxDiff, maxDiff, 0, 0)))
         }
@@ -310,13 +312,15 @@ class ViewManager extends jfxf.Initializable {
 
     if (verticalScroll != null)
       verticalScroll.unWatch()
-    verticalScroll = new WatchableScrollBar(verticalScrollDelegate,
+
+    verticalScroll = new WatchableScrollBar(
+      verticalScrollDelegate,
       maxs._2,
       values._2,
       (newValue: Int) => {
           val diff = newValue - values._2
           // do not allow a single scroll action to exceed window height
-          val maxDiff = Math.signum(diff).toInt * Math.min(Math.abs(diff), labeledTable.windowSize.rowCount)
+          val maxDiff = Math.signum(diff).toInt * Math.min(Math.abs(diff), labeledTable.windowSize.rowCount / 2)
           // slide table window vertically by the difference
           tableMutations.onNext(SlideWindowBy(Bounds(0, 0, maxDiff, maxDiff)))
         }

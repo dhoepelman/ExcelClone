@@ -35,13 +35,13 @@ object InteractionHelper {
     val subscription = Observable[Int](o => {
         value.onChange {
           (_, _, newValue) =>
-            if(!o.isUnsubscribed)
+            if (!o.isUnsubscribed)
               o.onNext(newValue.doubleValue.round.toInt)
         }
-    })
-    .distinctUntilChanged
-    .filter(v => v != currentValue)
-    .subscribe(v => valueListener(v))
+      })
+      .distinctUntilChanged
+      .filter(v => v != currentValue)
+      .subscribe(v => valueListener(v))
 
     def unWatch() = subscription.unsubscribe()
   }
