@@ -28,6 +28,8 @@ class Model(protected val sheetMutations : Observable[ModelMutations]) extends s
         ur.next(sheet.updateCellsStyle(poss, s => s.setColor(c)))
       case SetBackground(poss, c) =>
         ur.next(sheet.updateCellsStyle(poss, s => s.setBackground(c)))
+      case SetAlign(poss, a) =>
+        ur.next(sheet.updateCellsStyle(poss, s => s.setAlign(a)))
       case SetSheet(values, styles) =>
         ur.next(values.foldLeft(new Sheet(Map(), Map(), Map(), styles)) {
           case (s, (pos, value)) => s.setCell(pos, value)
