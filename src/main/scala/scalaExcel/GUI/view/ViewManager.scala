@@ -296,21 +296,35 @@ class ViewManager extends jfxf.Initializable {
     // stop listening to changes on the old bars
     if (horizontalScroll != null)
       horizontalScroll.unWatch()
-    horizontalScroll = new WatchableScrollBar(horizontalScrollDelegate,
+
+    horizontalScroll = new WatchableScrollBar(
+      horizontalScrollDelegate,
       maxs._1,
       values._1,
-      (newValue: Int) =>
-      // slide table window horizontally by the difference
-        tableMutations.onNext(SlideWindowBy(Bounds(newValue - values._1, newValue - values._1, 0, 0))))
+      (newValue: Int) => {
+        val diff = newValue - values._1
+        // do not allow a single scroll action to exceed window width
+        val maxDiff = Math.signum(diff).toInt * Math.min(Math.abs(diff), labeledTable.windowSize.columnCount / 2)
+        // slide table window horizontally by the difference
+        tableMutations.onNext(SlideWindowBy(Bounds(maxDiff, maxDiff, 0, 0)))
+        }
+    )
 
     if (verticalScroll != null)
       verticalScroll.unWatch()
-    verticalScroll = new WatchableScrollBar(verticalScrollDelegate,
+
+    verticalScroll = new WatchableScrollBar(
+      verticalScrollDelegate,
       maxs._2,
       values._2,
-      (newValue: Int) =>
-      // slide table window vertically by the difference
-        tableMutations.onNext(SlideWindowBy(Bounds(0, 0, newValue - values._2, newValue - values._2))))
+      (newValue: Int) => {
+          val diff = newValue - values._2
+          // do not allow a single scroll action to exceed window height
+          val maxDiff = Math.signum(diff).toInt * Math.min(Math.abs(diff), labeledTable.windowSize.rowCount / 2)
+          // slide table window vertically by the difference
+          tableMutations.onNext(SlideWindowBy(Bounds(0, 0, maxDiff, maxDiff)))
+        }
+    )
 
     addRowsButton.onAction = handle {
      streamTable.onAdd.onNext((true, 10, labeledTable.gridSize.rowCount))

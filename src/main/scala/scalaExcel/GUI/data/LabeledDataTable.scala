@@ -219,6 +219,8 @@ class LabeledDataTable( _dataWindow: DataWindow = DataWindow.DEFAULT,
 
   def gridSize = _dataWindow.dataSize
 
+  def windowSize = Size(_dataWindow.columnCount, _dataWindow.rowCount)
+
   /**
    * Calculates the maximum horizontal and vertical offsets the window can have
    */
