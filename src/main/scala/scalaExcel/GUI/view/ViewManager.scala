@@ -307,7 +307,7 @@ class ViewManager extends jfxf.Initializable {
         val maxDiff = Math.signum(diff).toInt * Math.min(Math.abs(diff), labeledTable.windowSize.columnCount / 2)
         // slide table window horizontally by the difference
         tableMutations.onNext(SlideWindowBy(Bounds(maxDiff, maxDiff, 0, 0)))
-        }
+      }
     )
 
     if (verticalScroll != null)
