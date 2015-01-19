@@ -19,7 +19,7 @@ abstract class ValueFormat {
   def applyNumericFormatter(formatter: (Locale) => DecimalFormat)(value: Value) =
     value match {
       case VDouble(d) =>
-        val locale = if (Locale.getDefault == null) Locale.US else Locale.getDefault
+        val locale = if (Locale.getDefault == null) DefaultProperties.LOCALE else Locale.getDefault
         formatter(locale).format(d)
       case _ => DefaultValueFormat.apply(value)
     }
@@ -97,9 +97,10 @@ case class CustomNumericValueFormat(
 
   override def toString = "Custom"
 
-  override def equals(obj: scala.Any): Boolean =
-    if (obj == null) false
-    else obj.isInstanceOf[CustomNumericValueFormat]
+  override def equals(obj: scala.Any): Boolean = obj match {
+    case _: CustomNumericValueFormat => true
+    case _ => false
+  }
 }
 
 class Styles (
