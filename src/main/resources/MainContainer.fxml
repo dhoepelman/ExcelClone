@@ -80,15 +80,15 @@
                                 </MenuItem>
                             </items>
                         </Menu>
-                  <Menu mnemonicParsing="false" text="Preferences">
-                     <items>
-                        <Menu fx:id="localeMenuDelegate" mnemonicParsing="false" text="Change Locale">
-                          <items>
-                            <MenuItem mnemonicParsing="false" text="Action 1" />
-                          </items>
+                        <Menu mnemonicParsing="false" text="Preferences">
+                            <items>
+                                <Menu fx:id="localeMenuDelegate" mnemonicParsing="false" text="Change Locale">
+                                    <items>
+                                        <MenuItem mnemonicParsing="false" text="Action 1" />
+                                    </items>
+                                </Menu>
+                            </items>
                         </Menu>
-                     </items>
-                  </Menu>
                     </menus>
                 </MenuBar>
                 <GridPane alignment="CENTER" gridLinesVisible="true" prefHeight="42" styleClass="button-bar">
