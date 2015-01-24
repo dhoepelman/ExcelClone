@@ -1,7 +1,5 @@
 package scalaExcel.GUI
 
-import java.util.Locale
-
 import scalafx.Includes._
 import scalafx.application.JFXApp
 import javafx.{fxml => jfxf}
