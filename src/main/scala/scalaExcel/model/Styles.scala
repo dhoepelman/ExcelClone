@@ -15,23 +15,33 @@ case object RightAlign  extends Alignment
 case object NoAlign     extends Alignment
 
 abstract class ValueFormat {
+
   def apply(value: Value): String
+
   def applyNumericFormatter(formatter: (Locale) => DecimalFormat)(value: Value) =
     value match {
       case VDouble(d) =>
-        val locale = if (Locale.getDefault == null) DefaultProperties.LOCALE else Locale.getDefault
+        val locale = if (Locale.getDefault == null) DefaultProperties.LOCALE
+                     else Locale.getDefault
         formatter(locale).format(d)
       case _ => DefaultValueFormat.apply(value)
     }
+
 }
+
 case object DefaultValueFormat extends ValueFormat {
+
   def apply(value: Value): String = value match {
     case VDouble(d) => new CustomNumericValueFormat().apply(value)
     case _ => TextValueFormat.apply(value)
   }
+
   override def toString = "Default"
+
 }
+
 case object TextValueFormat extends ValueFormat {
+
   def apply(value: Value): String = value match {
     case VEmpty => ""
     case VDouble(d) => d.toString
@@ -40,24 +50,33 @@ case object TextValueFormat extends ValueFormat {
     case VErr(e) => e.expr
     case _ => value.toString
   }
+
   override def toString = "Text"
 }
+
 case object ScientificValueFormat extends ValueFormat {
+
   def apply(value: Value): String =
     applyNumericFormatter((locale: Locale) =>
       new DecimalFormat("0.##E00", new DecimalFormatSymbols(locale)))(value)
 
   override def toString = "Scientific"
+
 }
+
 case object PercentageValueFormat extends ValueFormat {
+
   def apply(value: Value): String = value match {
-    case VDouble(d) => new CustomNumericValueFormat(suffix="%").apply(VDouble(d*100))
+    case VDouble(d) => new CustomNumericValueFormat(suffix="%").apply(VDouble(d * 100))
     case _ => DefaultValueFormat.apply(value)
   }
 
   override def toString = "Percentage"
+
 }
+
 case object CurrencyValueFormat extends ValueFormat {
+
   def apply(value: Value): String =
     applyNumericFormatter({
       locale => NumberFormat.getCurrencyInstance(locale)
@@ -65,18 +84,20 @@ case object CurrencyValueFormat extends ValueFormat {
     })(value)
 
   override def toString = "Currency"
+
 }
+
 case class CustomNumericValueFormat(
-                          prefix: String = "",
-                          suffix: String = "",
-                          minIntegerDigits: Int = DefaultProperties.NF_MIN_INTEGER_DIGITS,
-                          maxIntegerDigits: Int = DefaultProperties.NF_MAX_INTEGER_DIGITS,
-                          minFractionDigits: Int = DefaultProperties.NF_MIN_FRACTION_DIGITS,
-                          maxFractionDigits: Int = DefaultProperties.NF_MAX_FRACTION_DIGITS,
-                          decimalSymbol: Option[Char] = None,
-                          enableGrouping: Boolean = DefaultProperties.NF_ENABLE_GROUPING,
-                          groupingSymbol: Option[Char] = None
-                          ) extends ValueFormat {
+    prefix: String = "",
+    suffix: String = "",
+    minIntegerDigits: Int = DefaultProperties.NF_MIN_INTEGER_DIGITS,
+    maxIntegerDigits: Int = DefaultProperties.NF_MAX_INTEGER_DIGITS,
+    minFractionDigits: Int = DefaultProperties.NF_MIN_FRACTION_DIGITS,
+    maxFractionDigits: Int = DefaultProperties.NF_MAX_FRACTION_DIGITS,
+    decimalSymbol: Option[Char] = None,
+    enableGrouping: Boolean = DefaultProperties.NF_ENABLE_GROUPING,
+    groupingSymbol: Option[Char] = None
+  ) extends ValueFormat {
 
   private def customFormatter(locale: Locale) = {
     val formatter = new DecimalFormat()
@@ -92,15 +113,20 @@ case class CustomNumericValueFormat(
     formatter.setDecimalFormatSymbols(symbols)
     formatter
   }
-  def apply(value: Value): String =
-    prefix + applyNumericFormatter(customFormatter)(value) + suffix
+
+  def apply(value: Value): String = value match {
+    case _: VDouble => prefix + applyNumericFormatter(customFormatter)(value) + suffix
+    case _ => DefaultValueFormat.apply(value)
+  }
+
 
   override def toString = "Custom"
 
-  override def equals(obj: scala.Any): Boolean = obj match {
+  override def equals(obj: Any): Boolean = obj match {
     case _: CustomNumericValueFormat => true
     case _ => false
   }
+
 }
 
 class Styles (
