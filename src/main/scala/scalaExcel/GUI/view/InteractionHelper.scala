@@ -180,7 +180,7 @@ object InteractionHelper {
   }
 
   private def initializeFormatting(controller: ViewManager) {
-    // Selecting a single cell updates the alignment buttons' states
+    // Selecting a single cell updates the current format
     controller.onSingleCellSelected
       .distinctUntilChanged
       .map(single => single._2.styles)
@@ -190,17 +190,20 @@ object InteractionHelper {
         controller.formattingEnabled = true
     })
 
-    // Pressing of the alignment buttons is interpreted and pushed to the model
-    Observable[ValueFormat](o => {
-      controller.formatChoice.value.onChange {
-        (_, _, newValue) => if (controller.formattingEnabled)
-          newValue match {
-            case f: CustomNumericValueFormat =>
-              showFormattingDialog(controller.formatChoice.scene.window.getValue, o.onNext)
-            case f => o.onNext(f)
-          }
-      }
-    })
+    val currentFormat = Subject[ValueFormat]()
+    // The value of the formatting choice control is monitored for changes
+    controller.formatChoice.value.onChange {
+      (_, _, newValue) => if (controller.formattingEnabled)
+        newValue match {
+          case f: CustomNumericValueFormat =>
+            // custom formats require filling in a dialog
+            showFormattingDialog(controller.formatChoice.scene.window.getValue, currentFormat.onNext)
+          case f => currentFormat.onNext(f)
+        }
+    }
+
+    // The new format is pushed to the model
+    currentFormat
       .withLatest(controller.onSelection)
       .subscribe(controller.onFormat)
 
