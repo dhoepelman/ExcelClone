@@ -36,21 +36,21 @@ class Sheet(private[immutable] val cells: Map[CellPos, Cell] = Map(),
   private def setCell(pos: CellPos, newCell: Cell): Sheet = {
     val newCells = cells + (pos -> newCell)
     val newValues = calcNewValue(pos, newCell)
-    val newDependents = calcNewDependents(pos, newCell)
+    val newDependents = calcNewDependents(pos, newCell.refs)
 
     new Sheet(newCells, newValues, newDependents, styles)
       .updateValues(dependentsOf(pos), Set(pos))
   }
 
   /** Get the Cell or return an empty cell */
-  def getCell(pos: CellPos) : Cell = cells getOrElse(pos, Cell())
+  def getCell(pos: CellPos) = cells getOrElse(pos, Cell())
 
   def valueAt(pos: CellPos) = values get pos
 
-  def getValue(pos: CellPos) : Value = valueAt(pos).getOrElse(VEmpty)
+  def getValue(pos: CellPos) = valueAt(pos).getOrElse(VEmpty)
 
   def deleteCell(p: CellPos): Sheet = {
-    new Sheet(cells - p, values - p, dependents - p, styles - p)
+    new Sheet(cells - p, values - p, calcNewDependents(p, List()), styles - p)
       .updateValues(dependentsOf(p))
   }
 
@@ -66,7 +66,7 @@ class Sheet(private[immutable] val cells: Map[CellPos, Cell] = Map(),
     new Sheet(
       cells + (to -> cell),
       calcNewValue(to, cell),
-      calcNewDependents(to, cell),
+      calcNewDependents(to, cell.refs),
       styles + (to -> getCellStyle(from))
     ).updateValues(dependentsOf(to))
   }
@@ -159,11 +159,10 @@ class Sheet(private[immutable] val cells: Map[CellPos, Cell] = Map(),
     values + (pos -> value)
   }
 
-  private def calcNewDependents(pos: CellPos, c: Cell) = {
+  private def calcNewDependents(pos: CellPos, r: List[CellPos]) = {
     val oldCell = getCell(pos)
     val oldDeps = oldCell.refs
 
-    val r = c.refs
     val rmvDeps = oldDeps diff r
     val addDeps = r diff oldDeps
 
@@ -182,7 +181,7 @@ class Sheet(private[immutable] val cells: Map[CellPos, Cell] = Map(),
     cells.toString(),
     dependents.toString(),
     values.toString()
-    ).toString()
+  ).toString()
 
 }
 
