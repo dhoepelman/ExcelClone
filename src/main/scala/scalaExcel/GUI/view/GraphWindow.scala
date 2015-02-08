@@ -82,6 +82,7 @@ class GraphWindow (val sheets: Observable[Sheet],
         })
         .map {
           case (VDouble(v), i) => (v, i)
+          case _               => (0.0, 0) // Never occurs
         }
         .map(t => (t._2, t._1)) // Swap to put index on the x axis
         .map { case (x, y) => new javafx.scene.chart.XYChart.Data[Number, Number](x, y)}
