@@ -76,8 +76,16 @@ class ViewManager extends jfxf.Initializable {
   @jfxf.FXML private var menuDeleteDelegate: jfxsc.MenuItem = _
   var menuDelete: MenuItem = _
 
-  @jfxf.FXML private var menuGraphDelegate: jfxsc.MenuItem = _
-  var menuGraph: MenuItem = _
+  @jfxf.FXML private var menuGraph0Delegate: jfxsc.MenuItem = _
+  var menuGraph0: MenuItem = _
+  @jfxf.FXML private var menuGraph1Delegate: jfxsc.MenuItem = _
+  var menuGraph1: MenuItem = _
+  @jfxf.FXML private var menuGraph2Delegate: jfxsc.MenuItem = _
+  var menuGraph2: MenuItem = _
+  @jfxf.FXML private var menuGraph3Delegate: jfxsc.MenuItem = _
+  var menuGraph3: MenuItem = _
+  @jfxf.FXML private var menuGraph4Delegate: jfxsc.MenuItem = _
+  var menuGraph4: MenuItem = _
 
   @jfxf.FXML private var sortUpDelegate: jfxsc.Button = _
   var sortUp: Button = _
@@ -381,7 +389,11 @@ class ViewManager extends jfxf.Initializable {
     menuDelete = new MenuItem(menuDeleteDelegate)
     menuNew = new MenuItem(menuNewDelegate)
     menuClose = new MenuItem(menuCloseDelegate)
-    menuGraph = new MenuItem(menuGraphDelegate)
+    menuGraph0 = new MenuItem(menuGraph0Delegate)
+    menuGraph1 = new MenuItem(menuGraph1Delegate)
+    menuGraph2 = new MenuItem(menuGraph2Delegate)
+    menuGraph3 = new MenuItem(menuGraph3Delegate)
+    menuGraph4 = new MenuItem(menuGraph4Delegate)
     alignLeftButton = new Button(alignLeftDelegate)
     alignCenterButton = new Button(alignCenterDelegate)
     alignRightButton = new Button(alignRightDelegate)
@@ -427,9 +439,20 @@ class ViewManager extends jfxf.Initializable {
 
 
 
-    menuGraph.onAction = handle {
-      // TODO expose as Rx stream?
-      new GraphWindow(sheetsForGraph, List(0,1)).show()
+    menuGraph0.onAction = handle {
+      new GraphWindow(sheetsForGraph, List(0)).show()
+    }
+    menuGraph1.onAction = handle {
+      new GraphWindow(sheetsForGraph, List(1)).show()
+    }
+    menuGraph2.onAction = handle {
+      new GraphWindow(sheetsForGraph, List(2)).show()
+    }
+    menuGraph3.onAction = handle {
+      new GraphWindow(sheetsForGraph, List(3)).show()
+    }
+    menuGraph4.onAction = handle {
+      new GraphWindow(sheetsForGraph, List(4)).show()
     }
 
   }

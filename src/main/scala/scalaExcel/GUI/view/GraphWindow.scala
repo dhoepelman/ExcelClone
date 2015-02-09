@@ -1,5 +1,7 @@
 package scalaExcel.GUI.view
 
+import javafx.collections.ObservableList
+
 import rx.lang.scala._
 
 import scalaExcel.formula._
@@ -18,16 +20,15 @@ class GraphWindow (val sheets: Observable[Sheet],
 
   type DataNumNum = javafx.scene.chart.XYChart.Data[Number, Number]
 
-  title = "Superchart of forever"
+  title = "Chart Viewer"
 
-  // Defining the axes
+  // Create chart
   val xAxis = new NumberAxis
   val yAxis = new NumberAxis
-
-  // Creating the chart
   val lineChart = LineChart(xAxis, yAxis)
-  lineChart.title = "Superchart of forever"
+  lineChart.title = "Chart"
 
+  // Create window
   scene = new Scene(800, 600) {
     root = lineChart
   }
