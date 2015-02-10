@@ -21,6 +21,54 @@ class SheetTests {
     assertEquals(VDouble(1), sheet.getValue((0, 0)))
   }
 
+  @Test def setCellDependenciesSimple() = {
+    val sheet = new Sheet()
+      .setCell((0, 0), "0")
+      .setCell((0, 1), "=A1")
+      .setCell((0, 2), "=A1")
+
+    val sheet1 = sheet
+      .setCell((0, 0), "1")
+
+    assertEquals(VDouble(1), sheet1.getValue((0, 0)))
+    assertEquals(VDouble(1), sheet1.getValue((0, 1)))
+    assertEquals(VDouble(1), sheet1.getValue((0, 2)))
+  }
+
+  @Test def setCellDependenciesFibonacci() = {
+    val sheet = new Sheet()
+      .setCell((0, 0), "0")
+      .setCell((0, 1), "1")
+      .setCell((0, 2), "=A1+A2")
+      .setCell((0, 3), "=A2+A3")
+      .setCell((0, 4), "=A3+A4")
+      .setCell((0, 5), "=A4+A5")
+
+    assertEquals(VDouble(0), sheet.getValue((0, 0)))
+    assertEquals(VDouble(1), sheet.getValue((0, 1)))
+    assertEquals(VDouble(1), sheet.getValue((0, 2)))
+    assertEquals(VDouble(2), sheet.getValue((0, 3)))
+    assertEquals(VDouble(3), sheet.getValue((0, 4)))
+    assertEquals(VDouble(5), sheet.getValue((0, 5)))
+
+    assertEquals(List((0, 2)),         sheet.dependentsOf((0, 0)))
+    assertEquals(List((0, 2), (0, 3)), sheet.dependentsOf((0, 1)))
+    assertEquals(List((0, 3), (0, 4)), sheet.dependentsOf((0, 2)))
+    assertEquals(List((0, 4), (0, 5)), sheet.dependentsOf((0, 3)))
+    assertEquals(List((0, 5)),         sheet.dependentsOf((0, 4)))
+    assertEquals(List(),               sheet.dependentsOf((0, 5)))
+
+    val sheet1 = sheet
+      .setCell((0, 0), "1")
+
+    assertEquals(VDouble(1), sheet1.getValue((0, 0)))
+    assertEquals(VDouble(1), sheet1.getValue((0, 1)))
+    assertEquals(VDouble(2), sheet1.getValue((0, 2)))
+    assertEquals(VDouble(3), sheet1.getValue((0, 3)))
+    assertEquals(VDouble(5), sheet1.getValue((0, 4)))
+    assertEquals(VDouble(8), sheet1.getValue((0, 5)))
+  }
+
   @Test def deleteCell() = {
     val sheet = new Sheet()
       .setCell((0, 0), "1")

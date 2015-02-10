@@ -131,11 +131,12 @@ class Sheet(private[immutable] val cells: Map[CellPos, Cell] = Map(),
   private def updateValues(updates: List[CellPos], alreadyUpdated: Set[CellPos] = Set()): Sheet = {
     updates.foldLeft(this)((s, u) => {
       if (alreadyUpdated contains u)
-      // u was already updated, so this means there's a circular reference
+        // u was already updated, so this means there's a circular reference
         s.setToCircular(u)
       else {
         // recalculate the value of a cell
-        val newSheet = new Sheet(cells, calcNewValue(u, getCell(u)), dependents, styles)
+        val newValues = s.calcNewValue(u, s.getCell(u))
+        val newSheet = new Sheet(cells, newValues, dependents, styles)
         dependentsOf(u) match {
           case List() => newSheet
           case newUpdates => newSheet.updateValues(newUpdates, alreadyUpdated + u)
@@ -152,7 +153,7 @@ class Sheet(private[immutable] val cells: Map[CellPos, Cell] = Map(),
   }
 
   /** Get the cells that depend on this given cell */
-  private def dependentsOf(p: CellPos) : List[CellPos] = dependents getOrElse(p, List())
+  def dependentsOf(p: CellPos) : List[CellPos] = dependents getOrElse(p, List())
 
   private def calcNewValue(pos: CellPos, c: Cell) = {
     val value = c.eval(values)
