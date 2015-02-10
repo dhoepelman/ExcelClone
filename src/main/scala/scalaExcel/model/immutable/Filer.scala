@@ -7,7 +7,7 @@ import scalafx.scene.paint.Color
 import scalaExcel.GUI.util.CSSHelper
 import scalaExcel.formula.{VBool, VDouble, VString, Value}
 import scala.pickling._
-import scala.pickling.json._
+import scala.pickling.Defaults._
 import json._
 
 
