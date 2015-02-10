@@ -80,6 +80,12 @@
                                 </MenuItem>
                             </items>
                         </Menu>
+                        <Menu mnemonicParsing="false" text="View">
+                            <items>
+                                <MenuItem fx:id="menuGraphDelegate" text="Build graph...">
+                                </MenuItem>
+                            </items>
+                        </Menu>
                         <Menu mnemonicParsing="false" text="Preferences">
                             <items>
                                 <Menu fx:id="localeMenuDelegate" mnemonicParsing="false" text="Change Locale">

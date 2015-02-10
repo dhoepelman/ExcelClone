@@ -1,5 +1,8 @@
 package scalaExcel.GUI.view
 
+
+import rx.lang.scala.subjects.BehaviorSubject
+
 import java.util.Locale
 
 import scala.language.reflectiveCalls
@@ -32,6 +35,7 @@ import scalaExcel.GUI.data.AddColumns
 import scalaExcel.GUI.data.UpdateContents
 import scalaExcel.GUI.data.SlideWindowBy
 import scalaExcel.GUI.data.RemoveColumns
+import scalaExcel.formula.colToNum
 
 class ViewManager extends jfxf.Initializable {
 
@@ -78,6 +82,9 @@ class ViewManager extends jfxf.Initializable {
 
   @jfxf.FXML private var menuDeleteDelegate: jfxsc.MenuItem = _
   var menuDelete: MenuItem = _
+
+  @jfxf.FXML private var menuGraphDelegate: jfxsc.MenuItem = _
+  var menuGraph: MenuItem = _
 
   @jfxf.FXML private var sortUpDelegate: jfxsc.Button = _
   var sortUp: Button = _
@@ -139,6 +146,8 @@ class ViewManager extends jfxf.Initializable {
   val onAlign = Subject[(Traversable[CellPos], Alignment)]()
   val onFormat = Subject[(Traversable[CellPos], ValueFormat)]()
   val onRefresh = Subject[Unit]()
+
+  val sheetsForGraph = BehaviorSubject[Sheet]() // TODO create from existing streams
 
   /**
    * Rx stream of changes to the visible table
@@ -348,14 +357,37 @@ class ViewManager extends jfxf.Initializable {
       streamTable.onAdd.onNext((false, 5, labeledTable.gridSize.columnCount))
     }
 
+    menuGraph.onAction = handle {
+      InteractionHelper.showGraphDialog(tableContainer.scene.value.getWindow, {
+        case (onColumns, indexString) =>
+          val indexStringList = indexString.split(",").toList.map(_.trim)
+          val indexLabelList =
+            indexStringList.map({ case s =>
+              try {
+                if (onColumns)
+                  labeledTable.toSheetIndex((colToNum(s), 0))._1
+                else
+                  labeledTable.toSheetIndex((0, s.toInt - 1))._2
+              } catch {
+                case _: Throwable => -1
+              }
+            })
+              .zip(indexStringList) // index with preserved label
+              .filter(_._1 >= 0)
+          new GraphWindow(sheetsForGraph, onColumns, indexLabelList).show()
+      })
+    }
+
   }
 
   /**
    * To be called when the data model contents have changed
    * @param sheet the new data model sheet
    */
-  def dataChanged(sheet: Sheet) =
+  def dataChanged(sheet: Sheet) = {
     tableMutations.onNext(UpdateContents(sheet))
+    sheetsForGraph.onNext(sheet)
+  }
 
   /**
    * Called on initialization of the FXML controller
@@ -386,6 +418,7 @@ class ViewManager extends jfxf.Initializable {
     menuDelete = new MenuItem(menuDeleteDelegate)
     menuNew = new MenuItem(menuNewDelegate)
     menuClose = new MenuItem(menuCloseDelegate)
+    menuGraph = new MenuItem(menuGraphDelegate)
     alignLeftButton = new Button(alignLeftDelegate)
     alignCenterButton = new Button(alignCenterDelegate)
     alignRightButton = new Button(alignRightDelegate)
