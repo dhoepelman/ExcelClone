@@ -1,5 +1,7 @@
 package scalaExcel.GUI.view
 
+import java.util.Locale
+
 import scala.language.reflectiveCalls
 import java.net.URL
 import rx.lang.scala._
@@ -9,6 +11,7 @@ import javafx.scene.{control => jfxsc, layout => jfxsl}
 import javafx.stage.FileChooser.ExtensionFilter
 
 import scalafx.Includes._
+import scalafx.collections.ObservableBuffer
 import scalafx.scene.control._
 import scalafx.scene.input.ScrollEvent
 import scalafx.scene.layout.AnchorPane
@@ -99,6 +102,12 @@ class ViewManager extends jfxf.Initializable {
   @jfxf.FXML private var addRowsDelegate: jfxsc.Button = _
   var addRowsButton: Button = _
 
+  @jfxf.FXML private var formatChoiceDelegate: jfxsc.ChoiceBox[ValueFormat] = _
+  var formatChoice: ChoiceBox[ValueFormat] = _
+
+  @jfxf.FXML private var localeMenuDelegate: jfxsc.Menu = _
+  private var localeMenu: Menu = _
+
   val fileChooser = new javafx.stage.FileChooser
   fileChooser.getExtensionFilters.addAll(
     new ExtensionFilter("ScalaExcel homebrew", "*.scalaexcel"),
@@ -125,6 +134,8 @@ class ViewManager extends jfxf.Initializable {
   val onColumnReorder = Subject[Map[Int, Int]]()
   val onNewSheet = Subject[Unit]()
   val onAlign = Subject[(Traversable[CellPos], Alignment)]()
+  val onFormat = Subject[(Traversable[CellPos], ValueFormat)]()
+  val onRefresh = Subject[Unit]()
 
   /**
    * Rx stream of changes to the visible table
@@ -376,6 +387,28 @@ class ViewManager extends jfxf.Initializable {
     alignRightButton = new Button(alignRightDelegate)
     addColsButton = new Button(addColsDelegate)
     addRowsButton = new Button(addRowsDelegate)
+    formatChoice = new ChoiceBox(formatChoiceDelegate)
+    formatChoice.items = ObservableBuffer(DefaultValueFormat,
+      TextValueFormat,
+      CurrencyValueFormat,
+      ScientificValueFormat,
+      PercentageValueFormat,
+      new CustomNumericValueFormat())
+    formatChoice.value = DefaultValueFormat
+    localeMenu = new Menu(localeMenuDelegate)
+    localeMenu.items = ObservableBuffer() ++ Locale.getAvailableLocales
+      .filter(_.getDisplayLanguage != "")
+      .filter(_.getDisplayCountry != "")
+      .sortBy(_.getDisplayLanguage)
+      .map({locale =>
+        new MenuItem() {
+          userData = locale
+          text = locale.getDisplayLanguage + "(" + locale.getCountry + ")"
+          onAction = handle {
+            Locale.setDefault(userData.asInstanceOf[Locale])
+            onRefresh.onNext(Unit)
+          }
+        }})
 
     // initialize interaction streams
     InteractionHelper.initializeInteractionStreams(this)
@@ -451,5 +484,13 @@ class ViewManager extends jfxf.Initializable {
       alignCenterButton.disable = false
       alignRightButton.disable = false
   }
+
+  def formatting = formatChoice.value.value
+
+  def formatting_=(format: ValueFormat): Unit = formatChoice.value = format
+
+  def formattingEnabled = !formatChoice.isDisabled
+
+  def formattingEnabled_=(enabled: Boolean): Unit = formatChoice.disable = !enabled
 
 }

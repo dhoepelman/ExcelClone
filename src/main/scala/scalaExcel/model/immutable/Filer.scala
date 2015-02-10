@@ -72,6 +72,36 @@ object Filer {
   /** Manually deserialize Color */
   def deserializeColour(colour: String): Color = Color.web(colour)
 
+  /** Manually serialize Format case class */
+  def serializeFormat(format: ValueFormat): String =
+    format match {
+      case DefaultValueFormat => "DefaultValueFormat"
+      case TextValueFormat => "TextValueFormat"
+      case CurrencyValueFormat => "CurrencyValueFormat"
+      case ScientificValueFormat => "ScientificValueFormat"
+      case PercentageValueFormat => "PercentageValueFormat"
+      case CustomNumericValueFormat(prefix, suffix, minInt, maxInt, minFrac, maxFrac, decSymbol, grouping, grSymbol) =>
+        "Custom__"+prefix+"__"+suffix+"__"+minInt+"__"+maxInt+"__"+minFrac+"__"+maxFrac+"__"+decSymbol+"__"+grouping+"__"+grSymbol
+    }
+
+  /** Manually deserialize Format case class */
+  def deserializeFormat(format: String): ValueFormat = {
+    format match {
+      case "DefaultValueFormat" => DefaultValueFormat
+      case "TextValueFormat" => TextValueFormat
+      case "CurrencyValueFormat" => CurrencyValueFormat
+      case "ScientificValueFormat" => ScientificValueFormat
+      case "PercentageValueFormat" => PercentageValueFormat
+      case s => try {
+        val sections = s.stripPrefix("Custom").split("__")
+        CustomNumericValueFormat(sections(0), sections(1), sections(2).toInt, sections(3).toInt, sections(4).toInt, sections(5).toInt, sections(6).headOption, sections(7).toBoolean, sections(8).headOption)
+      }
+      catch {
+        case _: Throwable => new CustomNumericValueFormat()
+      }
+    }
+  }
+
   /** Save sheet to custom file type that preserves all the features */
   def saveHomebrew(file: File, sheet: Sheet): Unit = {
     // Pickling Sheet itself causes compiler to hang
@@ -84,7 +114,7 @@ object Filer {
           serializeAlignment(s.align),
           serializeColour(s.background),
           serializeColour(s.color),
-          s.format)
+          serializeFormat(s.format))
         )
       )
       printToFile(file)(_.print(structure.pickle.value))
@@ -104,7 +134,7 @@ object Filer {
       case (align, background, colour, format) => new Styles(
         deserializeColour(background),
         deserializeColour(colour),
-        format,
+        deserializeFormat(format),
         deserializeAlignment(align)
       )
     })
@@ -120,17 +150,6 @@ object Filer {
   def unescape(s: String): String =
     s.replace("\"\"", "\"")
 
-  /** A very basic formatter */
-  def dummyFormat(value: Value): String = {
-    //TODO remove function when formatter is available
-    value match {
-      case VDouble(v) => v.toString
-      case VString(v) => v.toString
-      case VBool(v) => v.toString
-      case _ => ""
-    }
-  }
-
   /** Save sheet as CSV file */
   def saveCSV(file: File, sheet: Sheet) = {
     printToFile(file)(_ print sheetToCSV(sheet))
@@ -139,9 +158,9 @@ object Filer {
   /** Convert sheet to CSV string */
   def sheetToCSV(sheet: Sheet): String = {
     (0 to sheet.rows).map(row => {
-      (0 to sheet.cols).map(column => sheet.getValue((column, row))).map(v =>
-         escape(dummyFormat(v)) //TODO hook to proper formatter
-      ).foldLeft("")((fold, v) => fold + "\"" + v + "\"" + ",")
+      (0 to sheet.cols).map(column => (sheet.getCellStyle((column, row)), sheet.getValue((column, row))))
+        .map({case (styles, value) => escape(styles.format(value))})
+        .foldLeft("")((fold, v) => fold + "\"" + v + "\"" + ",")
     }).foldLeft("")((fold, row) => fold + row + "\n")
   }
 
