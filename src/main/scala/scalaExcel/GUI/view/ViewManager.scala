@@ -35,6 +35,7 @@ import scalaExcel.GUI.data.AddColumns
 import scalaExcel.GUI.data.UpdateContents
 import scalaExcel.GUI.data.SlideWindowBy
 import scalaExcel.GUI.data.RemoveColumns
+import scalaExcel.formula.colToNum
 
 class ViewManager extends jfxf.Initializable {
 
@@ -82,16 +83,8 @@ class ViewManager extends jfxf.Initializable {
   @jfxf.FXML private var menuDeleteDelegate: jfxsc.MenuItem = _
   var menuDelete: MenuItem = _
 
-  @jfxf.FXML private var menuGraph0Delegate: jfxsc.MenuItem = _
-  var menuGraph0: MenuItem = _
-  @jfxf.FXML private var menuGraph1Delegate: jfxsc.MenuItem = _
-  var menuGraph1: MenuItem = _
-  @jfxf.FXML private var menuGraph2Delegate: jfxsc.MenuItem = _
-  var menuGraph2: MenuItem = _
-  @jfxf.FXML private var menuGraph3Delegate: jfxsc.MenuItem = _
-  var menuGraph3: MenuItem = _
-  @jfxf.FXML private var menuGraph4Delegate: jfxsc.MenuItem = _
-  var menuGraph4: MenuItem = _
+  @jfxf.FXML private var menuGraphDelegate: jfxsc.MenuItem = _
+  var menuGraph: MenuItem = _
 
   @jfxf.FXML private var sortUpDelegate: jfxsc.Button = _
   var sortUp: Button = _
@@ -364,6 +357,27 @@ class ViewManager extends jfxf.Initializable {
       streamTable.onAdd.onNext((false, 5, labeledTable.gridSize.columnCount))
     }
 
+    menuGraph.onAction = handle {
+      InteractionHelper.showGraphDialog(tableContainer.scene.value.getWindow, {
+        case (onColumns, indexString) =>
+          val indexStringList = indexString.split(",").toList.map(_.trim)
+          val indexLabelList =
+            indexStringList.map({ case s =>
+              try {
+                if (onColumns)
+                  labeledTable.toSheetIndex((colToNum(s), 0))._1
+                else
+                  labeledTable.toSheetIndex((0, s.toInt - 1))._2
+              } catch {
+                case _: Throwable => -1
+              }
+            })
+              .zip(indexStringList) // index with preserved label
+              .filter(_._1 >= 0)
+          new GraphWindow(sheetsForGraph, onColumns, indexLabelList).show()
+      })
+    }
+
   }
 
   /**
@@ -404,11 +418,7 @@ class ViewManager extends jfxf.Initializable {
     menuDelete = new MenuItem(menuDeleteDelegate)
     menuNew = new MenuItem(menuNewDelegate)
     menuClose = new MenuItem(menuCloseDelegate)
-    menuGraph0 = new MenuItem(menuGraph0Delegate)
-    menuGraph1 = new MenuItem(menuGraph1Delegate)
-    menuGraph2 = new MenuItem(menuGraph2Delegate)
-    menuGraph3 = new MenuItem(menuGraph3Delegate)
-    menuGraph4 = new MenuItem(menuGraph4Delegate)
+    menuGraph = new MenuItem(menuGraphDelegate)
     alignLeftButton = new Button(alignLeftDelegate)
     alignCenterButton = new Button(alignCenterDelegate)
     alignRightButton = new Button(alignRightDelegate)
@@ -507,24 +517,6 @@ class ViewManager extends jfxf.Initializable {
 
     menuClose.onAction = handle {
       tableContainer.scene.value.getWindow.asInstanceOf[jfxs.Stage].close()
-    }
-
-
-
-    menuGraph0.onAction = handle {
-      new GraphWindow(sheetsForGraph, List(0)).show()
-    }
-    menuGraph1.onAction = handle {
-      new GraphWindow(sheetsForGraph, List(1)).show()
-    }
-    menuGraph2.onAction = handle {
-      new GraphWindow(sheetsForGraph, List(2)).show()
-    }
-    menuGraph3.onAction = handle {
-      new GraphWindow(sheetsForGraph, List(3)).show()
-    }
-    menuGraph4.onAction = handle {
-      new GraphWindow(sheetsForGraph, List(4)).show()
     }
 
   }

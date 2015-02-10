@@ -82,15 +82,7 @@
                         </Menu>
                         <Menu mnemonicParsing="false" text="View">
                             <items>
-                                <MenuItem fx:id="menuGraph0Delegate" text="Graph 1st column">
-                                </MenuItem>
-                                <MenuItem fx:id="menuGraph1Delegate" text="Graph 2nd column">
-                                </MenuItem>
-                                <MenuItem fx:id="menuGraph2Delegate" text="Graph 3rd column">
-                                </MenuItem>
-                                <MenuItem fx:id="menuGraph3Delegate" text="Graph 4th column">
-                                </MenuItem>
-                                <MenuItem fx:id="menuGraph4Delegate" text="Graph 5th column">
+                                <MenuItem fx:id="menuGraphDelegate" text="Build graph...">
                                 </MenuItem>
                             </items>
                         </Menu>

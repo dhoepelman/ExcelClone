@@ -478,8 +478,8 @@ object InteractionHelper {
   /**
    * Shows formatting dialog
    * @param dialogOwner     the master window element
-   * @param responseHandler the action handler that takes the parameters:
-   *                        (numberOfItems, offsetOfFirstItem)
+   * @param responseHandler the action handler that takes the parameter:
+   *                        selectedValueFormat
    */
   def showFormattingDialog(dialogOwner: Window,
                           responseHandler: ValueFormat => Unit) = {
@@ -564,6 +564,67 @@ object InteractionHelper {
         },
         300,
         400
+      )
+    }.show()
+  }
+
+  /**
+   * Shows graph building dialog
+   * @param dialogOwner     the master window element
+   * @param responseHandler the action handler that takes the parameter:
+   *                        (onColumns, indexList)
+   */
+  def showGraphDialog(dialogOwner: Window,
+                           responseHandler: ((Boolean, String)) => Unit) = {
+    new Stage(){
+      title = "Custom Numeric Format"
+      initModality(Modality.APPLICATION_MODAL)
+      initOwner(dialogOwner)
+      scene = new Scene(
+        new VBox(20) {
+          padding = Insets.apply(10, 10, 10, 10)
+          spacing = 10
+          content = ObservableBuffer(
+            new Label("On Columns", new CheckBox() {
+              id = "checkOnColumns"
+              selected = true
+            }) {
+              contentDisplay = ContentDisplay.Right
+            },
+            new Label("Index List (separated by commas)", new TextField() {
+              id = "inputIndexList"
+              prefColumnCount = 15
+            }) {
+              contentDisplay = ContentDisplay.Bottom
+            },
+            new AnchorPane() {
+              content = new HBox(2) {
+                content = ObservableBuffer(
+                  new Button("Build") {
+                    onAction = handle {
+                      val onColumns = scene.value.lookup("#checkOnColumns").asInstanceOf[jfxsc.CheckBox].isSelected
+                      val indexString = scene.value.lookup("#inputIndexList").asInstanceOf[jfxsc.TextField].text.value
+                      // send choice
+                      responseHandler((onColumns, indexString))
+                      scene.value.getWindow.asInstanceOf[jfxs.Stage].close()
+                    }
+                  },
+                  new Button("Cancel") {
+                    onAction = handle {
+                      scene.value.getWindow.asInstanceOf[jfxs.Stage].close()
+                    }
+                  }
+                )
+                spacing = 5
+                alignment = Pos.BottomRight
+              }
+              vgrow = Priority.Always
+              AnchorPane.setAnchors(content.get(0), 0, 0, 0, 0)
+            }
+          )
+        },
+        300,
+        200
       )
     }.show()
   }
