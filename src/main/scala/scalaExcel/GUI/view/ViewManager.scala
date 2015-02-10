@@ -3,6 +3,8 @@ package scalaExcel.GUI.view
 
 import rx.lang.scala.subjects.BehaviorSubject
 
+import java.util.Locale
+
 import scala.language.reflectiveCalls
 import java.net.URL
 import rx.lang.scala._
@@ -12,6 +14,7 @@ import javafx.scene.{control => jfxsc, layout => jfxsl}
 import javafx.stage.FileChooser.ExtensionFilter
 
 import scalafx.Includes._
+import scalafx.collections.ObservableBuffer
 import scalafx.scene.control._
 import scalafx.scene.input.ScrollEvent
 import scalafx.scene.layout.AnchorPane
@@ -42,6 +45,9 @@ class ViewManager extends jfxf.Initializable {
 
   @jfxf.FXML private var formulaEditorDelegate: jfxsc.TextField = _
   var formulaEditor: TextField = _
+
+  @jfxf.FXML private var formulaCheatSheetDelegate: jfxsc.MenuButton = _
+  var formulaCheatSheet: MenuButton = _
 
   @jfxf.FXML private var backgroundColorPickerDelegate: jfxsc.ColorPicker = _
   var backgroundColorPicker: jfxsc.ColorPicker = _
@@ -113,6 +119,12 @@ class ViewManager extends jfxf.Initializable {
   @jfxf.FXML private var addRowsDelegate: jfxsc.Button = _
   var addRowsButton: Button = _
 
+  @jfxf.FXML private var formatChoiceDelegate: jfxsc.ChoiceBox[ValueFormat] = _
+  var formatChoice: ChoiceBox[ValueFormat] = _
+
+  @jfxf.FXML private var localeMenuDelegate: jfxsc.Menu = _
+  private var localeMenu: Menu = _
+
   val fileChooser = new javafx.stage.FileChooser
   fileChooser.getExtensionFilters.addAll(
     new ExtensionFilter("ScalaExcel homebrew", "*.scalaexcel"),
@@ -139,6 +151,8 @@ class ViewManager extends jfxf.Initializable {
   val onColumnReorder = Subject[Map[Int, Int]]()
   val onNewSheet = Subject[Unit]()
   val onAlign = Subject[(Traversable[CellPos], Alignment)]()
+  val onFormat = Subject[(Traversable[CellPos], ValueFormat)]()
+  val onRefresh = Subject[Unit]()
 
   val sheetsForGraph = BehaviorSubject[Sheet]() // TODO create from existing streams
 
@@ -379,6 +393,7 @@ class ViewManager extends jfxf.Initializable {
     sortUp = new Button(sortUpDelegate)
     sortDown = new Button(sortDownDelegate)
     formulaEditor = new TextField(formulaEditorDelegate)
+    formulaCheatSheet = new MenuButton(formulaCheatSheetDelegate)
     menuLoad = new MenuItem(menuLoadDelegate)
     menuSave = new MenuItem(menuSaveDelegate)
     menuRedo = new MenuItem(menuRedoDelegate)
@@ -399,6 +414,63 @@ class ViewManager extends jfxf.Initializable {
     alignRightButton = new Button(alignRightDelegate)
     addColsButton = new Button(addColsDelegate)
     addRowsButton = new Button(addRowsDelegate)
+    formatChoice = new ChoiceBox(formatChoiceDelegate)
+    formatChoice.items = ObservableBuffer(DefaultValueFormat,
+      TextValueFormat,
+      CurrencyValueFormat,
+      ScientificValueFormat,
+      PercentageValueFormat,
+      new CustomNumericValueFormat())
+    formatChoice.value = DefaultValueFormat
+    localeMenu = new Menu(localeMenuDelegate)
+    localeMenu.items = ObservableBuffer() ++ Locale.getAvailableLocales
+      .filter(_.getDisplayLanguage != "")
+      .filter(_.getDisplayCountry != "")
+      .sortBy(_.getDisplayLanguage)
+      .map({locale =>
+        new MenuItem() {
+          userData = locale
+          text = locale.getDisplayLanguage + "(" + locale.getCountry + ")"
+          onAction = handle {
+            Locale.setDefault(userData.asInstanceOf[Locale])
+            onRefresh.onNext(Unit)
+          }
+        }})
+
+    val fcsItems = formulaCheatSheet.items
+
+    List(
+      "SUM(range)",
+      "AVERAGE(range)",
+      "POWER(num, exp)",
+      "ROUND(num)",
+      "ROW(ref)",
+      "ROWS(range)",
+      "COLUMN(ref)",
+      "COLUMNS(range)",
+      "COUNT(range)",
+      "MATCH(value, range)",
+      "VLOOKUP(value, range, offset)",
+      "ADDRESS(row, col, abs)",
+      "IF(test, true, false)",
+      "OR(value1, value2)",
+      "AND(value1, value2)",
+      "NOT(value)",
+      "UPPER(value)",
+      "LOWER(value)",
+      "LEN(value)",
+      "TRIM(value)",
+      "ISBLANK(value)",
+      "ISERROR(value)",
+      "ISNA(value)",
+      "ISLOGICAL(value)",
+      "ISNUMBER(value)",
+      "ISTEXT(value)"
+    ).foreach(fn => {
+      val item = new MenuItem(fn)
+      item.onAction = handle(editorText = editorText + fn)
+      fcsItems.add(item)
+    })
 
     // initialize interaction streams
     InteractionHelper.initializeInteractionStreams(this)
@@ -492,5 +564,13 @@ class ViewManager extends jfxf.Initializable {
       alignCenterButton.disable = false
       alignRightButton.disable = false
   }
+
+  def formatting = formatChoice.value.value
+
+  def formatting_=(format: ValueFormat): Unit = formatChoice.value = format
+
+  def formattingEnabled = !formatChoice.isDisabled
+
+  def formattingEnabled_=(enabled: Boolean): Unit = formatChoice.disable = !enabled
 
 }

@@ -15,7 +15,8 @@ import scalafx.stage.{Modality, Stage, Window}
 import scalafx.scene.{Node, Scene}
 import scalafx.geometry.{Pos, Insets}
 import scalaExcel.formula._
-import scalaExcel.model.{RightAlign, CenterAlign, Alignment, LeftAlign}
+import scalaExcel.model._
+import javafx.scene.{control => jfxsc}
 
 object InteractionHelper {
 
@@ -61,6 +62,8 @@ object InteractionHelper {
     initializeSorting(controller)
 
     initializeAlignment(controller)
+
+    initializeFormatting(controller)
   }
 
   private def initializeFormulaEditor(controller: ViewManager) {
@@ -101,7 +104,7 @@ object InteractionHelper {
     //Changes on the color picker are pushed to the model
     Observable[Color](o => {
       controller.fontColorPicker.onAction = handle {
-        o.onNext(controller.fontColorPicker.value.value)
+        o.onNext(controller.fontColor)
       }
     })
       .withLatest(controller.onSelection)
@@ -173,6 +176,36 @@ object InteractionHelper {
     })
       .withLatest(controller.onSelection)
       .subscribe(controller.onAlign)
+
+  }
+
+  private def initializeFormatting(controller: ViewManager) {
+    // Selecting a single cell updates the current format
+    controller.onSingleCellSelected
+      .distinctUntilChanged
+      .map(single => single._2.styles)
+      .subscribe(s => {
+        controller.formattingEnabled = false
+        controller.formatting = s.format
+        controller.formattingEnabled = true
+    })
+
+    val currentFormat = Subject[ValueFormat]()
+    // The value of the formatting choice control is monitored for changes
+    controller.formatChoice.value.onChange {
+      (_, _, newValue) => if (controller.formattingEnabled)
+        newValue match {
+          case f: CustomNumericValueFormat =>
+            // custom formats require filling in a dialog
+            showFormattingDialog(controller.formatChoice.scene.window.getValue, currentFormat.onNext)
+          case f => currentFormat.onNext(f)
+        }
+    }
+
+    // The new format is pushed to the model
+    currentFormat
+      .withLatest(controller.onSelection)
+      .subscribe(controller.onFormat)
 
   }
 
@@ -442,4 +475,96 @@ object InteractionHelper {
         onSelect(index)
   }
 
+  /**
+   * Shows formatting dialog
+   * @param dialogOwner     the master window element
+   * @param responseHandler the action handler that takes the parameters:
+   *                        (numberOfItems, offsetOfFirstItem)
+   */
+  def showFormattingDialog(dialogOwner: Window,
+                          responseHandler: ValueFormat => Unit) = {
+
+    val codes = List("prefix", "suffix", "minInt", "maxInt", "minFrac", "maxFrac", "decSymbol", "grSymbol")
+    val labels = List("Prefix", "Suffix", "Min Integer Digits", "Max Integer Digits", "Min Fraction Digits", "Max Fraction Digits", "Custom Decimal Symbol", "Custom Grouping Symbol")
+    val inputs = codes.view.zip(labels).map({
+      case (c, l) =>
+        (l, new TextField() {
+          id = c
+          prefColumnCount = 5
+        })
+    })
+    val groupingCheck = new CheckBox()
+    new Stage(){
+      title = "Custom Numeric Format"
+      initModality(Modality.APPLICATION_MODAL)
+      initOwner(dialogOwner)
+      scene = new Scene(
+        new VBox(20) {
+          padding = Insets.apply(10, 10, 10, 10)
+          spacing = 10
+          content = ObservableBuffer[Node]() ++
+            inputs.map({
+              case (l, i) => new Label(l, i) {
+                contentDisplay = ContentDisplay.Right
+              }
+            }) :+
+            new Label("Enable Grouping", groupingCheck) {
+              contentDisplay = ContentDisplay.Right
+            } :+
+            new AnchorPane() {
+            content = new HBox(2) {
+              content = ObservableBuffer(
+                new Button("Apply") {
+                  onAction = handle {
+                    // build custom format by parsing input fields
+                    val format = new CustomNumericValueFormat(
+                      scene.value.lookup("#prefix").asInstanceOf[jfxsc.TextField].text.value,
+                      scene.value.lookup("#suffix").asInstanceOf[jfxsc.TextField].text.value,
+                      try {
+                        scene.value.lookup("#minInt").asInstanceOf[jfxsc.TextField].text.value.toInt
+                      } catch {
+                        case _ : Throwable => 0
+                      },
+                      try {
+                        scene.value.lookup("#maxInt").asInstanceOf[jfxsc.TextField].text.value.toInt
+                      } catch {
+                        case _ : Throwable => Int.MaxValue
+                      },
+                      try {
+                        scene.value.lookup("#minFrac").asInstanceOf[jfxsc.TextField].text.value.toInt
+                      } catch {
+                        case _ : Throwable => 0
+                      },
+                      try {
+                        scene.value.lookup("#maxFrac").asInstanceOf[jfxsc.TextField].text.value.toInt
+                      } catch {
+                        case _ : Throwable => Int.MaxValue
+                      },
+                      scene.value.lookup("#decSymbol").asInstanceOf[jfxsc.TextField].text.value.headOption,
+                      groupingCheck.selected.value,
+                      scene.value.lookup("#grSymbol").asInstanceOf[jfxsc.TextField].text.value.headOption
+                    )
+                    // send format
+                    responseHandler(format)
+                    scene.value.getWindow.asInstanceOf[jfxs.Stage].close()
+                  }
+                },
+                new Button("Cancel") {
+                  onAction = handle {
+                    scene.value.getWindow.asInstanceOf[jfxs.Stage].close()
+                  }
+                }
+              )
+              spacing = 5
+              alignment = Pos.BottomRight
+            }
+            vgrow = Priority.Always
+            AnchorPane.setAnchors(content.get(0), 0, 0, 0, 0)
+          }
+        },
+        300,
+        400
+      )
+    }.show()
+  }
 }

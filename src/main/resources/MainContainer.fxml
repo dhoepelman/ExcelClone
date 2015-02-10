@@ -94,6 +94,15 @@
                                 </MenuItem>
                             </items>
                         </Menu>
+                        <Menu mnemonicParsing="false" text="Preferences">
+                            <items>
+                                <Menu fx:id="localeMenuDelegate" mnemonicParsing="false" text="Change Locale">
+                                    <items>
+                                        <MenuItem mnemonicParsing="false" text="Action 1" />
+                                    </items>
+                                </Menu>
+                            </items>
+                        </Menu>
                     </menus>
                 </MenuBar>
                 <GridPane alignment="CENTER" gridLinesVisible="true" prefHeight="42" styleClass="button-bar">
@@ -284,24 +293,42 @@
                     </rowConstraints>
                 </GridPane>
                 <AnchorPane fx:id="cellEditorContainer">
-                    <padding><Insets bottom="1" left="25" right="0" top="4" /></padding>
                     <children>
-                        <GridPane AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+                        <GridPane AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
                             <children>
-                                <Label text="f(x)=" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                                <TextField fx:id="formulaEditorDelegate" promptText="formula editor" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                <AnchorPane prefHeight="30.0" prefWidth="100.0" GridPane.columnIndex="0">
+                                    <children>
+                                        <MenuButton fx:id="formulaCheatSheetDelegate" mnemonicParsing="false" text="fn" textAlignment="CENTER" textOverrun="CLIP" AnchorPane.leftAnchor="1.0" AnchorPane.rightAnchor="1.0">
+                                            <items>
+                                            </items>
+                                        </MenuButton>
+                                    </children>
+                                 </AnchorPane>
+                                <Label text="f(x)=" GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.halignment="RIGHT" />
+                                <AnchorPane prefHeight="30.0" prefWidth="620.0" GridPane.columnIndex="2">
+                                    <children>
+                                        <TextField fx:id="formulaEditorDelegate" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="25.0" promptText="formula editor" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="1.0" />
+                                    </children>
+                                    <GridPane.margin>
+                                       <Insets />
+                                    </GridPane.margin>
+                                </AnchorPane>
                             </children>
                             <columnConstraints>
-                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="40" minWidth="20.0" prefWidth="25" />
-                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="90.0" prefWidth="100.0" />
+                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="60.0" prefWidth="60.0" />
+                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="20.0" prefWidth="40.0" />
+                                <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" />
                             </columnConstraints>
                             <rowConstraints>
                                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                             </rowConstraints>
+                            <padding>
+                                <Insets top="2.0" />
+                            </padding>
                         </GridPane>
                     </children>
                 </AnchorPane>
-                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
                     <children>
                         <BorderPane prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                             <bottom>
@@ -315,7 +342,7 @@
                             </center>
                         </BorderPane>
                     </children>
-                    </AnchorPane>
+                </AnchorPane>
             </children>
         </VBox>
     </children>

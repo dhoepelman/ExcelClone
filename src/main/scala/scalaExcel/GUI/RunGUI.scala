@@ -73,8 +73,12 @@ object RunGUI extends JFXApp {
     vm.onColumnReorder.map(permutations => ReorderColumns(permutations)),
     // when a new sheet is opened
     vm.onNewSheet.flatMap({ _ => Observable.from(List(SetSheet(Map(), Map()), ClearHistory))}),
-    // when the background color of a cell is selected
-    vm.onAlign.map(align => SetAlign(align._1, align._2))
+    // when the alignment of a cell is selected
+    vm.onAlign.map(align => SetAlign(align._1, align._2)),
+    // when the value format of a cell is selected
+    vm.onFormat.map(format => SetFormat(format._1, format._2)),
+    // when the table needs refreshing
+    vm.onRefresh.map(_ => Refresh)
   )
 
   // The data model
